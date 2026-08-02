@@ -163,6 +163,7 @@ Page({
     },
 
     // 功能点：试听已录语音（播放/暂停）
+    // 每次播放都销毁旧实例并新建，回调中做实例身份校验，避免快速重复点击时旧实例回调错乱播放状态
     bindVoicePlayTap: function () {
         if (!this.data.voice || !this.data.voice.tempFilePath) return;
 
@@ -171,18 +172,39 @@ Page({
             return;
         }
 
-        if (!this._voiceAudioCtx) {
-            this._voiceAudioCtx = wx.createInnerAudioContext();
-            this._voiceAudioCtx.onEnded(() => this._stopVoicePlay());
-            this._voiceAudioCtx.onError(() => this._stopVoicePlay());
-        }
-        this._voiceAudioCtx.src = this.data.voice.tempFilePath;
-        this._voiceAudioCtx.play();
+        // 销毁旧播放器（旧实例的回调将因身份校验失效）
+        this._destroyVoiceCtx();
+
+        let ctx = wx.createInnerAudioContext();
+        this._voiceAudioCtx = ctx;
         this.setData({ voicePlaying: true });
+
+        ctx.onEnded(() => {
+            if (this._voiceAudioCtx === ctx) this._stopVoicePlay();
+        });
+        ctx.onStop(() => {
+            if (this._voiceAudioCtx === ctx) this._stopVoicePlay();
+        });
+        ctx.onError(() => {
+            if (this._voiceAudioCtx === ctx) this._stopVoicePlay();
+        });
+
+        ctx.src = this.data.voice.tempFilePath;
+        ctx.play();
+    },
+
+    // 功能点：销毁试听播放器（先置空再停止销毁，防止旧实例回调再次进入）
+    _destroyVoiceCtx: function () {
+        let ctx = this._voiceAudioCtx;
+        this._voiceAudioCtx = null;
+        if (ctx) {
+            ctx.stop();
+            ctx.destroy();
+        }
     },
 
     _stopVoicePlay: function () {
-        if (this._voiceAudioCtx) this._voiceAudioCtx.stop();
+        this._destroyVoiceCtx();
         this.setData({ voicePlaying: false });
     },
 

@@ -114,6 +114,8 @@
 		<view class="tag-select">
 			<view wx:for="{{tagItems}}" wx:key="tag" class="tag-item {{item.sel?'cur':''}}" bindtap="bindTagItemTap" data-idx="{{index}}">
 				<text class="icon-{{item.sel?'squarecheckfill':'square'}} margin-right-xxs"></text>{{item.tag}}
+				<!-- 功能点：全局删除该标签（同时从所有用户身上移除，清理用户数据） -->
+				<text class="icon-close tag-del" catchtap="bindTagGlobalDelTap" data-idx="{{index}}"></text>
 			</view>
 		</view>
 		<view class="form-group" style="padding:20rpx 10rpx 0">
@@ -135,6 +137,8 @@
 			</view>
 			<view wx:for="{{groupPresets}}" wx:key="*this" class="tag-item {{formGroup===item?'cur':''}}" bindtap="bindGroupItemTap" data-group="{{item}}">
 				<text class="icon-{{formGroup===item?'roundcheckfill':'round'}} margin-right-xxs"></text>{{item}}
+				<!-- 功能点：全局删除该分组（同时清空所有该分组用户的分组字段，清理用户数据） -->
+				<text class="icon-close tag-del" catchtap="bindGroupGlobalDelTap" data-idx="{{index}}"></text>
 			</view>
 		</view>
 	</cmpt-modal>

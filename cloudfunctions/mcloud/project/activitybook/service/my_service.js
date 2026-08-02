@@ -15,20 +15,24 @@ class MyService extends BaseProjectService {
 
 	/** 我的数据统计（功能点：我的页面数据统计卡片） */
 	async getMyDataStat(userId) {
+		let pid = this.getProjectId(); // 项目ID（所有统计必须按_pid过滤，防止多项目数据串扰）
 
 		// 报名活动次数
 		let activityJoinCnt = await ActivityJoinModel.count({
+			_pid: pid,
 			ACTIVITY_JOIN_USER_ID: userId
 		});
 
 		// 参与活动次数（报名成功）
 		let activityJoinSuccCnt = await ActivityJoinModel.count({
+			_pid: pid,
 			ACTIVITY_JOIN_USER_ID: userId,
 			ACTIVITY_JOIN_STATUS: ActivityJoinModel.STATUS.SUCC
 		});
 
 		// 打卡次数
 		let enrollJoinWhere = {
+			_pid: pid,
 			ENROLL_JOIN_USER_ID: userId,
 			ENROLL_JOIN_STATUS: EnrollJoinModel.STATUS.SUCC
 		};
@@ -37,8 +41,9 @@ class MyService extends BaseProjectService {
 		// 打卡天数（按打卡日期去重统计）
 		let enrollDayCnt = await EnrollJoinModel.distinctCnt(enrollJoinWhere, 'ENROLL_JOIN_DAY');
 
-		// 收藏数
+		// 收藏数（按_pid过滤）
 		let favCnt = await FavModel.count({
+			_pid: pid,
 			FAV_USER_ID: userId
 		});
 
@@ -46,6 +51,7 @@ class MyService extends BaseProjectService {
 		let startDay = timeUtil.time('Y-M-D', -86400 * 6);
 		let endDay = timeUtil.time('Y-M-D');
 		let groupRet = await EnrollJoinModel.groupCount({
+			_pid: pid,
 			ENROLL_JOIN_USER_ID: userId,
 			ENROLL_JOIN_STATUS: EnrollJoinModel.STATUS.SUCC,
 			ENROLL_JOIN_DAY: ['between', startDay, endDay]
@@ -88,6 +94,7 @@ class MyService extends BaseProjectService {
 		let fields = 'NOTICE_TYPE,NOTICE_TITLE,NOTICE_DESC,NOTICE_ACTIVITY_ID,NOTICE_JOIN_ID,NOTICE_READ,NOTICE_ADD_TIME';
 
 		let where = {
+			_pid: this.getProjectId(), // 按项目过滤
 			NOTICE_USER_ID: userId // 仅查询本人的通知
 		};
 
@@ -97,6 +104,7 @@ class MyService extends BaseProjectService {
 	/** 我的未读通知数（功能点：我的页面通知入口角标） */
 	async getMyNoticeCnt(userId) {
 		let cnt = await NoticeModel.count({
+			_pid: this.getProjectId(), // 按项目过滤
 			NOTICE_USER_ID: userId,
 			NOTICE_READ: NoticeModel.READ.UNREAD
 		});

@@ -192,6 +192,58 @@ Page({
 		this.setData({ tagItems });
 	},
 
+	/** 功能点：全局删除标签（确认后调用云端接口，从所有用户身上移除该标签，清理用户数据） */
+	bindTagGlobalDelTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let idx = Number(pageHelper.dataset(e, 'idx'));
+		let tag = this.data.tagItems[idx].tag;
+
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = { tag };
+				let opts = { title: '删除中' };
+				await cloudHelper.callCloudSumbit('admin/user_tag_del', params, opts).then(res => {
+					pageHelper.showSuccToast('已删除标签，并清理' + (res.data.cnt || 0) + '个用户数据');
+					// 从弹窗与会话级预置列表中移除（预置常量定义在 project_setting.js，如需彻底移除请同步修改）
+					let tagItems = that.data.tagItems;
+					tagItems.splice(idx, 1);
+					that.setData({ tagItems });
+					that._reloadList(); // 刷新用户列表展示
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认全局删除标签「' + tag + '」？该标签将从所有用户身上移除', callback);
+	},
+
+	/** 功能点：全局删除分组（确认后调用云端接口，清空所有该分组用户的分组字段，清理用户数据） */
+	bindGroupGlobalDelTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let idx = Number(pageHelper.dataset(e, 'idx'));
+		let group = this.data.groupPresets[idx];
+
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = { group };
+				let opts = { title: '删除中' };
+				await cloudHelper.callCloudSumbit('admin/user_group_del', params, opts).then(res => {
+					pageHelper.showSuccToast('已删除分组，并清理' + (res.data.cnt || 0) + '个用户数据');
+					// 从弹窗与会话级预置列表中移除（预置常量定义在 project_setting.js，如需彻底移除请同步修改）
+					let groupPresets = that.data.groupPresets;
+					groupPresets.splice(idx, 1);
+					that.setData({ groupPresets });
+					that._reloadList(); // 刷新用户列表展示
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认全局删除分组「' + group + '」？属于该分组的用户将被清除分组', callback);
+	},
+
 	/** 打标签弹窗-确定（批量设置标签，整体覆盖） */
 	bindTagCmpt: async function () {
 		if (!AdminBiz.isAdmin(this)) return;

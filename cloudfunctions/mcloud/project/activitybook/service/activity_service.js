@@ -390,6 +390,8 @@ class ActivityService extends BaseProjectService {
 		} 
 
 		await ActivityModel.edit(id, { ACTIVITY_JOIN_CNT: cnt, ACTIVITY_USER_LIST: list });
+
+		return cnt; // 返回最新报名人数（供审核超员校验使用）
 	}
 
 	/**  报名前获取关键信息 */
@@ -523,7 +525,8 @@ class ActivityService extends BaseProjectService {
 
 		let fields = 'ACTIVITY_TITLE,ACTIVITY_START,ACTIVITY_OBJ.cover';
 
-		let list = await ActivityModel.getAll(where, fields, orderBy);
+		// 功能点：限制单日活动列表条数，防止数据量过大拖慢日历页加载
+		let list = await ActivityModel.getAll(where, fields, orderBy, 50);
 
 		let retList = [];
 

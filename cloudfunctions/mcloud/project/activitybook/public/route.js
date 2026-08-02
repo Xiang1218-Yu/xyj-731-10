@@ -57,6 +57,8 @@ module.exports = {
 	'admin/user_batch_status': 'admin/admin_user_controller@batchStatusUser#demo', // 批量设置用户状态
 	'admin/user_tag': 'admin/admin_user_controller@setUserTag#demo', // 设置用户标签（单个/批量）
 	'admin/user_group': 'admin/admin_user_controller@setUserGroup#demo', // 设置用户分组（单个/批量）
+	'admin/user_tag_del': 'admin/admin_user_controller@delUserTagGlobal#demo', // 全局删除标签并清理用户数据
+	'admin/user_group_del': 'admin/admin_user_controller@delUserGroupGlobal#demo', // 全局删除分组并清理用户数据
 
 	'admin/user_data_get': 'admin/admin_user_controller@userDataGet',
 	'admin/user_data_export': 'admin/admin_user_controller@userDataExport',

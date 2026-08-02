@@ -110,3 +110,15 @@ page {
 	background-color: #eaf4fe;
 	border: 1rpx solid #2499f2;
 }
+
+/* 功能点：标签/分组的全局删除小图标 */
+.tag-select .tag-item .tag-del {
+	font-size: 24rpx;
+	color: #aaa;
+	margin-left: 12rpx;
+	padding: 4rpx;
+}
+
+.tag-select .tag-item .tag-del:hover {
+	color: #e64340;
+}

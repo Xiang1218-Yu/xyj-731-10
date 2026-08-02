@@ -145,9 +145,20 @@ class AdminUserService extends BaseProjectAdminService {
 		if (!Array.isArray(tags))
 			this.AppError('标签格式不正确');
 
-		// 标签清洗：去空格、去空值、去重，最多10个
+		// 功能点：标签唯一性校验与清洗 —— 去空格、去空值、单个标签长度限制、大小写不敏感去重、最多10个
 		tags = tags.map(item => String(item).trim()).filter(item => item);
-		tags = [...new Set(tags)].slice(0, 10);
+		let seen = {}; // 已出现的标签（小写形式），用于大小写不敏感去重
+		let cleanTags = [];
+		for (let k = 0; k < tags.length; k++) {
+			if (tags[k].length > 10)
+				this.AppError('标签「' + tags[k] + '」过长，单个标签不能超过10个字');
+			let lower = tags[k].toLowerCase();
+			if (seen[lower]) continue; // 重复标签（含大小写不同的重复）跳过
+			seen[lower] = true;
+			cleanTags.push(tags[k]);
+			if (cleanTags.length >= 10) break;
+		}
+		tags = cleanTags;
 
 		let where = {
 			USER_MINI_OPENID: ['in', ids]
@@ -162,12 +173,50 @@ class AdminUserService extends BaseProjectAdminService {
 			this.AppError('请选择要操作的用户');
 
 		group = String(group || '').trim();
+		// 功能点：分组名校验 —— 长度限制（唯一性由单值字段天然保证，一个用户仅属于一个分组）
+		if (group.length > 10)
+			this.AppError('分组名称不能超过10个字');
 
 		let where = {
 			USER_MINI_OPENID: ['in', ids]
 		};
 		let cnt = await UserModel.edit(where, { USER_GROUP: group });
 		return { cnt };
+	}
+
+	/** 功能点：全局删除标签 —— 从所有用户身上移除该标签，清理用户数据 */
+	async delUserTagGlobal(tag) {
+		tag = String(tag || '').trim();
+		if (!tag) this.AppError('标签名不能为空');
+
+		// 查出所有带该标签的用户（数组包含匹配），逐个移除该标签
+		let where = {
+			USER_TAGS: tag
+		};
+		let list = await UserModel.getAllBig(where, 'USER_MINI_OPENID,USER_TAGS');
+
+		let cnt = 0;
+		for (let k = 0; k < list.length; k++) {
+			let tags = (list[k].USER_TAGS || []).filter(item => item != tag);
+			await UserModel.edit({ USER_MINI_OPENID: list[k].USER_MINI_OPENID }, { USER_TAGS: tags });
+			cnt++;
+		}
+
+		return { cnt }; // 清理的用户数
+	}
+
+	/** 功能点：全局删除分组 —— 清空所有属于该分组的用户分组字段，清理用户数据 */
+	async delUserGroupGlobal(group) {
+		group = String(group || '').trim();
+		if (!group) this.AppError('分组名不能为空');
+
+		// 批量清空该分组下所有用户的分组字段
+		let where = {
+			USER_GROUP: group
+		};
+		let cnt = await UserModel.edit(where, { USER_GROUP: '' });
+
+		return { cnt }; // 清理的用户数
 	}
 
 	// #####################导出用户数据

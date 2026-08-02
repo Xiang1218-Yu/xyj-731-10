@@ -63,6 +63,7 @@ Page({
 	},
 
 	// 功能点：语音打卡播放/暂停（wx.createInnerAudioContext）
+	// 每次切换语音都销毁旧实例并新建，回调中做实例身份校验，避免快速切换时旧实例回调错乱新播放状态
 	bindVoiceTap: function (e) {
 		let src = pageHelper.dataset(e, 'src');
 		if (!src) return;
@@ -73,23 +74,41 @@ Page({
 			return;
 		}
 
-		if (!this._voiceAudioCtx) {
-			this._voiceAudioCtx = wx.createInnerAudioContext();
-			this._voiceAudioCtx.onEnded(() => this._stopVoice());
-			this._voiceAudioCtx.onStop(() => this._stopVoice());
-			this._voiceAudioCtx.onError((res) => {
-				console.error('voice play error', res);
-				this._stopVoice();
-			});
-		}
-		this._voiceAudioCtx.src = src; // 直接播放云存储fileID
-		this._voiceAudioCtx.play();
+		// 销毁旧播放器（旧实例的回调将因身份校验失效）
+		this._destroyVoiceCtx();
+
+		let ctx = wx.createInnerAudioContext();
+		this._voiceAudioCtx = ctx;
 		this.setData({ playingVoice: src });
+
+		ctx.onEnded(() => {
+			if (this._voiceAudioCtx === ctx) this._stopVoice();
+		});
+		ctx.onStop(() => {
+			if (this._voiceAudioCtx === ctx) this._stopVoice();
+		});
+		ctx.onError((res) => {
+			console.error('voice play error', res);
+			if (this._voiceAudioCtx === ctx) this._stopVoice();
+		});
+
+		ctx.src = src; // 直接播放云存储fileID
+		ctx.play();
+	},
+
+	// 功能点：销毁语音播放器（先置空再停止销毁，防止旧实例回调再次进入）
+	_destroyVoiceCtx: function () {
+		let ctx = this._voiceAudioCtx;
+		this._voiceAudioCtx = null;
+		if (ctx) {
+			ctx.stop();
+			ctx.destroy();
+		}
 	},
 
 	// 功能点：停止语音播放
 	_stopVoice: function () {
-		if (this._voiceAudioCtx) this._voiceAudioCtx.stop();
+		this._destroyVoiceCtx();
 		if (this.data.playingVoice) this.setData({ playingVoice: '' });
 	},
 

@@ -198,6 +198,46 @@ class AdminUserController extends BaseProjectAdminController {
 		return result;
 	}
 
+	/** 功能点：全局删除标签（从所有用户身上移除该标签） */
+	async delUserTagGlobal() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			tag: 'must|string|max:30|name=标签',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.delUserTagGlobal(input.tag);
+
+		this.logUser('全局删除标签「' + input.tag + '」，清理了「' + result.cnt + '」个用户的标签数据');
+
+		return result;
+	}
+
+	/** 功能点：全局删除分组（清空所有属于该分组的用户分组字段） */
+	async delUserGroupGlobal() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			group: 'must|string|max:30|name=分组',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.delUserGroupGlobal(input.group);
+
+		this.logUser('全局删除分组「' + input.group + '」，清理了「' + result.cnt + '」个用户的分组数据');
+
+		return result;
+	}
+
 	/************** 用户数据导出 BEGIN ********************* */
 	/** 当前是否有导出文件生成 */
 	async userDataGet() {

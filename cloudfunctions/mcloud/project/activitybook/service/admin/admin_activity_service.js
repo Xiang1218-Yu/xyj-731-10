@@ -418,17 +418,6 @@ class AdminActivityService extends BaseProjectAdminService {
 		let activity = await ActivityModel.getOne(activityJoin.ACTIVITY_JOIN_ACTIVITY_ID);
 		if (!activity) this.AppError('该活动不存在');
 
-		// 审核通过前校验人数上限（待审核与成功的记录均占用名额）
-		if (status == ActivityJoinModel.STATUS.SUCC && activity.ACTIVITY_MAX_CNT > 0) {
-			let whereCnt = {
-				ACTIVITY_JOIN_ACTIVITY_ID: activity._id,
-				ACTIVITY_JOIN_STATUS: ['in', [ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.SUCC]]
-			}
-			let cntJoin = await ActivityJoinModel.count(whereCnt);
-			if (cntJoin >= activity.ACTIVITY_MAX_CNT)
-				this.AppError('该活动名额已满，无法再通过审核');
-		}
-
 		// 更新报名状态与理由
 		let data = {
 			ACTIVITY_JOIN_STATUS: status
@@ -440,11 +429,33 @@ class AdminActivityService extends BaseProjectAdminService {
 		} else {
 			data.ACTIVITY_JOIN_REASON = '';
 		}
-		await ActivityJoinModel.edit(activityJoinId, data);
 
-		// 重新统计活动报名人数
+		// 功能点：防并发竞态 —— 以"原状态"为条件做原子更新，更新数为0说明该记录已被其他并发操作处理
+		let oldStatus = activityJoin.ACTIVITY_JOIN_STATUS;
+		let updated = await ActivityJoinModel.edit({
+			_id: activityJoinId,
+			ACTIVITY_JOIN_STATUS: oldStatus
+		}, data);
+		if (!updated)
+			this.AppError('该报名记录状态已被其他操作变更，请刷新后重试');
+
+		// 重新统计活动报名人数（原子更新成功后再统计，保证计数基于最新状态）
 		let activityService = new ActivityService();
-		await activityService.statActivityJoin(activity._id);
+		let joinCnt = await activityService.statActivityJoin(activity._id);
+
+		// 功能点：防并发超员 —— 通过后若实际占用名额超过上限，回滚本次通过（先更新后校验+回滚，杜绝并发下超出人数上限）
+		if (status == ActivityJoinModel.STATUS.SUCC && activity.ACTIVITY_MAX_CNT > 0
+			&& joinCnt > activity.ACTIVITY_MAX_CNT) {
+			await ActivityJoinModel.edit({
+				_id: activityJoinId,
+				ACTIVITY_JOIN_STATUS: status
+			}, {
+				ACTIVITY_JOIN_STATUS: oldStatus,
+				ACTIVITY_JOIN_REASON: ''
+			});
+			await activityService.statActivityJoin(activity._id); // 回滚后再次重算
+			this.AppError('该活动名额已满，无法再通过审核');
+		}
 
 		// 发送审核结果订阅消息通知
 		await this.sendActivityJoinNotice(activityJoin, activity, status, reason);
@@ -545,14 +556,44 @@ class AdminActivityService extends BaseProjectAdminService {
 		let activity = await ActivityModel.getOne(activityId);
 		if (!activity) this.AppError('该活动不存在');
 
-		// 逐条流转状态（复用单条审核逻辑：通过前校验人数上限、拒绝记录理由、重算报名人数、发送审核结果通知）
-		let cnt = 0;
-		for (let k = 0; k < ids.length; k++) {
-			await this.statusActivityJoin(ids[k], status, reason);
-			cnt++;
+		// 功能点：批量通过前统一预检名额，避免"部分成功部分失败"
+		if (status == ActivityJoinModel.STATUS.SUCC && activity.ACTIVITY_MAX_CNT > 0) {
+			// 本次实际将新增通过的条数（仅待审核/未过审的记录会发生状态变化）
+			let passCnt = await ActivityJoinModel.count({
+				ACTIVITY_JOIN_ACTIVITY_ID: activityId,
+				_id: ['in', ids],
+				ACTIVITY_JOIN_STATUS: ['in', [ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.ADMIN_CANCEL]]
+			});
+			// 当前已占用名额（待审核与成功的记录均占用名额）
+			let curCnt = await ActivityJoinModel.count({
+				ACTIVITY_JOIN_ACTIVITY_ID: activityId,
+				ACTIVITY_JOIN_STATUS: ['in', [ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.SUCC]]
+			});
+			if (curCnt + passCnt > activity.ACTIVITY_MAX_CNT) {
+				let remain = Math.max(0, activity.ACTIVITY_MAX_CNT - curCnt);
+				this.AppError('名额不足：当前已占' + curCnt + '/' + activity.ACTIVITY_MAX_CNT + '人，本次最多还能通过' + remain + '人，请调整勾选数量');
+			}
 		}
 
-		return { cnt };
+		// 功能点：逐条流转状态并收集失败项（复用单条审核逻辑：原子状态流转、超员回滚、重算人数、发送通知），
+		// 单条失败不中断整体批次，最终返回成功/失败明细，杜绝"部分成功部分失败却无任何反馈"
+		let cnt = 0;
+		let failList = [];
+		for (let k = 0; k < ids.length; k++) {
+			try {
+				await this.statusActivityJoin(ids[k], status, reason);
+				cnt++;
+			} catch (err) {
+				console.error('批量审核第' + (k + 1) + '条失败 id=' + ids[k], err);
+				failList.push(err.message || '未知错误');
+			}
+		}
+
+		// 全部失败时直接报错（视为本次操作失败）
+		if (cnt == 0 && failList.length > 0)
+			this.AppError('操作失败：' + failList[0]);
+
+		return { cnt, failCnt: failList.length, failMsg: failList[0] || '' };
 	}
 
 	/** 批量删除报名记录（ids为记录_id数组，删除后重算报名人数） */

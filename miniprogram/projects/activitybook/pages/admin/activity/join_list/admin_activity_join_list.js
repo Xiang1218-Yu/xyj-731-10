@@ -441,6 +441,20 @@ Page({
 		this.selectComponent('#cmpt-comm-list').reload(); // 刷新列表
 	},
 
+	/** 展示批量审核结果（部分失败时给出明细提示，避免"部分成功部分失败"无感知） */
+	_showBatchResult: function (data) {
+		if (data && data.failCnt > 0) {
+			wx.showModal({
+				title: '部分处理失败',
+				content: '成功' + data.cnt + '条，失败' + data.failCnt + '条。失败原因：' + (data.failMsg || '未知'),
+				showCancel: false,
+				confirmText: '知道了'
+			});
+		} else {
+			pageHelper.showSuccToast('操作成功');
+		}
+	},
+
 	/** 批量审核通过 */
 	bindBatchStatusTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
@@ -458,7 +472,7 @@ Page({
 				};
 				let opts = { title: '处理中' };
 				await cloudHelper.callCloudSumbit('admin/activity_join_batch_status', params, opts).then(res => {
-					pageHelper.showSuccToast('操作成功');
+					that._showBatchResult(res.data); // 展示批量处理结果（含部分失败明细）
 					that._reloadList();
 				});
 			} catch (err) {
@@ -500,7 +514,7 @@ Page({
 					refuseModalShow: false,
 					formReason: ''
 				});
-				pageHelper.showSuccToast('操作成功');
+				this._showBatchResult(res.data); // 展示批量处理结果（含部分失败明细）
 				this._reloadList();
 			});
 		} catch (err) {
