@@ -33,6 +33,20 @@ class BaseAdminService extends BaseService {
 			return admin;
 		}
 
+		// 免登录开发测试模式
+		if (token === 'admin-no-login-token') {
+			let admin = {};
+			admin.ADMIN_NAME = 'admin';
+			admin.ADMIN_DESC = '开发测试';
+			admin.ADMIN_ID = 'no-login-id';
+			admin.ADMIN_PHONE = '13900000000';
+			admin.ADMIN_LOGIN_CNT = 0;
+			admin.ADMIN_LOGIN_TIME = '';
+			admin.ADMIN_TYPE = 1;
+			admin.ADMIN_STATUS = 1;
+			return admin;
+		}
+
 		let where = {
 			ADMIN_TOKEN: token,
 			ADMIN_TOKEN_TIME: ['>', timeUtil.time() - config.ADMIN_LOGIN_EXPIRE * 1000], // token有效时间
@@ -47,6 +61,20 @@ class BaseAdminService extends BaseService {
 
 	/** 是否超级管理员 */
 	async isSuperAdmin(token) {
+
+		// 免登录开发测试模式
+		if (token === 'admin-no-login-token') {
+			let admin = {};
+			admin.ADMIN_NAME = 'admin';
+			admin.ADMIN_DESC = '开发测试';
+			admin.ADMIN_ID = 'no-login-id';
+			admin.ADMIN_PHONE = '13900000000';
+			admin.ADMIN_LOGIN_CNT = 0;
+			admin.ADMIN_LOGIN_TIME = '';
+			admin.ADMIN_TYPE = 1;
+			admin.ADMIN_STATUS = 1;
+			return admin;
+		}
 
 		let where = {
 			ADMIN_TOKEN: token,

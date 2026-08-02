@@ -132,8 +132,9 @@ function callCloud(route, params = {}, options) {
 				} else if (res.result.code == CODE.ADMIN_ERROR) {
 				// 后台登录错误
 				if (setting.ADMIN_NO_LOGIN) {
-					// 免登录模式不跳转，继续执行
-					resolve(res.result);
+					// 免登录模式下不跳转，避免死循环，只提示错误
+					console.error('[ADMIN_ERROR]', res.result.msg);
+					reject(res.result);
 					return;
 				}
 				wx.reLaunch({
