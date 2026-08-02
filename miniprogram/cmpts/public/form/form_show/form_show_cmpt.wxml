@@ -27,6 +27,14 @@
 			<view wx:if="{{item.type=='image'}}" class="form-group-show-text">
 				<image bindtap="url" data-type="image" data-url="{{itm}}" wx:for="{{item.val}}" lazy-load="{{true}}" wx:key="key1" wx:for-item="itm" src="{{itm}}" class="loading form-group-show-img" show-menu-by-longpress="{{true}}" />
 			</view>
+			<view wx:elif="{{item.type=='audio'}}" class="form-group-show-text">
+				<view wx:if="{{item.val}}" class="show-audio" bindtap="bindShowAudioTap" data-src="{{item.val}}"><text class="icon-voice text-orange"></text> 点击播放语音</view>
+				<view wx:else>未录制</view>
+			</view>
+			<view wx:elif="{{item.type=='location'}}" class="form-group-show-text">
+				<view wx:if="{{item.val && item.val.name}}" class="show-location" bindtap="bindShowLocationTap" data-location="{{item.val}}"><text class="icon-locationfill text-orange"></text> {{item.val.name}}</view>
+				<view wx:else>未选择</view>
+			</view>
 			<view wx:elif="{{item.type=='switch'}}" class="form-group-show-text">{{item.val===true?'是':'否'}}</view>
 			<view wx:elif="{{item.type=='content'}}" class="form-group-show-text">[图文]</view>
 			<view wx:elif="{{item.type=='rows'}}" class="form-group-show-text">[多条目]</view>
@@ -244,6 +252,18 @@
 
 	<block wx:elif="{{item.type=='image'}}">
 		<cmpt-img-upload id="form{{item.mark}}" data-idx="{{index}}" must="{{item.must}}" imgMax="{{item.max}}" title="{{item.title}}上传 {{item.must?'(必填)':''}}" isCheck="{{false}}" imgUploadSize="{{10}}" imgList="{{item.val}}" bind:upload="bindImgUploadCmpt" />
+		<view wx:if="{{item.focus}}" class="hint-desc error">{{item.focus}}</view>
+			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
+	</block>
+
+	<block wx:elif="{{item.type=='audio'}}">
+		<cmpt-audio-upload id="form{{item.mark}}" data-idx="{{index}}" must="{{item.must}}" title="{{item.title}} {{item.must?'(必填)':''}}" maxSecond="{{item.max}}" audioSrc="{{item.val}}" bind:upload="bindAudioUploadCmpt" />
+		<view wx:if="{{item.focus}}" class="hint-desc error">{{item.focus}}</view>
+			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
+	</block>
+
+	<block wx:elif="{{item.type=='location'}}">
+		<cmpt-location-pick id="form{{item.mark}}" data-idx="{{index}}" must="{{item.must}}" title="{{item.title}} {{item.must?'(必填)':''}}" location="{{item.val}}" bind:change="bindLocationPickCmpt" />
 		<view wx:if="{{item.focus}}" class="hint-desc error">{{item.focus}}</view>
 			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
 	</block>

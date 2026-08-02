@@ -72,6 +72,23 @@ Page({
 		this.setData({
 			user
 		})
+
+		// 登录后加载个人数据统计卡片
+		this._loadStat();
+	},
+
+	// 加载"我的"数据统计
+	_loadStat: async function () {
+		if (!PassportBiz.isLogin()) {
+			this.setData({ stat: null });
+			return;
+		}
+		try {
+			let stat = await cloudHelper.callCloudData('my/stat', {});
+			if (stat) this.setData({ stat });
+		} catch (err) {
+			console.log(err);
+		}
 	},
 
 	/**

@@ -114,6 +114,64 @@ class AdminUserController extends BaseProjectAdminController {
 		await service.statusUser(input.id, input.status, input.reason);
 	}
 
+	/** 批量修改用户状态 */
+	async batchStatusUser() {
+		await this.isAdmin();
+
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+		};
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		await service.batchStatusUser(input.ids, input.status);
+		this.logUser('批量修改了' + input.ids.length + '个用户的状态');
+	}
+
+	/** 批量删除用户 */
+	async batchDelUser() {
+		await this.isAdmin();
+
+		let rules = {
+			ids: 'must|array',
+		};
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		await service.batchDelUser(input.ids);
+		this.logUser('批量删除了' + input.ids.length + '个用户');
+	}
+
+	/** 设置用户标签/分组 */
+	async setUserTags() {
+		await this.isAdmin();
+
+		let rules = {
+			id: 'must|id',
+			tags: 'array',
+		};
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		await service.setUserTags(input.id, input.tags);
+	}
+
+	/** 批量给用户追加标签 */
+	async batchAddUserTag() {
+		await this.isAdmin();
+
+		let rules = {
+			ids: 'must|array',
+			tag: 'must|string|min:1|max:20|name=标签',
+		};
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		await service.batchAddUserTag(input.ids, input.tag);
+		this.logUser('批量给' + input.ids.length + '个用户添加标签「' + input.tag + '」');
+	}
+
 	/************** 用户数据导出 BEGIN ********************* */
 	/** 当前是否有导出文件生成 */
 	async userDataGet() {

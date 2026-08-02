@@ -11,6 +11,10 @@ Page({
 	 */
 	data: {
 		isLoad: false,
+
+		// 批量操作
+		batchMode: false,
+		selectedIds: [],
 	},
 
 	/**
@@ -57,6 +61,66 @@ Page({
 
 	bindCommListCmpt: function (e) {
 		pageHelper.commListListener(this, e);
+	},
+
+	//############### 批量操作 ###############
+
+	bindToggleBatchTap: function () {
+		this.setData({ batchMode: !this.data.batchMode, selectedIds: [] });
+	},
+
+	bindSelectTap: function (e) {
+		let id = pageHelper.dataset(e, 'id');
+		let selectedIds = this.data.selectedIds;
+		let idx = selectedIds.indexOf(id);
+		if (idx >= 0) selectedIds.splice(idx, 1);
+		else selectedIds.push(id);
+		this.setData({ selectedIds });
+	},
+
+	bindSelectAllTap: function () {
+		let list = this.data.dataList ? this.data.dataList.list : [];
+		let selectedIds = this.data.selectedIds;
+		if (selectedIds.length == list.length && list.length > 0) selectedIds = [];
+		else selectedIds = list.map(item => item._id);
+		this.setData({ selectedIds });
+	},
+
+	bindBatchDelTap: function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		if (this.data.selectedIds.length == 0) return pageHelper.showNoneToast('请先选择');
+
+		let callback = async () => {
+			try {
+				await cloudHelper.callCloudSumbit('admin/activity_batch_del', { ids: this.data.selectedIds }, { title: '删除中' }).then(res => {
+					this._afterBatch('批量删除成功');
+				});
+			} catch (e) { console.log(e); }
+		}
+		pageHelper.showConfirm('确认删除选中的 ' + this.data.selectedIds.length + ' 个活动？报名数据将一并删除且不可恢复', callback);
+	},
+
+	bindBatchStatusTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		if (this.data.selectedIds.length == 0) return pageHelper.showNoneToast('请先选择');
+
+		let status = Number(pageHelper.dataset(e, 'status'));
+		let callback = async () => {
+			try {
+				await cloudHelper.callCloudSumbit('admin/activity_batch_status', { ids: this.data.selectedIds, status }, { title: '处理中' }).then(res => {
+					this._afterBatch('操作成功');
+				});
+			} catch (e) { console.log(e); }
+		}
+		pageHelper.showConfirm('确认对选中的 ' + this.data.selectedIds.length + ' 个活动执行此操作？', callback);
+	},
+
+	_afterBatch: function (msg) {
+		this.setData({ batchMode: false, selectedIds: [] });
+		pageHelper.showSuccToast(msg, 1500, () => {
+			let cmpt = this.selectComponent('#cmpt-comm-list');
+			if (cmpt) cmpt.reload();
+		});
 	},
 
 	bindJoinMoreTap: async function (e) {

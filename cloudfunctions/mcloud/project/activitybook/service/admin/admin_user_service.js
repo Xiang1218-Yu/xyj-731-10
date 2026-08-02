@@ -71,12 +71,24 @@ class AdminUserService extends BaseProjectAdminService {
 				case 'status':
 					where.and.USER_STATUS = Number(sortVal);
 					break; 
+				case 'tag':
+					// 按标签/分组筛选
+					where.and.USER_TAGS = sortVal;
+					break;
 				case 'sort': {
 					orderBy = this.fmtOrderBySort(sortVal, 'USER_ADD_TIME');
 					break;
 					}
 			}
 		}
+
+		// 附加查询条件 (如按标签精确筛选)
+		if (util.isDefined(whereEx) && whereEx) {
+			for (let key in whereEx) {
+				where.and[key] = whereEx[key];
+			}
+		}
+
 		let result = await UserModel.getList(where, fields, orderBy, page, size, true, oldTotal, false);
 
 
@@ -86,14 +98,56 @@ class AdminUserService extends BaseProjectAdminService {
 		return result;
 	}
 
+	/**修改用户状态 */
 	async statusUser(id, status, reason) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		status = Number(status);
+		let data = {
+			USER_STATUS: status,
+			USER_CHECK_REASON: reason || ''
+		};
+		await UserModel.edit({ USER_MINI_OPENID: id }, data);
 	}
 
 	/**删除用户 */
 	async delUser(id) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		await UserModel.del({ USER_MINI_OPENID: id });
+	}
 
+	//##################### 批量操作 (后台管理)
+
+	/** 批量修改用户状态 */
+	async batchStatusUser(ids, status) {
+		if (!ids || ids.length == 0) return;
+		status = Number(status);
+		await UserModel.edit({ USER_MINI_OPENID: ['in', ids] }, { USER_STATUS: status });
+	}
+
+	/** 批量删除用户 */
+	async batchDelUser(ids) {
+		if (!ids || ids.length == 0) return;
+		await UserModel.del({ USER_MINI_OPENID: ['in', ids] });
+	}
+
+	//##################### 用户标签/分组
+
+	/** 设置单个用户的标签/分组 */
+	async setUserTags(id, tags) {
+		if (!Array.isArray(tags)) tags = [];
+		await UserModel.edit({ USER_MINI_OPENID: id }, { USER_TAGS: tags });
+	}
+
+	/** 批量给用户追加标签(去重) */
+	async batchAddUserTag(ids, tag) {
+		if (!ids || ids.length == 0 || !tag) return;
+
+		let list = await UserModel.getAll({ USER_MINI_OPENID: ['in', ids] }, 'USER_MINI_OPENID,USER_TAGS', {}, 1000);
+		for (let k = 0; k < list.length; k++) {
+			let tags = list[k].USER_TAGS || [];
+			if (!tags.includes(tag)) {
+				tags.push(tag);
+				await UserModel.edit({ USER_MINI_OPENID: list[k].USER_MINI_OPENID }, { USER_TAGS: tags });
+			}
+		}
 	}
 
 	// #####################导出用户数据
@@ -108,11 +162,35 @@ class AdminUserService extends BaseProjectAdminService {
 		return await exportUtil.deleteDataExcel(EXPORT_USER_DATA_KEY);
 	}
 
-	/**导出用户数据 */
+	/**导出用户数据 (含标签/分组) */
 	async exportUserDataExcel(condition, fields) {
+		// condition 为列表查询时生成的where条件(已encodeURIComponent)
+		let where = {};
+		if (condition) {
+			try {
+				where = JSON.parse(decodeURIComponent(condition));
+			} catch (e) {
+				where = { and: { _pid: this.getProjectId() } };
+			}
+		}
 
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let orderBy = { USER_ADD_TIME: 'desc' };
+		let list = await UserModel.getAll(where, 'USER_NAME,USER_MOBILE,USER_STATUS,USER_TAGS,USER_ADD_TIME', orderBy, 5000);
 
+		let header = ['昵称', '手机', '状态', '标签/分组', '注册时间'];
+		let data = [header];
+		for (let k = 0; k < list.length; k++) {
+			let u = list[k];
+			data.push([
+				u.USER_NAME || '',
+				u.USER_MOBILE || '',
+				UserModel.getDesc('STATUS', u.USER_STATUS),
+				(u.USER_TAGS && u.USER_TAGS.length) ? u.USER_TAGS.join('、') : '',
+				timeUtil.timestamp2Time(u.USER_ADD_TIME)
+			]);
+		}
+
+		return await exportUtil.exportDataExcel(EXPORT_USER_DATA_KEY, '用户资料', list.length, data);
 	}
 
 }

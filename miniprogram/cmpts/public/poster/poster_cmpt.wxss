@@ -82,3 +82,37 @@
 	padding: 30rpx 0 20rpx;
 	font-size: 32rpx;
 }
+
+/* 海报模板选择 */
+.main-poster .poster-template {
+	width: 100%;
+	padding: 20rpx 40rpx 0;
+	box-sizing: border-box;
+}
+
+.main-poster .poster-template .poster-template-title {
+	font-size: 28rpx;
+	color: #333;
+	margin-bottom: 16rpx;
+}
+
+.main-poster .poster-template .poster-template-list {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+.main-poster .poster-template .poster-template-item {
+	padding: 12rpx 34rpx;
+	border-radius: 40rpx;
+	background: #f2f2f2;
+	color: #666;
+	font-size: 26rpx;
+	margin-right: 20rpx;
+	margin-bottom: 10rpx;
+}
+
+.main-poster .poster-template .poster-template-item.active {
+	background: #FFC700;
+	color: #fff;
+}

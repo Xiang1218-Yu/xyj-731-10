@@ -16,6 +16,9 @@ module.exports = {
 	'passport/register': 'passport_controller@register',
 	'passport/edit_base': 'passport_controller@editBase',
 
+	// 我的-数据统计
+	'my/stat': 'my_controller@getMyStat',
+
 	// 收藏
 	'fav/update': 'fav_controller@updateFav',
 	'fav/del': 'fav_controller@delFav',
@@ -46,6 +49,12 @@ module.exports = {
 	'admin/user_del': 'admin/admin_user_controller@delUser#demo',
 	'admin/user_status': 'admin/admin_user_controller@statusUser#demo',
 
+	// 用户-批量操作与标签/分组
+	'admin/user_batch_status': 'admin/admin_user_controller@batchStatusUser#demo',
+	'admin/user_batch_del': 'admin/admin_user_controller@batchDelUser#demo',
+	'admin/user_set_tags': 'admin/admin_user_controller@setUserTags#demo',
+	'admin/user_batch_add_tag': 'admin/admin_user_controller@batchAddUserTag#demo',
+
 	'admin/user_data_get': 'admin/admin_user_controller@userDataGet',
 	'admin/user_data_export': 'admin/admin_user_controller@userDataExport',
 	'admin/user_data_del': 'admin/admin_user_controller@userDataDel',
@@ -63,6 +72,10 @@ module.exports = {
 	'admin/product_sort': 'admin/admin_product_controller@sortProduct#demo',
 	'admin/product_vouch': 'admin/admin_product_controller@vouchProduct#demo',
 	'admin/product_status': 'admin/admin_product_controller@statusProduct#demo',
+
+	// 书单-批量操作
+	'admin/product_batch_del': 'admin/admin_product_controller@batchDelProduct#demo',
+	'admin/product_batch_status': 'admin/admin_product_controller@batchStatusProduct#demo',
 
 
 
@@ -140,6 +153,10 @@ module.exports = {
 	'admin/activity_sort': 'admin/admin_activity_controller@sortActivity#demo',
 	'admin/activity_vouch': 'admin/admin_activity_controller@vouchActivity#demo',
 	'admin/activity_status': 'admin/admin_activity_controller@statusActivity#demo',
+
+	// 活动-批量操作
+	'admin/activity_batch_del': 'admin/admin_activity_controller@batchDelActivity#demo',
+	'admin/activity_batch_status': 'admin/admin_activity_controller@batchStatusActivity#demo',
 	'admin/activity_join_list': 'admin/admin_activity_controller@getActivityJoinList',
 	'admin/activity_join_status': 'admin/admin_activity_controller@statusActivityJoin#demo',
 	'admin/activity_cancel_join_all': 'admin/admin_activity_controller@cancelActivityJoinAll#demo',

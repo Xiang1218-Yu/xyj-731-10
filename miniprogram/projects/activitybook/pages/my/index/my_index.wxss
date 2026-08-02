@@ -85,6 +85,41 @@
 	margin-top: 10rpx;
 }
 
+/* 数据统计卡片 */
+.main .stat {
+	width: 100%;
+	position: relative;
+	margin-top: 10rpx;
+}
+
+.main .stat .stat-inner {
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-around;
+	background-color: #fff;
+	padding: 30rpx 0rpx;
+	border-radius: 16rpx !important;
+}
+
+.main .stat .stat-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+}
+
+.main .stat .stat-item .stat-num {
+	font-size: 40rpx;
+	font-weight: bold;
+}
+
+.main .stat .stat-item .stat-label {
+	font-size: 24rpx;
+	color: #999;
+	margin-top: 8rpx;
+}
+
 .main .record .inner {
 	width: 100%;
 	display: flex;

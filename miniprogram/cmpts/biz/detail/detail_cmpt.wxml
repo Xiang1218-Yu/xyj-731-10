@@ -134,4 +134,4 @@
 </view>
 <!--btn End-->
 
-<cmpt-poster model:show="{{showPoster}}" doPoster="{{doPoster}}" wx:if="{{ posterConfig}}" config="{{posterConfig}}" />
+<cmpt-poster model:show="{{showPoster}}" doPoster="{{doPoster}}" wx:if="{{ posterConfig}}" config="{{posterConfig}}" posterData="{{posterData}}" showTemplate="{{true}}" />

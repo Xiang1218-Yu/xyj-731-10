@@ -18,6 +18,7 @@ import Poster from '../../../cmpts/public/poster/wxa-plugin-canvas/poster/poster
 const pageHelper = require('../../../helper/page_helper.js');
 const picHelper = require('../../../helper/pic_helper.js');
 const helper = require('../../../helper/helper.js');
+const posterCmptHelper = require('./poster_cmpt_helper.js');
 
 Component({
 	externalClasses: ['poster-class'],
@@ -34,6 +35,17 @@ Component({
 		config: { // 图形参数
 			type: Object,
 			value: null,
+		},
+		// 海报原始数据 {cover,title,desc,qr,bg,user,avatar}
+		// 传入后组件内部可根据模板编号实时切换并重新生成config
+		posterData: {
+			type: Object,
+			value: null,
+		},
+		// 是否显示模板选择 (需配合 posterData 使用)
+		showTemplate: {
+			type: Boolean,
+			value: false,
 		},
 		isQr: { // 是否叠加小程序码
 			type: Boolean,
@@ -62,6 +74,8 @@ Component({
 	 */
 	data: {
 		isLoad: false,
+		templates: posterCmptHelper.TEMPLATES, // 可选模板列表
+		curTemplate: 1, // 当前选中的模板编号
 	},
 
 	lifetimes: {
@@ -87,6 +101,27 @@ Component({
 		bindPosterTap: function (e) {
 			this.setData({
 				isCreate:true,
+				isLoad: false,
+			}, async () => {
+				await this.createPoster();
+			});
+		},
+
+		// 选择海报模板并实时重新生成预览
+		bindSelectTemplateTap: async function (e) {
+			let template = Number(pageHelper.dataset(e, 'template'));
+			if (template == this.data.curTemplate && this.data.isCreate) return;
+
+			// 根据模板编号与原始数据重建config
+			let posterData = this.data.posterData;
+			if (!posterData) return;
+
+			let config = await posterCmptHelper.configByTemplate(template, posterData);
+
+			this.setData({
+				curTemplate: template,
+				config,
+				isCreate: true,
 				isLoad: false,
 			}, async () => {
 				await this.createPoster();

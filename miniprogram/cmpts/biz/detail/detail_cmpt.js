@@ -113,6 +113,7 @@ Component({
 		isFav: -1,
 		showPoster: false,
 		posterConfig: null,
+		posterData: null, // 海报原始数据，供模板切换实时重建
 	},
 
 	lifetimes: {
@@ -135,17 +136,21 @@ Component({
 
 			if (this.data.doShare) {
 
-				let posterConfig = await posterCmptHelper.config1({
+				// 海报原始数据，供模板选择时实时重建
+				let posterData = {
 					cover: this.data.cover,
 					title: this.data.title,
 					desc: this.data.desc,
 					qr: this.data.qr,
-                    bg: this.data.bg,
-                    user: this.data.user,
-                    avatar: this.data.avatar
-				})
+					bg: this.data.bg,
+					user: this.data.user,
+					avatar: this.data.avatar
+				};
+
+				let posterConfig = await posterCmptHelper.config1(posterData)
 				this.setData({
-					posterConfig
+					posterConfig,
+					posterData
 				});
 
 			}

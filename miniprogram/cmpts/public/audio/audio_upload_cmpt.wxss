@@ -1,0 +1,27 @@
+.audio-box {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.audio-btn {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	padding: 12rpx 30rpx;
+	border-radius: 40rpx;
+	color: #fff;
+	margin-right: 20rpx;
+	margin-bottom: 10rpx;
+	font-size: 28rpx;
+}
+
+.audio-btn text {
+	color: #fff;
+}
+
+.audio-btn-text {
+	margin-left: 10rpx;
+}

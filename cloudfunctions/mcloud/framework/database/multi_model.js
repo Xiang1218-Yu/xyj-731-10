@@ -63,7 +63,7 @@ class MultiModel extends Model {
 		// 赋值
 		for (let k = 0; k < hasImageForms.length; k++) {
 			for (let j in forms) {
-				if ((forms[j].type == 'image' || forms[j].type == 'content')
+				if ((forms[j].type == 'image' || forms[j].type == 'content' || forms[j].type == 'audio')
 					&& forms[j].mark == hasImageForms[k].mark
 					&& forms[j].type == hasImageForms[k].type) {
 					forms[j].val = hasImageForms[k].val;

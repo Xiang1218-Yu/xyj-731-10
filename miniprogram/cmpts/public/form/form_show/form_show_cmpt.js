@@ -231,8 +231,8 @@ Component({
 
 			if (type == 'line') return val;
 
-			if (type != 'switch' && type != 'checkbox' && type != 'area' && type != 'content' && type != 'image' && type != 'rows') {
-				// switch(bool),checkbox(array), area(array), content(array) 不处理，其他做类型处理
+			if (type != 'switch' && type != 'checkbox' && type != 'area' && type != 'content' && type != 'image' && type != 'rows' && type != 'location') {
+				// switch(bool),checkbox(array), area(array), content(array), location(object) 不处理，其他做类型处理
 
 				if (typeof val === 'object' && !Array.isArray(val)) {
 					// 对象要被处理为空串，数组做trim不处理(typeof数组也是object)
@@ -251,6 +251,16 @@ Component({
 				case 'image': {
 					// 不支持字符串缺省值 
 					if (!Array.isArray(val)) return [];
+					break;
+				}
+				case 'audio': {
+					// 语音: 值为音频地址字符串
+					if (typeof val !== 'string') return '';
+					break;
+				}
+				case 'location': {
+					// 位置: 值为对象{name,address,latitude,longitude}, 无则为null
+					if (!val || typeof val !== 'object' || Array.isArray(val) || !val.name) return null;
 					break;
 				}
 				case 'content': {
@@ -363,6 +373,41 @@ Component({
 			let idx = pageHelper.dataset(e, 'idx');
 			let val = e.detail;
 			this._setForm(idx, val);
+		},
+
+		// 语音录制回调 (val为本地临时文件路径, 提交后由transTempPics上传)
+		bindAudioUploadCmpt: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let val = e.detail;
+			this._setForm(idx, val);
+		},
+
+		// 位置选择回调 (val为{name,address,latitude,longitude})
+		bindLocationPickCmpt: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let val = e.detail;
+			this._setForm(idx, val);
+		},
+
+		// 展示模式下播放语音
+		bindShowAudioTap: function (e) {
+			let src = pageHelper.dataset(e, 'src');
+			if (!src) return;
+			let audio = wx.createInnerAudioContext();
+			audio.src = src;
+			audio.play();
+		},
+
+		// 展示模式下在地图查看位置
+		bindShowLocationTap: function (e) {
+			let location = pageHelper.dataset(e, 'location');
+			if (!location || !location.latitude) return;
+			wx.openLocation({
+				latitude: location.latitude,
+				longitude: location.longitude,
+				name: location.name,
+				address: location.address,
+			});
 		},
 
 		bindLineBlur: function (e) {

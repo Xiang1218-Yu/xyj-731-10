@@ -2,13 +2,31 @@
     <cmpt-comm-list source='admin' type="admin-product-list" search="{{search||''}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/product_list" sortMenusDefaultIndex="0" topBottom="50" placeholder="搜索标题" bind:list="bindCommListCmpt"> 
 
         <view slot="searchEnd">
+            <button bindtap="bindToggleBatchTap" class="btn radius {{batchMode?'bg-red':'bg-grey'}} text-white margin-right-s"><text class="icon-check margin-right-xxs"></text>{{batchMode?'退出批量':'批量操作'}}</button>
             <button bindtap="url" data-url="../add/admin_product_add" class="btn radius bg-admin text-white margin-right-s"><text class="icon-roundadd margin-right-xxs"></text>添加新{{PRODUCT_NAME}}</button>
         </view>
+
+        <!-- 批量操作工具栏 -->
+        <view wx:if="{{batchMode}}" class="batch-bar">
+            <view class="batch-left" bindtap="bindSelectAllTap">
+                <text class="{{selectedIds.length==dataList.list.length&&dataList.list.length>0?'icon-checkboxfill text-green':'icon-checkbox'}}"></text> 全选
+            </view>
+            <view class="batch-info">已选 {{selectedIds.length}} 项</view>
+            <view class="batch-oprt">
+                <view class="btn sm radius bg-green text-white margin-right-xs" bindtap="bindBatchStatusTap" data-status="1">启用</view>
+                <view class="btn sm radius bg-orange text-white margin-right-xs" bindtap="bindBatchStatusTap" data-status="0">停用</view>
+                <view class="btn sm radius bg-red text-white" bindtap="bindBatchDelTap">删除</view>
+            </view>
+        </view>
+
         <!-- List Begin -->
         <view class="admin-comm-list">
             <view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录</view>
 
-            <view class="item" wx:for="{{dataList.list}}" wx:key="key">
+            <view class="item {{batchMode&&selectedIds.indexOf(item._id)>=0?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
+				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectTap" data-id="{{item._id}}">
+					<text class="{{selectedIds.indexOf(item._id)>=0?'icon-checkboxfill text-green':'icon-checkbox text-grey'}}"></text>
+				</view>
 				<view class="no">{{index+1}}</view>
                 <view class="header">
                     <view class="left text-cut"><text wx:if="{{item.PRODUCT_ORDER==0}}" class="text-black margin-right-xxs" style="font-weight:normal;font-size:24rpx">[置顶]</text><text wx:if="{{item.PRODUCT_VOUCH==1}}" class="text-black margin-right-xxs" style="font-weight:normal;font-size:24rpx">[首页推荐]</text> {{item.PRODUCT_TITLE}}
@@ -50,7 +68,7 @@
                         <view class="content">{{item.PRODUCT_ADD_TIME}}</view>
                     </view> 
 
-                    <view class="oprt">
+                    <view wx:if="{{!batchMode}}" class="oprt">
                         <view bindtap="url" data-url="../edit/admin_product_edit?id={{item._id}}" class="btn round margin-right-s"><text class="icon-edit margin-right-xxs"></text>编辑</view> 
 
                         <view bindtap="bindStatusMoreTap" data-id="{{item._id}}" class="btn margin-right-s">状态管理</view>  
