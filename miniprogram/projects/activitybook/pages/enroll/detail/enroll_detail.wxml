@@ -86,6 +86,16 @@
                                         <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
                                     </view>
 
+                                    <!-- 功能点：语音打卡（点击播放/暂停） -->
+                                    <view class="voice-line {{playingVoice==item.ENROLL_JOIN_VOICE.fileID?'playing':''}}" wx:if="{{item.ENROLL_JOIN_VOICE&&item.ENROLL_JOIN_VOICE.fileID}}" bindtap="bindVoiceTap" data-src="{{item.ENROLL_JOIN_VOICE.fileID}}">
+                                        <text class="icon-voice margin-right-xxs"></text>{{playingVoice==item.ENROLL_JOIN_VOICE.fileID?'播放中…':'语音'}} {{item.ENROLL_JOIN_VOICE.duration}}″
+                                    </view>
+
+                                    <!-- 功能点：位置打卡展示 -->
+                                    <view class="addr-line" wx:if="{{item.ENROLL_JOIN_ADDRESS}}">
+                                        <text class="icon-location margin-right-xxs"></text>{{item.ENROLL_JOIN_ADDRESS}}
+                                    </view>
+
 
                                 </view>
 
@@ -118,6 +128,16 @@
 
                                 <view class="album">
                                     <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+                                </view>
+
+                                <!-- 功能点：语音打卡（点击播放/暂停） -->
+                                <view class="voice-line {{playingVoice==item.ENROLL_JOIN_VOICE.fileID?'playing':''}}" wx:if="{{item.ENROLL_JOIN_VOICE&&item.ENROLL_JOIN_VOICE.fileID}}" bindtap="bindVoiceTap" data-src="{{item.ENROLL_JOIN_VOICE.fileID}}">
+                                    <text class="icon-voice margin-right-xxs"></text>{{playingVoice==item.ENROLL_JOIN_VOICE.fileID?'播放中…':'语音'}} {{item.ENROLL_JOIN_VOICE.duration}}″
+                                </view>
+
+                                <!-- 功能点：位置打卡展示 -->
+                                <view class="addr-line" wx:if="{{item.ENROLL_JOIN_ADDRESS}}">
+                                    <text class="icon-location margin-right-xxs"></text>{{item.ENROLL_JOIN_ADDRESS}}
                                 </view>
 
 

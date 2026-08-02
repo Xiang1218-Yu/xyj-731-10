@@ -36,6 +36,7 @@
         "projects/activitybook/pages/activity/my_join_self/activity_my_join_self",
         "projects/activitybook/pages/activity/calendar/activity_calendar",
         "projects/activitybook/pages/activity/join_list/activity_join_list",
+        "projects/activitybook/pages/activity/poster/activity_poster",
         "projects/activitybook/pages/admin/activity/join_list/admin_activity_join_list",
         "projects/activitybook/pages/admin/activity/self/admin_activity_self",
         "projects/activitybook/pages/admin/activity/export/admin_activity_export",

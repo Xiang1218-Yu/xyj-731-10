@@ -27,7 +27,7 @@ class ActivityService extends BaseProjectService {
 			return '报名结束';
 		else if (activity.ACTIVITY_MAX_CNT > 0
 			&& activity.ACTIVITY_JOIN_CNT >= activity.ACTIVITY_MAX_CNT)
-			return '报名已满';
+			return '名额已满'; // 达到人数上限自动截止报名，前端报名按钮置灰展示
 		else
 			return '报名中';
 	}

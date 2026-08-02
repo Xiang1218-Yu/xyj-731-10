@@ -10,6 +10,8 @@
 	<view class="picker-set text-cut" bindtap="bindEditTap" data-edit="{{item.edit}}" data-idx="{{index}}">
 	 
 		<text wx:if="{{item.type=='text'}}">单行文本，</text>
+		<text wx:elif="{{item.type=='radio'}}">单选按钮，</text>
+		<text wx:elif="{{item.type=='number'}}">数字，</text>
 		<text wx:elif="{{item.type=='date'}}">日期，</text>
 		<text wx:elif="{{item.type=='hourminute'}}">时间点，</text>
 		<text wx:elif="{{item.type=='select'}}">单项选择，</text>

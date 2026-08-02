@@ -26,6 +26,9 @@ UserModel.DB_STRUCTURE = {
 	USER_FORMS: 'array|true|default=[]',
 	USER_OBJ: 'object|true|default={}',
 
+	USER_TAGS: 'array|true|default=[]|comment=用户标签名数组（见下方预置标签 TAGS，也支持自定义标签）',
+	USER_GROUP: 'string|false|comment=用户分组名（见下方预置分组 GROUPS）',
+
 	USER_LOGIN_CNT: 'int|true|default=0|comment=登陆次数',
 	USER_LOGIN_TIME: 'int|false|comment=最近登录时间',
 
@@ -56,6 +59,18 @@ UserModel.STATUS_DESC = {
 	UNCHECK: '未通过审核',
 	FORBID: '禁用'
 };
+
+/**
+ * 预置用户标签（后台打标签弹窗可勾选，同时支持输入自定义标签）
+ * 如：活跃用户、资深书友、新用户、核心成员、志愿者
+ */
+UserModel.TAGS = ['活跃用户', '资深书友', '新用户', '核心成员', '志愿者'];
+
+/**
+ * 预置用户分组（后台设分组弹窗单选）
+ * 如：读书会一组、读书会二组、读书会三组
+ */
+UserModel.GROUPS = ['读书会一组', '读书会二组', '读书会三组'];
 
 
 module.exports = UserModel;

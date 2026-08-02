@@ -25,7 +25,13 @@ EnrollJoinModel.DB_STRUCTURE = {
 	ENROLL_JOIN_FORMS: 'array|true|default=[]|comment=表单',
 	ENROLL_JOIN_OBJ: 'object|true|default={}',
 
-	ENROLL_JOIN_STATUS: 'int|true|default=1|comment=状态 1=成功', 
+	// 功能点：多媒体打卡（图片/语音/位置）
+	ENROLL_JOIN_IMG: 'array|false|comment=打卡图片(云存储fileID数组)',
+	ENROLL_JOIN_VOICE: 'object|false|comment=打卡语音{fileID:云存储ID,duration:时长秒}',
+	ENROLL_JOIN_ADDRESS: 'string|false|comment=打卡位置文字',
+	ENROLL_JOIN_ADDRESS_GEO: 'object|false|comment=打卡位置经纬度{latitude,longitude,name,address}',
+
+	ENROLL_JOIN_STATUS: 'int|true|default=1|comment=状态 1=成功',
 
 	ENROLL_JOIN_ADD_TIME: 'int|true',
 	ENROLL_JOIN_EDIT_TIME: 'int|true',

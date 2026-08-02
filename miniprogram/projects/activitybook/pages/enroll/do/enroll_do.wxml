@@ -6,6 +6,34 @@
 		</cmpt-form-show>
 	</view>
 
+	<!-- 功能点：多媒体打卡（语音 + 位置），图片由上方表单内图片上传组件完成 -->
+	<view class="form-box shadow margin-top-xs media-box">
+		<!-- 语音打卡（最长60秒） -->
+		<view class="media-item">
+			<view class="media-title">语音打卡<text class="media-tip">（最长{{maxSecond}}秒，选填）</text></view>
+			<view wx:if="{{!voice}}" class="voice-btn {{voiceRecording?'recording':''}}" bindtap="bindVoiceToggleTap">
+				<text class="icon-record margin-right-xxs"></text>{{voiceRecording?'正在录音 '+voiceSecond+'s / '+maxSecond+'s，点击结束':'点击开始录音'}}
+			</view>
+			<view wx:else class="voice-done">
+				<view class="voice-chip {{voicePlaying?'playing':''}}" bindtap="bindVoicePlayTap">
+					<text class="icon-voice margin-right-xxs"></text>{{voicePlaying?'播放中…':'语音'}} {{voice.duration}}″
+				</view>
+				<text class="icon-close voice-del" bindtap="bindVoiceDelTap"></text>
+			</view>
+		</view>
+
+		<!-- 位置打卡 -->
+		<view class="media-item">
+			<view class="media-title">位置打卡<text class="media-tip">（选填）</text></view>
+			<view class="addr-box" bindtap="bindChooseLocationTap">
+				<text class="icon-location margin-right-xxs"></text>
+				<text wx:if="{{!address}}" class="addr-hint">点击获取当前位置</text>
+				<text wx:else class="addr-text text-cut">{{address}}</text>
+				<text wx:if="{{address}}" class="icon-close addr-del" catchtap="bindLocationDelTap"></text>
+			</view>
+		</view>
+	</view>
+
 
 	<button bindtap="bindFormSubmit" class="btn-base btn-project">提交</button>
 </view>

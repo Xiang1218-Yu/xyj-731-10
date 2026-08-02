@@ -65,6 +65,48 @@ class AdminProductController extends BaseProjectAdminController {
 
 	}
 
+	/** 批量删除 */
+	async batchDelProduct() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=书单',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminProductService();
+		let result = await service.batchDelProduct(input.ids);
+
+		this.logOther('批量删除了「' + input.ids.length + '」个书单');
+
+		return result;
+	}
+
+	/** 批量状态修改（上架/下架） */
+	async batchStatusProduct() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=书单',
+			status: 'must|int|name=状态',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminProductService();
+		let result = await service.batchStatusProduct(input.ids, input.status);
+
+		let statusDesc = (input.status == ProductModel.STATUS.COMM) ? '上架' : '下架';
+		this.logOther('批量' + statusDesc + '了「' + input.ids.length + '」个书单');
+
+		return result;
+	}
+
 	/** 列表 */
 	async getAdminProductList() {
 		await this.isAdmin();

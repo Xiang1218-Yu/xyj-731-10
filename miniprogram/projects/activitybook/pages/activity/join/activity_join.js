@@ -2,6 +2,7 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
+const projectSetting = require('../../../public/project_setting.js');
 
 Page({
 	/**
@@ -104,6 +105,16 @@ Page({
 	},
 
 	bindCheckTap: async function (e) {
+		// 订阅报名审核结果通知（配置模板ID后才弹出授权，用户拒绝也不影响报名）
+		let tid = projectSetting.ACTIVITY_JOIN_NOTICE_TID;
+		if (tid) {
+			 wx.requestSubscribeMessage({
+				tmplIds: [tid],
+				success(res) { console.log('订阅审核结果通知', res); },
+				fail(err) { console.log('订阅审核结果通知失败', err); }
+			});
+		}
+
 		this.selectComponent("#form-show").checkForms();
 	},
 

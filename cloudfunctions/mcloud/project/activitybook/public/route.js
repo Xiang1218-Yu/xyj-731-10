@@ -16,6 +16,9 @@ module.exports = {
 	'passport/register': 'passport_controller@register',
 	'passport/edit_base': 'passport_controller@editBase',
 
+	// 我的（功能点：我的数据统计）
+	'my/data_stat': 'my_controller@getMyDataStat',
+
 	// 收藏
 	'fav/update': 'fav_controller@updateFav',
 	'fav/del': 'fav_controller@delFav',
@@ -45,6 +48,10 @@ module.exports = {
 	'admin/user_detail': 'admin/admin_user_controller@getUserDetail',
 	'admin/user_del': 'admin/admin_user_controller@delUser#demo',
 	'admin/user_status': 'admin/admin_user_controller@statusUser#demo',
+	'admin/user_batch_del': 'admin/admin_user_controller@batchDelUser#demo', // 批量删除用户
+	'admin/user_batch_status': 'admin/admin_user_controller@batchStatusUser#demo', // 批量设置用户状态
+	'admin/user_tag': 'admin/admin_user_controller@setUserTag#demo', // 设置用户标签（单个/批量）
+	'admin/user_group': 'admin/admin_user_controller@setUserGroup#demo', // 设置用户分组（单个/批量）
 
 	'admin/user_data_get': 'admin/admin_user_controller@userDataGet',
 	'admin/user_data_export': 'admin/admin_user_controller@userDataExport',
@@ -63,6 +70,8 @@ module.exports = {
 	'admin/product_sort': 'admin/admin_product_controller@sortProduct#demo',
 	'admin/product_vouch': 'admin/admin_product_controller@vouchProduct#demo',
 	'admin/product_status': 'admin/admin_product_controller@statusProduct#demo',
+	'admin/product_batch_del': 'admin/admin_product_controller@batchDelProduct#demo', // 批量删除书单
+	'admin/product_batch_status': 'admin/admin_product_controller@batchStatusProduct#demo', // 批量上下架书单
 
 
 
@@ -131,19 +140,23 @@ module.exports = {
 	'activity/my_join_self': 'activity_controller@myJoinSelf',
 
 	'admin/activity_list': 'admin/admin_activity_controller@getAdminActivityList',
-	'admin/activity_insert': 'admin/admin_activity_controller@insertActivity#demo',
+	'admin/activity_insert': 'admin/admin_activity_controller@insertActivity',
 	'admin/activity_detail': 'admin/admin_activity_controller@getActivityDetail',
-	'admin/activity_edit': 'admin/admin_activity_controller@editActivity#demo',
-	'admin/activity_update_forms': 'admin/admin_activity_controller@updateActivityForms#demo',
-	'admin/activity_clear': 'admin/admin_activity_controller@clearActivityAll#demo',
-	'admin/activity_del': 'admin/admin_activity_controller@delActivity#demo',
-	'admin/activity_sort': 'admin/admin_activity_controller@sortActivity#demo',
-	'admin/activity_vouch': 'admin/admin_activity_controller@vouchActivity#demo',
-	'admin/activity_status': 'admin/admin_activity_controller@statusActivity#demo',
+	'admin/activity_edit': 'admin/admin_activity_controller@editActivity',
+	'admin/activity_update_forms': 'admin/admin_activity_controller@updateActivityForms',
+	'admin/activity_clear': 'admin/admin_activity_controller@clearActivityAll',
+	'admin/activity_del': 'admin/admin_activity_controller@delActivity',
+	'admin/activity_sort': 'admin/admin_activity_controller@sortActivity',
+	'admin/activity_vouch': 'admin/admin_activity_controller@vouchActivity',
+	'admin/activity_status': 'admin/admin_activity_controller@statusActivity',
+	'admin/activity_batch_del': 'admin/admin_activity_controller@batchDelActivity', // 批量删除活动
+	'admin/activity_batch_status': 'admin/admin_activity_controller@batchStatusActivity', // 批量设置活动状态
 	'admin/activity_join_list': 'admin/admin_activity_controller@getActivityJoinList',
-	'admin/activity_join_status': 'admin/admin_activity_controller@statusActivityJoin#demo',
-	'admin/activity_cancel_join_all': 'admin/admin_activity_controller@cancelActivityJoinAll#demo',
-	'admin/activity_join_del': 'admin/admin_activity_controller@delActivityJoin#demo',
+	'admin/activity_join_status': 'admin/admin_activity_controller@statusActivityJoin',
+	'admin/activity_cancel_join_all': 'admin/admin_activity_controller@cancelActivityJoinAll',
+	'admin/activity_join_del': 'admin/admin_activity_controller@delActivityJoin',
+	'admin/activity_join_batch_status': 'admin/admin_activity_controller@batchStatusActivityJoin', // 批量审核报名
+	'admin/activity_join_batch_del': 'admin/admin_activity_controller@batchDelActivityJoin', // 批量删除报名记录
 	'admin/activity_join_scan': 'admin/admin_activity_controller@scanActivityJoin',
 	'admin/activity_join_checkin': 'admin/admin_activity_controller@checkinActivityJoin',
 	'admin/activity_self_checkin_qr': 'admin/admin_activity_controller@genActivitySelfCheckinQr',
