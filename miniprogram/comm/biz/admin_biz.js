@@ -114,6 +114,24 @@ class AdminBiz extends BaseBiz {
 
 		if (setting.IS_SUB) wx.hideHomeButton();
 
+		// 免登录模式（开发测试使用）
+		if (setting.ADMIN_NO_LOGIN) {
+			let admin = cacheHelper.get(constants.CACHE_ADMIN);
+			if (!admin) {
+				// 构造一个超级管理员token写入缓存
+				admin = {
+					name: 'admin',
+					type: 1 // 超级管理员
+				};
+				cacheHelper.set(constants.CACHE_ADMIN, admin, constants.ADMIN_TOKEN_EXPIRE);
+			}
+			that.setData({
+				isAdmin: true,
+				isSuperAdmin: true
+			});
+			return true;
+		}
+
 		let admin = cacheHelper.get(constants.CACHE_ADMIN);
 		if (!admin) {
 			return wx.showModal({
