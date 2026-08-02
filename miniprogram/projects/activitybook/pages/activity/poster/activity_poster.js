@@ -64,9 +64,12 @@ Page({
 			return;
 		}
 
+		// 数据就绪后再初始化画布（canvas 在 wx:if="{{isLoad}}" 内，setData 回调中节点已渲染）
 		this.setData({
 			isLoad: true,
 			activity,
+		}, () => {
+			this._initCanvas();
 		});
 
 		this._tryDraw();
@@ -76,6 +79,7 @@ Page({
 	 * 生命周期函数--监听页面初次渲染完成
 	 */
 	onReady: function () {
+		// 兜底初始化（此时若数据未加载，canvas 节点可能尚未渲染，查询不到则静默返回，等待数据加载后再次初始化）
 		this._initCanvas();
 	},
 
@@ -83,9 +87,12 @@ Page({
 	 * 初始化 canvas 2d 画布
 	 */
 	_initCanvas: function () {
+		if (this._canvasReady) return; // 已初始化过则无须重复
+
 		wx.createSelectorQuery().select('#posterCanvas')
 			.fields({ node: true, size: true })
 			.exec((res) => {
+				// 节点尚未渲染（isLoad 为 false）时静默返回，等待数据加载完成后重新初始化
 				if (!res || !res[0] || !res[0].node) return;
 				let canvas = res[0].node;
 				let ctx = canvas.getContext('2d');
@@ -112,7 +119,12 @@ Page({
 	_tryDraw: async function () {
 		if (!this._canvasReady || !this.data.isLoad || this._preparing || this._prepared) return;
 		this._preparing = true;
-		await this._prepareResource();
+		try {
+			await this._prepareResource();
+		} catch (err) {
+			// 素材准备异常不阻塞绘制（封面/小程序码均有兜底绘制逻辑）
+			console.error('海报素材准备异常', err);
+		}
 		this._preparing = false;
 		this._prepared = true;
 		this._drawPoster();
@@ -124,12 +136,17 @@ Page({
 	_prepareResource: async function () {
 		let activity = this.data.activity;
 
-		// 封面图：云文件 fileID 需先转成临时链接，再下载为本地临时文件绘制
-		let cover = (activity.ACTIVITY_OBJ && activity.ACTIVITY_OBJ.cover) ? activity.ACTIVITY_OBJ.cover[0] : '';
-		if (cover && cover.startsWith('cloud'))
-			cover = await cloudHelper.getTempFileURLOne(cover);
-		cover = await this._getLocalImage(cover);
-		this._coverImg = cover ? await this._loadCanvasImage(cover) : null;
+		// 封面图：云文件 fileID 需先转成临时链接，再下载为本地临时文件绘制（独立容错，失败不阻塞小程序码准备）
+		try {
+			let cover = (activity.ACTIVITY_OBJ && activity.ACTIVITY_OBJ.cover) ? activity.ACTIVITY_OBJ.cover[0] : '';
+			if (cover && cover.startsWith('cloud'))
+				cover = await cloudHelper.getTempFileURLOne(cover);
+			cover = await this._getLocalImage(cover);
+			this._coverImg = cover ? await this._loadCanvasImage(cover) : null;
+		} catch (err) {
+			console.error('封面图准备失败', err);
+			this._coverImg = null; // 兜底：绘制占位色块
+		}
 
 		// 小程序码：优先使用活动自带的小程序码（ACTIVITY_QR）；无则调云端接口实时生成真实小程序码
 		let qr = activity.ACTIVITY_QR || '';
@@ -141,8 +158,14 @@ Page({
 				console.error('生成活动小程序码失败', err);
 			}
 		}
-		if (qr && qr.startsWith('cloud'))
-			qr = await cloudHelper.getTempFileURLOne(qr);
+		if (qr && qr.startsWith('cloud')) {
+			try {
+				qr = await cloudHelper.getTempFileURLOne(qr);
+			} catch (err) {
+				console.error('小程序码转临时链接失败', err);
+				qr = '';
+			}
+		}
 		qr = await this._getLocalImage(qr);
 		if (qr) {
 			this._qrImg = await this._loadCanvasImage(qr);
