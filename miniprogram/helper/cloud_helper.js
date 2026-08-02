@@ -130,14 +130,20 @@ function callCloud(route, params = {}, options) {
 					reject(res.result);
 					return;
 				} else if (res.result.code == CODE.ADMIN_ERROR) {
-					// 后台登录错误
-					wx.reLaunch({
-						url: pageHelper.fmtURLByPID('/pages/admin/index/login/admin_login'),
-					});
-					//reject(res.result);
+				// 后台登录错误
+				if (setting.ADMIN_NO_LOGIN) {
+					// 免登录模式下不跳转，避免死循环，只提示错误
+					console.error('[ADMIN_ERROR]', res.result.msg);
+					reject(res.result);
 					return;
+				}
+				wx.reLaunch({
+					url: pageHelper.fmtURLByPID('/pages/admin/index/login/admin_login'),
+				});
+				//reject(res.result);
+				return;
 
-				} else if (res.result.code == CODE.WORK_ERROR) {
+			} else if (res.result.code == CODE.WORK_ERROR) {
 					// 服务者登录错误
 					wx.reLaunch({
 						url: pageHelper.fmtURLByPID('/pages/work/index/login/work_login'),
