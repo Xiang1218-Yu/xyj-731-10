@@ -117,7 +117,7 @@ class AdminBiz extends BaseBiz {
 		// 免登录模式（开发测试使用）
 		if (setting.ADMIN_NO_LOGIN) {
 			let admin = cacheHelper.get(constants.CACHE_ADMIN);
-			if (!admin) {
+			if (!admin || !admin.token) {
 				// 构造一个超级管理员token写入缓存
 				admin = {
 					name: 'admin',
