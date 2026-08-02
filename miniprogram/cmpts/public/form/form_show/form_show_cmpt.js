@@ -566,10 +566,29 @@ Component({
 		},
 
 		/**
+		 * 删除云存储中的语音文件
+		 */
+		_deleteCloudVoice: function (fileID) {
+			if (!fileID || typeof fileID !== 'string' || !fileID.startsWith('cloud://')) return;
+			wx.cloud.deleteFile({
+				fileList: [fileID],
+				fail(err) {
+					console.warn('语音文件删除失败', err);
+				}
+			});
+		},
+
+		/**
 		 * 上传语音文件到云存储
 		 */
 		_uploadVoice: async function (filePath, idx) {
 			let that = this;
+
+			// 如果已有语音文件，先删除旧文件
+			let oldVal = this.data.forms[idx] ? this.data.forms[idx].val : '';
+			if (oldVal && oldVal.startsWith('cloud://')) {
+				this._deleteCloudVoice(oldVal);
+			}
 
 			// 获取文件扩展名
 			let ext = '.mp3';
@@ -716,6 +735,18 @@ Component({
 			let idx = pageHelper.dataset(e, 'idx');
 			let that = this;
 			pageHelper.showConfirm('确定要删除该语音吗？', function () {
+				// 删除云端文件
+				let val = that.data.forms[idx] ? that.data.forms[idx].val : '';
+				if (val && val.startsWith('cloud://')) {
+					that._deleteCloudVoice(val);
+				}
+				// 停止播放
+				if (that._isPlaying && that._playingIdx === idx) {
+					if (that._audioCtx) that._audioCtx.stop();
+					that._isPlaying = false;
+					that._playingIdx = -1;
+					that.setData({ voicePlayingIdx: -1 });
+				}
 				that._setForm(idx, '');
 			});
 		},

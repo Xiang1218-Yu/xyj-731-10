@@ -34,8 +34,20 @@ class AdminProductService extends BaseProjectAdminService {
 
 	/**删除数据 */
 	async delProduct(id) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		// 先获取产品信息
+		let product = await ProductModel.getOne(id, 'PRODUCT_FORMS,PRODUCT_QR');
+		if (!product) return;
 
+		// 删除产品表单图片
+		await cloudUtil.handlerCloudFilesForForms(product.PRODUCT_FORMS, []);
+
+		// 删除二维码
+		if (product.PRODUCT_QR) {
+			await cloudUtil.deleteFiles(product.PRODUCT_QR);
+		}
+
+		// 删除产品
+		await ProductModel.del(id);
 	}
 
 	/**获取信息 */
@@ -133,7 +145,22 @@ class AdminProductService extends BaseProjectAdminService {
 
 	/**修改状态 */
 	async statusProduct(id, status) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let data = { PRODUCT_STATUS: Number(status) };
+		await ProductModel.edit(id, data);
+	}
+
+	/**批量修改产品状态 */
+	async batchStatusProduct(ids, status) {
+		for (let k = 0; k < ids.length; k++) {
+			await this.statusProduct(ids[k], status);
+		}
+	}
+
+	/**批量删除产品 */
+	async batchDelProduct(ids) {
+		for (let k = 0; k < ids.length; k++) {
+			await this.delProduct(ids[k]);
+		}
 	}
 
 	/**置顶与排序设定 */

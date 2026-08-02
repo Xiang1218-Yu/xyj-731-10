@@ -5,3 +5,72 @@ page {
 	background-color: #f8f8f8;
 }
 
+/* 批量操作样式 begin */
+.batch-item {
+	padding-left: 70rpx !important;
+}
+
+.batch-check {
+	position: absolute;
+	left: 15rpx;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 10;
+}
+
+.checkbox {
+	width: 40rpx;
+	height: 40rpx;
+	border: 2rpx solid #ccc;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background-color: #fff;
+	font-size: 28rpx;
+	color: #fff;
+}
+
+.checkbox.checked {
+	background-color: #2499f2;
+	border-color: #2499f2;
+}
+
+.batch-bar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 100rpx;
+	background-color: #fff;
+	border-top: 1rpx solid #eee;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 20rpx;
+	z-index: 999;
+	box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.batch-bar-left {
+	display: flex;
+	align-items: center;
+	font-size: 28rpx;
+	color: #333;
+}
+
+.batch-bar-right {
+	display: flex;
+	align-items: center;
+}
+
+.batch-btn {
+	padding: 0 24rpx !important;
+	height: 64rpx !important;
+	line-height: 64rpx !important;
+	font-size: 26rpx !important;
+	margin-left: 15rpx !important;
+	border-radius: 8rpx !important;
+}
+/* 批量操作样式 end */
+

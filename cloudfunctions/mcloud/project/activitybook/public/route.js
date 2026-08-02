@@ -75,6 +75,9 @@ module.exports = {
 	'admin/product_vouch': 'admin/admin_product_controller@vouchProduct#demo',
 	'admin/product_status': 'admin/admin_product_controller@statusProduct#demo',
 
+	'admin/product_batch_status': 'admin/admin_product_controller@batchStatusProduct',
+	'admin/product_batch_del': 'admin/admin_product_controller@batchDelProduct',
+
 
 
 	// 打卡

@@ -86,6 +86,21 @@
                                         <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
                                     </view>
 
+                                    <!-- 语音播放条 -->
+                                    <view wx:if="{{item.ENROLL_JOIN_OBJ.voice}}" class="join-voice-bar" bindtap="bindVoicePlay" data-key="activity-{{index}}" data-voice="{{item.ENROLL_JOIN_OBJ.voice}}">
+                                        <text class="join-voice-icon">{{voicePlayingKey=='activity-'+index?'⏸':'▶'}}</text>
+                                        <text class="join-voice-text">语音消息</text>
+                                    </view>
+
+                                    <!-- 位置卡片 -->
+                                    <view wx:if="{{item.ENROLL_JOIN_OBJ.location}}" class="join-location-card" bindtap="bindLocationOpen" data-location="{{item.ENROLL_JOIN_OBJ.location}}">
+                                        <text class="join-location-icon">📍</text>
+                                        <view class="join-location-info">
+                                            <view class="join-location-name">{{item.ENROLL_JOIN_OBJ.location.name}}</view>
+                                            <view class="join-location-address">{{item.ENROLL_JOIN_OBJ.location.address}}</view>
+                                        </view>
+                                    </view>
+
 
                                 </view>
 
@@ -118,6 +133,21 @@
 
                                 <view class="album">
                                     <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+                                </view>
+
+                                <!-- 语音播放条 -->
+                                <view wx:if="{{item.ENROLL_JOIN_OBJ.voice}}" class="join-voice-bar" bindtap="bindVoicePlay" data-key="my-{{index}}" data-voice="{{item.ENROLL_JOIN_OBJ.voice}}">
+                                    <text class="join-voice-icon">{{voicePlayingKey=='my-'+index?'⏸':'▶'}}</text>
+                                    <text class="join-voice-text">语音消息</text>
+                                </view>
+
+                                <!-- 位置卡片 -->
+                                <view wx:if="{{item.ENROLL_JOIN_OBJ.location}}" class="join-location-card" bindtap="bindLocationOpen" data-location="{{item.ENROLL_JOIN_OBJ.location}}">
+                                    <text class="join-location-icon">📍</text>
+                                    <view class="join-location-info">
+                                        <view class="join-location-name">{{item.ENROLL_JOIN_OBJ.location.name}}</view>
+                                        <view class="join-location-address">{{item.ENROLL_JOIN_OBJ.location.address}}</view>
+                                    </view>
                                 </view>
 
 

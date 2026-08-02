@@ -60,10 +60,10 @@ class MultiModel extends Model {
 		if (!forms) return;
 
 
-		// 赋值
+		// 赋值（支持image、content、voice类型的表单字段更新）
 		for (let k = 0; k < hasImageForms.length; k++) {
 			for (let j in forms) {
-				if ((forms[j].type == 'image' || forms[j].type == 'content')
+				if ((forms[j].type == 'image' || forms[j].type == 'content' || forms[j].type == 'voice')
 					&& forms[j].mark == hasImageForms[k].mark
 					&& forms[j].type == hasImageForms[k].type) {
 					forms[j].val = hasImageForms[k].val;

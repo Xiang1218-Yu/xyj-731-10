@@ -219,6 +219,39 @@ class AdminProductController extends BaseProjectAdminController {
 		return await service.updateProductForms(input);
 	}
 
+	/** 批量修改产品状态 */
+	async batchStatusProduct() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminProductService();
+		return await service.batchStatusProduct(input.ids, input.status);
+	}
+
+	/** 批量删除产品 */
+	async batchDelProduct() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminProductService();
+		return await service.batchDelProduct(input.ids);
+	}
+
 }
 
 module.exports = AdminProductController;
