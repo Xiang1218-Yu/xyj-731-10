@@ -82,6 +82,7 @@ Component({
 	 */
 	methods: {
 		_fmtTime: function (str) {
+			if (!str) return '00';
 			str = str.replace(/[^0-9]/ig, '');
 			str = parseInt(str);
 			return str < 10 ? '0' + str : '' + str;

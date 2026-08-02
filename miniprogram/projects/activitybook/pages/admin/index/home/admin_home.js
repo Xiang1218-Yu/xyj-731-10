@@ -29,6 +29,7 @@ Page({
 	_loadDetail: async function () {
 
 		let admin = AdminBiz.getAdminToken();
+		console.log('[admin_home] admin token:', admin ? admin.token : 'null');
 		this.setData({
 			isLoad: true,
 			admin
