@@ -19,6 +19,11 @@ module.exports = {
 	// 我的（功能点：我的数据统计）
 	'my/data_stat': 'my_controller@getMyDataStat',
 
+	// 我的（功能点：站内通知中心）
+	'my/notice_list': 'my_controller@getMyNoticeList', // 我的通知列表
+	'my/notice_cnt': 'my_controller@getMyNoticeCnt', // 我的未读通知数
+	'my/notice_read': 'my_controller@readMyNotice', // 标记通知已读
+
 	// 收藏
 	'fav/update': 'fav_controller@updateFav',
 	'fav/del': 'fav_controller@delFav',
@@ -138,6 +143,7 @@ module.exports = {
 	'activity/my_join_detail': 'activity_controller@getMyActivityJoinDetail',
 	'activity/my_join_someday': 'activity_controller@getMyActivityJoinSomeday',
 	'activity/my_join_self': 'activity_controller@myJoinSelf',
+	'activity/qr': 'activity_controller@getActivityQr', // 活动海报：获取（如无则生成）活动小程序码
 
 	'admin/activity_list': 'admin/admin_activity_controller@getAdminActivityList',
 	'admin/activity_insert': 'admin/admin_activity_controller@insertActivity',

@@ -17,7 +17,8 @@ Page({
     data: {
         isLoad: false,
 
-        // 功能点：多媒体打卡（语音/位置）
+        // 功能点：多媒体打卡（图片/语音/位置）
+        imgList: [], // 独立图片打卡UI选择的本地图片路径数组
         maxSecond: VOICE_MAX_SECOND, // 语音最长秒数
         voiceRecording: false, // 是否正在录音
         voiceSecond: 0, // 已录音秒数
@@ -44,6 +45,13 @@ Page({
 
         // 功能点：初始化录音管理器（语音打卡）
         this._initRecorder();
+    },
+
+    // 功能点：图片打卡 —— 独立图片上传组件选择回调（本地路径，提交时统一上传云存储）
+    bindImgUploadCmpt: function (e) {
+        this.setData({
+            imgList: e.detail || []
+        });
     },
 
 
@@ -225,6 +233,15 @@ Page({
         if (!forms) return;
         data.forms = forms;
         data.enrollId = this.data.id;
+
+        // 功能点：图片打卡 —— 提交前先将独立图片UI的图片上传至云存储
+        let img = [];
+        if (this.data.imgList && this.data.imgList.length) {
+            img = await cloudHelper.transTempPics(this.data.imgList, 'enroll/join/', '', 'image');
+            if (!img || !img.length)
+                return pageHelper.showNoneToast('图片上传失败，请重试');
+        }
+        data.img = img;
 
         // 功能点：语音打卡 —— 提交前先将语音文件上传至云存储
         let voice = {};

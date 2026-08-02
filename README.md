@@ -23,14 +23,15 @@
 
 ## 2. 多媒体打卡（图片 / 语音 / 位置）
 - 打卡从纯文字扩展为支持：多图上传（云存储）、语音录制（`wx.getRecorderManager`，限 60 秒，可试听）、位置打卡（`wx.chooseLocation`，保存地址与经纬度）。
+- 打卡发布页提供独立的多媒体打卡区域：图片打卡（独立图片上传组件，最多 9 张，不依赖表单图片字段）、语音打卡、位置打卡。
 - 打卡动态列表、打卡详情、我的打卡记录均支持图片预览、语音播放/暂停（`wx.createInnerAudioContext`）、位置展示。
 - 关键代码：`miniprogram/projects/activitybook/pages/enroll/do/enroll_do.js`、`cloudfunctions/mcloud/project/activitybook/model/enroll_join_model.js`（新增 `ENROLL_JOIN_IMG / ENROLL_JOIN_VOICE / ENROLL_JOIN_ADDRESS / ENROLL_JOIN_ADDRESS_GEO`）。
 
 ## 3. 报名审核状态流转与通知
 - 组织者可设置报名方式（直接通过 / 需审核，`ACTIVITY_CHECK_SET`）与人数上限（`ACTIVITY_MAX_CNT`，0 为不限；达到上限自动截止，报名按钮置灰提示"名额已满"）。
 - 后台报名名单页提供"待审核"筛选，显示申请人信息及自定义字段，支持单个/批量"通过""拒绝"（拒绝可填理由）。
-- 审核结果通过订阅消息通知申请人（模板 ID 配置于 `project_config.js` / `project_setting.js` 的 `ACTIVITY_JOIN_NOTICE_TID`，未配置则静默跳过）；用户端"我的报名"列表/详情展示待审核 / 成功（含核验码）/ 未通过（含理由）状态。
-- 关键代码：`cloudfunctions/mcloud/project/activitybook/service/admin/admin_activity_service.js`（`statusActivityJoin`、`sendActivityJoinNotice`）、`miniprogram/projects/activitybook/pages/admin/activity/join_list/`。
+- 双通道审核结果通知：① 站内通知中心（notice 集合，审核通过/拒绝后自动写入，"我的"页面"我的通知"入口带未读角标，点击直达报名详情）；② 订阅消息（模板 ID 配置于 `project_config.js` / `project_setting.js` 的 `ACTIVITY_JOIN_NOTICE_TID`，未配置则静默跳过）。
+- 关键代码：`cloudfunctions/mcloud/project/activitybook/service/admin/admin_activity_service.js`（`statusActivityJoin`、`insertActivityJoinNotice`、`sendActivityJoinNotice`）、`cloudfunctions/mcloud/project/activitybook/model/notice_model.js`、`miniprogram/projects/activitybook/pages/my/notice/my_notice.js`、`miniprogram/projects/activitybook/pages/admin/activity/join_list/`。
 
 ## 4. "我的"页面可视化数据统计卡片
 - 我的页面新增"我的数据统计"卡片：报名次数、参与次数、打卡次数、打卡天数、收藏数等关键指标。
@@ -47,6 +48,7 @@
 ## 6. 活动海报一键生成
 - 活动详情页新增"生成海报"入口，进入海报页后基于活动信息（标题、时间、地点、名额、小程序码）一键生成可分享的活动海报图片。
 - 提供 3 套海报模版（明亮黄 / 墨绿 / 藏青），切换模版实时预览重绘。
+- 海报数据全部动态获取：活动信息取自 `activity/view` 接口；小程序码优先使用活动自带 `ACTIVITY_QR`，缺失时调用 `activity/qr` 接口实时生成真实小程序码并回写活动。
 - 支持保存到相册（授权被拒时引导开启）；封面云图片自动转临时链接绘制。
 - 关键代码：`miniprogram/projects/activitybook/pages/activity/poster/activity_poster.js`。
 

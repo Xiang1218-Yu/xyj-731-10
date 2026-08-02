@@ -9,6 +9,7 @@ const timeUtil = require('../../../framework/utils/time_util.js');
 const ActivityJoinModel = require('../model/activity_join_model.js');
 const EnrollJoinModel = require('../model/enroll_join_model.js');
 const FavModel = require('../model/fav_model.js');
+const NoticeModel = require('../model/notice_model.js');
 
 class MyService extends BaseProjectService {
 
@@ -68,6 +69,57 @@ class MyService extends BaseProjectService {
 			favCnt,
 			weekList
 		};
+	}
+
+	/** 我的站内通知列表（功能点：站内通知中心，分页按时间倒序） */
+	async getMyNoticeList(userId, {
+		search, // 搜索条件
+		sortType, // 搜索菜单
+		sortVal, // 搜索菜单
+		orderBy, // 排序
+		page,
+		size,
+		isTotal = true,
+		oldTotal = 0
+	}) {
+		orderBy = orderBy || {
+			'NOTICE_ADD_TIME': 'desc'
+		};
+		let fields = 'NOTICE_TYPE,NOTICE_TITLE,NOTICE_DESC,NOTICE_ACTIVITY_ID,NOTICE_JOIN_ID,NOTICE_READ,NOTICE_ADD_TIME';
+
+		let where = {
+			NOTICE_USER_ID: userId // 仅查询本人的通知
+		};
+
+		return await NoticeModel.getList(where, fields, orderBy, page, size, isTotal, oldTotal);
+	}
+
+	/** 我的未读通知数（功能点：我的页面通知入口角标） */
+	async getMyNoticeCnt(userId) {
+		let cnt = await NoticeModel.count({
+			NOTICE_USER_ID: userId,
+			NOTICE_READ: NoticeModel.READ.UNREAD
+		});
+
+		return {
+			cnt
+		};
+	}
+
+	/** 标记某条通知已读（仅能操作本人的通知） */
+	async readMyNotice(userId, noticeId) {
+		let notice = await NoticeModel.getOne(noticeId);
+		if (!notice) this.AppError('该通知不存在');
+
+		// 仅允许标记自己的通知
+		if (notice.NOTICE_USER_ID != userId) this.AppError('无权操作该通知');
+
+		// 已读的无须重复处理
+		if (notice.NOTICE_READ == NoticeModel.READ.READ) return;
+
+		await NoticeModel.edit(noticeId, {
+			NOTICE_READ: NoticeModel.READ.READ
+		});
 	}
 
 }

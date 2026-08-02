@@ -14,6 +14,7 @@ const timeUtil = require('../../../../framework/utils/time_util.js');
 const dataUtil = require('../../../../framework/utils/data_util.js');
 const ActivityModel = require('../../model/activity_model.js');
 const ActivityJoinModel = require('../../model/activity_join_model.js');
+const NoticeModel = require('../../model/notice_model.js');
 const exportUtil = require('../../../../framework/utils/export_util.js');
 const miniLib = require('../../../../framework/lib/mini_lib.js');
 const projectConfig = require('../../public/project_config.js');
@@ -447,6 +448,31 @@ class AdminActivityService extends BaseProjectAdminService {
 
 		// 发送审核结果订阅消息通知
 		await this.sendActivityJoinNotice(activityJoin, activity, status, reason);
+
+		// 写入站内通知（订阅消息模板ID需配置不可靠，站内通知作为可靠兜底）
+		await this.insertActivityJoinNotice(activityJoin, activity, status, reason);
+	}
+
+	/** 写入报名审核结果站内通知（批量审核内部循环调用单个审核，无需重复插入） */
+	async insertActivityJoinNotice(activityJoin, activity, status, reason = '') {
+		// 仅审核通过/拒绝时生成站内通知
+		if (![ActivityJoinModel.STATUS.SUCC, ActivityJoinModel.STATUS.ADMIN_CANCEL].includes(status)) return;
+
+		let title = (status == ActivityJoinModel.STATUS.SUCC) ? '报名审核通过' : '报名审核未通过';
+		let desc = '您报名的活动「' + activity.ACTIVITY_TITLE + '」' + title;
+		if (status == ActivityJoinModel.STATUS.ADMIN_CANCEL && reason)
+			desc += '，原因：' + reason; // 拒绝时附带拒绝理由
+
+		let data = {
+			NOTICE_USER_ID: activityJoin.ACTIVITY_JOIN_USER_ID, // 接收人
+			NOTICE_TYPE: NoticeModel.TYPE.ACTIVITY_JOIN, // 通知类型：报名审核结果
+			NOTICE_TITLE: title,
+			NOTICE_DESC: desc,
+			NOTICE_ACTIVITY_ID: activity._id,
+			NOTICE_JOIN_ID: activityJoin._id,
+			NOTICE_READ: NoticeModel.READ.UNREAD // 默认未读
+		};
+		await NoticeModel.insert(data);
 	}
 
 	/** 发送报名审核结果订阅消息（需在 project_config.js 配置模板ID） */

@@ -6,8 +6,13 @@
 		</cmpt-form-show>
 	</view>
 
-	<!-- 功能点：多媒体打卡（语音 + 位置），图片由上方表单内图片上传组件完成 -->
+	<!-- 功能点：多媒体打卡（图片 + 语音 + 位置），独立的多媒体打卡区域 -->
 	<view class="form-box shadow margin-top-xs media-box">
+		<!-- 图片打卡（独立图片上传，不依赖表单图片字段） -->
+		<view class="media-item">
+			<cmpt-img-upload id="cmpt-img" title="图片打卡（选填，最多9张）" must="{{false}}" isCheck="{{true}}" isShowSize="{{false}}" imgMax="{{9}}" bind:upload="bindImgUploadCmpt" />
+		</view>
+
 		<!-- 语音打卡（最长60秒） -->
 		<view class="media-item">
 			<view class="media-title">语音打卡<text class="media-tip">（最长{{maxSecond}}秒，选填）</text></view>

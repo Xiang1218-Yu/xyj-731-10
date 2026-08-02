@@ -1,0 +1,27 @@
+<block wx:if="{{isLoad}}">
+	<cmpt-comm-list type="my_notice" _menus="{{[]}}" _items="{{[]}}" route="my/notice_list" isTotalMenu="{{false}}" topBottom="120" bind:list="bindCommListCmpt">
+
+		<!-- List Begin -->
+		<view class="notice-list-box padding-project">
+
+			<view class="item card-project shadow-project" wx:for="{{dataList.list}}" wx:key="index" bindtap="bindItemTap" data-idx="{{index}}">
+				<!-- 未读红点标识 -->
+				<view wx:if="{{item.NOTICE_READ==0}}" class="dot"></view>
+
+				<view class="title content-cut-one {{item.NOTICE_READ==1?'text-grey':''}}">{{item.NOTICE_TITLE}}</view>
+				<view class="desc content-cut-two">{{item.NOTICE_DESC}}</view>
+				<view class="time">
+					<text class="icon-time margin-right-xs"></text><text>{{item.NOTICE_ADD_TIME}}</text>
+				</view>
+			</view>
+
+			<!--load begin-->
+			<import src="../../../../../tpls/public/list_load_tpl.wxml" />
+			<template is="listLoadTpl" data="{{skin:'load-project',dataList,noHint:'暂无通知哦~'}}" />
+			<!--load end-->
+
+		</view>
+		<!-- List END -->
+
+	</cmpt-comm-list>
+</block>

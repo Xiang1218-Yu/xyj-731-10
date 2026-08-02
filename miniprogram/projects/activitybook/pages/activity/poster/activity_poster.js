@@ -131,15 +131,23 @@ Page({
 		cover = await this._getLocalImage(cover);
 		this._coverImg = cover ? await this._loadCanvasImage(cover) : null;
 
-		// 小程序码：优先使用活动自带的小程序码（ACTIVITY_QR）
+		// 小程序码：优先使用活动自带的小程序码（ACTIVITY_QR）；无则调云端接口实时生成真实小程序码
 		let qr = activity.ACTIVITY_QR || '';
+		if (!qr) {
+			try {
+				let qrRes = await cloudHelper.callCloudData('activity/qr', { id: activity._id });
+				if (qrRes && qrRes.qr) qr = qrRes.qr;
+			} catch (err) {
+				console.error('生成活动小程序码失败', err);
+			}
+		}
 		if (qr && qr.startsWith('cloud'))
 			qr = await cloudHelper.getTempFileURLOne(qr);
 		qr = await this._getLocalImage(qr);
 		if (qr) {
 			this._qrImg = await this._loadCanvasImage(qr);
 		} else {
-			// 无小程序码时，用二维码库生成带活动id参数的二维码占位
+			// 真实小程序码获取失败时的兜底：用二维码库生成带活动id参数的二维码占位
 			let text = 'projects/activitybook/pages/activity/detail/activity_detail?id=' + activity._id;
 			let dataUrl = qrLib.drawImg(text, { size: 280, errorCorrectLevel: 'M' });
 			this._qrImg = await this._loadCanvasImage(dataUrl);

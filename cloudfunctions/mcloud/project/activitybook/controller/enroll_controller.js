@@ -221,7 +221,8 @@ class EnrollController extends BaseProjectController {
 		let rules = {
 			enrollId: 'must|id',
             forms: 'array|name=表单',
-			// 功能点：多媒体打卡（语音/位置）
+			// 功能点：多媒体打卡（图片/语音/位置）
+			img: 'array|name=打卡图片',
 			voice: 'object|name=打卡语音',
 			address: 'string|max:200|name=打卡位置',
 			addressGeo: 'object|name=打卡位置经纬度',
@@ -235,7 +236,7 @@ class EnrollController extends BaseProjectController {
 
 		let service = new EnrollService();
 		return await service.enrollJoin(this._userId, input.enrollId, input.forms,
-			input.voice, input.address, input.addressGeo);
+			input.img, input.voice, input.address, input.addressGeo);
 	}
 
 

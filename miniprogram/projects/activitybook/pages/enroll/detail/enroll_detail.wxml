@@ -82,8 +82,9 @@
                                     </view>
                                     <view class="content"><text>{{item.ENROLL_JOIN_OBJ.content}}</text></view>
 
+                                    <!-- 功能点：图片打卡展示（独立图片打卡UI + 表单图片合并后的云图片） -->
                                     <view class="album">
-                                        <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+                                        <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_IMG}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_IMG}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_IMG.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
                                     </view>
 
                                     <!-- 功能点：语音打卡（点击播放/暂停） -->
@@ -126,8 +127,9 @@
                                 </view>
                                 <view class="content"><text>{{item.ENROLL_JOIN_OBJ.content}}</text></view>
 
+                                <!-- 功能点：图片打卡展示（独立图片打卡UI + 表单图片合并后的云图片） -->
                                 <view class="album">
-                                    <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+                                    <image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_IMG}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_IMG}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_IMG.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
                                 </view>
 
                                 <!-- 功能点：语音打卡（点击播放/暂停） -->

@@ -18,8 +18,9 @@
 					<view class="content" wx:if="{{item.ENROLL_JOIN_OBJ.content}}">{{item.ENROLL_JOIN_OBJ.content}}</view>
 
 					<!-- 功能点：打卡图片（可预览） -->
-					<view class="album" wx:if="{{item.ENROLL_JOIN_OBJ.img&&item.ENROLL_JOIN_OBJ.img.length}}">
-						<image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+					<!-- 功能点：图片打卡展示（独立图片打卡UI + 表单图片合并后的云图片） -->
+					<view class="album" wx:if="{{item.ENROLL_JOIN_IMG&&item.ENROLL_JOIN_IMG.length}}">
+						<image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_IMG}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_IMG}}" wx:key="key1" wx:for-item="itm" class="loading" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
 					</view>
 
 					<!-- 功能点：语音打卡（点击播放/暂停） -->

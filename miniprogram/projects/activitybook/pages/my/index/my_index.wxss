@@ -133,6 +133,11 @@
 	color: #0E9489;
 }
 
+/* 功能点：站内通知入口未读数角标定位（tag.badge为绝对定位） */
+.main .comm-list.menu .item .content {
+	position: relative;
+}
+
 .main .site-footer {
 	width: 100%;
 	align-self: flex-end;

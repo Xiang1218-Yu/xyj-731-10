@@ -17,6 +17,7 @@ Page({
 		// 功能点：我的数据统计
 		stat: null, // 统计数据（null表示未登录或未加载）
 		statCanvasWidth: 320, // 统计柱状图画布宽度(px)
+		noticeCnt: 0, // 功能点：站内通知未读数（菜单角标）
 	},
 
 	/**
@@ -59,6 +60,7 @@ Page({
 		await PassportBiz.loginSilenceMust(this);
 		this._loadUser();
 		this._loadStat(); // 功能点：加载我的数据统计
+		this._loadNoticeCnt(); // 功能点：加载未读通知数角标
 	},
 
 	/**
@@ -155,12 +157,31 @@ Page({
 		});
 	},
 
+	// 功能点：加载我的未读通知数（云端接口 my/notice_cnt，用于菜单角标）
+	_loadNoticeCnt: async function () {
+		// 未登录用户不加载未读数
+		if (!PassportBiz.isLogin()) {
+			this.setData({
+				noticeCnt: 0
+			});
+			return;
+		}
+
+		let ret = await cloudHelper.callCloudData('my/notice_cnt', {}, { title: 'bar' });
+		if (!ret) return;
+
+		this.setData({
+			noticeCnt: ret.cnt || 0
+		});
+	},
+
 	/**
 	 * 页面相关事件处理函数--监听用户下拉动作
 	 */
 	onPullDownRefresh: async function () {
 		await this._loadUser();
 		await this._loadStat(); // 功能点：下拉刷新同时刷新数据统计
+		await this._loadNoticeCnt(); // 功能点：下拉刷新同时刷新未读通知数
 		wx.stopPullDownRefresh();
 	},
 

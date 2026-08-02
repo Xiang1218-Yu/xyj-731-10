@@ -105,6 +105,15 @@
 				</view>
 			</view>
 
+			<!-- 功能点：站内通知中心入口（含未读数角标） -->
+			<view class="item arrow" bindtap="url" data-url="../notice/my_notice">
+				<view class="content">
+					<text class="icon-notice my-icon-project"></text>
+					<text class="text-black">我的通知</text>
+					<text wx:if="{{noticeCnt>0}}" class="tag badge">{{noticeCnt>99?'99+':noticeCnt}}</text>
+				</view>
+			</view>
+
 
 			<view class="item arrow" bindtap="url" data-url="../../enroll/my_user_list/enroll_my_user_list">
 				<view class="content">
