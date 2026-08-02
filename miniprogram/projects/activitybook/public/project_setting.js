@@ -112,5 +112,7 @@ module.exports = { //activitybook
 	ENROLL_JOIN_FIELDS: [
         { mark: 'content', title: '打卡内容', type: 'textarea', must: true },
 		{ mark: 'img', title: '图片', type: 'image', min: 0, max: 8, must: false },
+		{ mark: 'voice', title: '语音分享', type: 'voice', must: false },
+		{ mark: 'location', title: '打卡位置', type: 'location', must: false },
 	],
 }

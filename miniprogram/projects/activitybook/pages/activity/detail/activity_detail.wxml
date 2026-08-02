@@ -111,10 +111,17 @@
 		<view class="bottom-line">
 			<view bindtap="url" data-url="../../comment/list/comment_list?id={{id}}" class="join comment   margin-right">评价 <text wx:if="{{activity.ACTIVITY_COMMENT_CNT>0}}">({{activity.ACTIVITY_COMMENT_CNT}})</text></view>
 
+			<view bindtap="bindPosterTap" class="join poster margin-right">
+				<text class="icon-share margin-right-xxs"></text>生成海报
+			</view>
+
 			<view bindtap="bindJoinTap" wx:if="{{activity.statusDesc=='报名中'&&!activity.myActivityJoinId}}" class="join bg-project text-white">我要报名</view>
 			<view bindtap="bindCancelJoinTap" wx:elif="{{activity.myActivityJoinId}}" class="join bg-grey light">取消报名</view>
 			<view wx:else class="join bg-grey light">{{activity.statusDesc}}</view>
 		</view>
 	</cmpt-detail>
+
+	<!-- 海报弹窗组件 -->
+	<cmpt-poster show="{{posterShow}}" config="{{posterConfig}}" isQr="{{true}}" bind:close="bindPosterClose" />
 
 </block>

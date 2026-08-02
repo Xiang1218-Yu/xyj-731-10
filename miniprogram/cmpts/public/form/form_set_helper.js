@@ -50,6 +50,10 @@ function initFields(defaultFields = null) {
 				case 'image':
 					max = 8;
 					break;
+				case 'voice':
+					// 语音条数默认为1
+					max = 1;
+					break;
 				case 'digit':
 				case 'int':
 					max = 10;
@@ -71,6 +75,17 @@ function initFields(defaultFields = null) {
 			if (fields[k].type == 'image') {
 				if (curForm['max'] > 8) curForm['max'] = 8;
 				if (curForm['min'] > 8) curForm['min'] = 8;
+			}
+
+			// 语音条数不超过1
+			if (fields[k].type == 'voice') {
+				if (curForm['max'] > 1) curForm['max'] = 1;
+				if (curForm['min'] > 1) curForm['min'] = 1;
+			}
+
+			// 地理位置默认值
+			if (fields[k].type == 'location') {
+				if (!helper.isDefined(curForm['def']) || curForm['def'] === '') curForm['def'] = null;
 			}
 
 			if (fields[k].type == 'mobile') {
@@ -169,9 +184,9 @@ function checkIDCard(idcode) {
 
 // 必填提示
 function getMustHint(type) {
-	if (type == 'image') return '请上传';
+	if (type == 'image' || type == 'voice') return '请上传';
 
-	let arr = ['select', 'date', 'month', 'hourminute', 'time', 'checkbox', 'radio','switch', 'area'];
+	let arr = ['select', 'date', 'month', 'hourminute', 'time', 'checkbox', 'radio','switch', 'area', 'location'];
 	if (arr.includes(type))
 		return '请选择';
 	else
@@ -192,7 +207,20 @@ function checkForm(fields, forms, that) {
 		// 必填
 		let hintOprt = getMustHint(type); //提示动作
 
-		if (fields[k].must && type != 'switch' && (!helper.isDefined(val) || val.length == 0)) {
+		// voice为字符串文件ID，location为对象或空串
+		let isEmpty = false;
+		if (!helper.isDefined(val) || val === null) {
+			isEmpty = true;
+		} else if (type === 'location') {
+			// 地理位置：对象且包含name才算已选择
+			isEmpty = (typeof val !== 'object') || !val.name;
+		} else if (typeof val === 'string') {
+			isEmpty = (val.length == 0);
+		} else if (Array.isArray(val)) {
+			isEmpty = (val.length == 0);
+		}
+
+		if (fields[k].must && type != 'switch' && isEmpty) {
 			fields[k].focus = hintOprt + title;
 			pageHelper.anchor('form' + forms[k].mark, that);
 			return pageHelper.showModal(hintOprt + '' + title);
@@ -347,7 +375,7 @@ function mark() {
 function getTypeOptions() {
 	//return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,mobile=手机号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
 
-	return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
+	return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字,voice=语音上传,location=地理位置');
 }
 
 // 重复性规则

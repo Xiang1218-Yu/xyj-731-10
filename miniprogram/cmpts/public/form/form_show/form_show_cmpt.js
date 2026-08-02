@@ -1,4 +1,4 @@
-﻿const pageHelper = require('../../../../helper/page_helper.js');
+const pageHelper = require('../../../../helper/page_helper.js');
 const helper = require('../../../../helper/helper.js');
 const cloudHelper = require('../../../../helper/cloud_helper.js');
 const cacheHelper = require('../../../../helper/cache_helper.js');
@@ -61,7 +61,14 @@ Component({
 		cacheName: '',
 		isLoad: false,
 		showCheckModal: false,
-		mobileCheck: setting.MOBILE_CHECK
+		mobileCheck: setting.MOBILE_CHECK,
+
+		// 语音录制相关
+		isRecording: false,
+		recordingIdx: -1,
+		recordTime: 0,
+		voiceUploading: false,
+		voicePlayingIdx: -1,
 	},
 
 	/**
@@ -85,6 +92,23 @@ Component({
 
 		detached: function () {
 			// 在组件实例被从页面节点树移除时执行
+			// 销毁音频播放器
+			if (this._audioCtx) {
+				this._audioCtx.destroy();
+				this._audioCtx = null;
+			}
+			// 停止录音
+			if (this._recorderManager) {
+				try {
+					this._recorderManager.stop();
+				} catch (e) { }
+				this._recorderManager = null;
+			}
+			// 清除录音计时器
+			if (this._recordTimer) {
+				clearInterval(this._recordTimer);
+				this._recordTimer = null;
+			}
 		},
 	},
 
@@ -179,9 +203,9 @@ Component({
 			}
 			if (ret === undefined) ret = null;
 
-			// **** 对缓存匹配 图片和富文本和多条目不读取缓存 
+			// **** 对缓存匹配 图片、语音、富文本和多条目不读取缓存 
 			if (ret === null && this.data.isCacheMatch
-				&& (type != 'image' && type != 'content' && type != 'rows')) {
+				&& (type != 'image' && type != 'voice' && type != 'content' && type != 'rows')) {
 				let caches = cacheHelper.get(this.data.cacheName);
 				if (caches && Array.isArray(caches)) {
 					for (let k = 0; k < caches.length; k++) {
@@ -231,8 +255,8 @@ Component({
 
 			if (type == 'line') return val;
 
-			if (type != 'switch' && type != 'checkbox' && type != 'area' && type != 'content' && type != 'image' && type != 'rows') {
-				// switch(bool),checkbox(array), area(array), content(array) 不处理，其他做类型处理
+			if (type != 'switch' && type != 'checkbox' && type != 'area' && type != 'content' && type != 'image' && type != 'rows' && type != 'location') {
+				// switch(bool),checkbox(array), area(array), content(array), location(object) 不处理，其他做类型处理
 
 				if (typeof val === 'object' && !Array.isArray(val)) {
 					// 对象要被处理为空串，数组做trim不处理(typeof数组也是object)
@@ -251,6 +275,27 @@ Component({
 				case 'image': {
 					// 不支持字符串缺省值 
 					if (!Array.isArray(val)) return [];
+					break;
+				}
+				case 'voice': {
+					// 语音为字符串文件ID
+					if (typeof val === 'object') return '';
+					if (val === undefined || val === null) return '';
+					val = String(val).trim();
+					break;
+				}
+				case 'location': {
+					// 地理位置为对象 {name, address, latitude, longitude}
+					if (val === undefined || val === null || val === '') return '';
+					if (typeof val === 'string') {
+						// 尝试解析字符串形式的位置
+						try {
+							val = JSON.parse(val);
+						} catch (e) {
+							return '';
+						}
+					}
+					if (typeof val !== 'object' || !val.name) return '';
 					break;
 				}
 				case 'content': {
@@ -363,6 +408,369 @@ Component({
 			let idx = pageHelper.dataset(e, 'idx');
 			let val = e.detail;
 			this._setForm(idx, val);
+		},
+
+		/**
+		 * 语音上传入口：弹出选择菜单
+		 */
+		bindVoiceUpload: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let that = this;
+
+			wx.showActionSheet({
+				itemList: ['录制语音', '从聊天记录选择'],
+				success(res) {
+					if (res.tapIndex === 0) {
+						// 录制语音
+						that.bindVoiceRecord(e);
+					} else if (res.tapIndex === 1) {
+						// 从聊天记录选择
+						that.bindVoiceChoose(e);
+					}
+				}
+			});
+		},
+
+		/**
+		 * 语音录制按钮：开始/停止录音
+		 */
+		bindVoiceRecord: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+
+			if (this.data.isRecording) {
+				// 停止录音
+				this._stopRecording(idx);
+			} else {
+				// 开始录音
+				this._startRecording(idx);
+			}
+		},
+
+		/**
+		 * 开始录音
+		 */
+		_startRecording: function (idx) {
+			let that = this;
+
+			// 记录当前录音字段索引
+			this._currentRecordIdx = idx;
+
+			// 初始化录音管理器
+			if (!this._recorderManager) {
+				this._recorderManager = wx.getRecorderManager();
+
+				this._recorderManager.onStart(() => {
+					that.setData({
+						isRecording: true,
+						recordingIdx: that._currentRecordIdx,
+						recordTime: 0
+					});
+					// 录音计时
+					that._recordTimer = setInterval(() => {
+						let t = that.data.recordTime + 1;
+						that.setData({ recordTime: t });
+						// 最长60秒自动停止
+						if (t >= 60) {
+							that._stopRecording();
+						}
+					}, 1000);
+				});
+
+				this._recorderManager.onStop((res) => {
+					// 清除计时器
+					if (that._recordTimer) {
+						clearInterval(that._recordTimer);
+						that._recordTimer = null;
+					}
+					that.setData({
+						isRecording: false,
+						recordingIdx: -1,
+						recordTime: 0
+					});
+
+					// 上传语音文件
+					if (res.tempFilePath && that._currentRecordIdx !== undefined) {
+						that._uploadVoice(res.tempFilePath, that._currentRecordIdx);
+					}
+					that._currentRecordIdx = undefined;
+				});
+
+				this._recorderManager.onError((err) => {
+					console.error('录音错误', err);
+					if (that._recordTimer) {
+						clearInterval(that._recordTimer);
+						that._recordTimer = null;
+					}
+					that.setData({
+						isRecording: false,
+						recordingIdx: -1,
+						recordTime: 0
+					});
+					wx.showToast({
+						title: '录音失败，请检查权限',
+						icon: 'none'
+					});
+				});
+			}
+
+			// 开始录音，mp3格式，最长60秒
+			this._recorderManager.start({
+				duration: 60000,
+				format: 'mp3',
+				sampleRate: 44100,
+				numberOfChannels: 1,
+				encodeBitRate: 192000
+			});
+
+			wx.showToast({
+				title: '开始录音',
+				icon: 'none',
+				duration: 1000
+			});
+		},
+
+		/**
+		 * 停止录音
+		 */
+		_stopRecording: function () {
+			if (this._recorderManager) {
+				this._recorderManager.stop();
+			}
+		},
+
+		/**
+		 * 从聊天记录选择语音文件
+		 */
+		bindVoiceChoose: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let that = this;
+
+			wx.chooseMessageFile({
+				count: 1,
+				type: 'file',
+				extension: ['mp3', 'm4a', 'wav', 'aac', 'silk'],
+				success(res) {
+					if (res.tempFiles && res.tempFiles.length > 0) {
+						let tempFile = res.tempFiles[0];
+						// 检查文件大小（限制10MB）
+						if (tempFile.size > 10 * 1024 * 1024) {
+							return pageHelper.showModal('语音文件大小不能超过10MB');
+						}
+						that._uploadVoice(tempFile.path, idx);
+					}
+				},
+				fail(err) {
+					console.log('选择文件取消', err);
+				}
+			});
+		},
+
+		/**
+		 * 上传语音文件到云存储
+		 */
+		_uploadVoice: async function (filePath, idx) {
+			let that = this;
+
+			// 获取文件扩展名
+			let ext = '.mp3';
+			let match = filePath.match(/\.[^.]+?$/);
+			if (match) ext = match[0];
+
+			// 生成云存储路径
+			let rd = dataHelper.genRandomNum(1000000, 9999999);
+			let cloudPath = 'voice/' + rd + ext;
+
+			// 加上项目标识
+			if (pageHelper.getPID()) {
+				cloudPath = pageHelper.getPID() + '/' + cloudPath;
+			}
+
+			that.setData({ voiceUploading: true });
+			wx.showLoading({
+				title: '语音上传中...',
+				mask: true
+			});
+
+			try {
+				let res = await wx.cloud.uploadFile({
+					cloudPath: cloudPath,
+					filePath: filePath
+				});
+
+				if (res.fileID) {
+					// 设置表单值为文件ID
+					that._setForm(idx, res.fileID);
+					wx.showToast({
+						title: '上传成功',
+						icon: 'success'
+					});
+				} else {
+					wx.showToast({
+						title: '上传失败',
+						icon: 'none'
+					});
+				}
+			} catch (err) {
+				console.error('语音上传失败', err);
+				wx.showToast({
+					title: '上传失败，请重试',
+					icon: 'none'
+				});
+			} finally {
+				that.setData({ voiceUploading: false });
+				wx.hideLoading();
+			}
+		},
+
+		/**
+		 * 播放/暂停语音
+		 */
+		bindVoicePlay: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let fileID = this.data.forms[idx].val;
+
+			if (!fileID) return;
+
+			// 如果正在播放，则停止
+			if (this._isPlaying && this._playingIdx === idx) {
+				if (this._audioCtx) {
+					this._audioCtx.stop();
+				}
+				this._isPlaying = false;
+				this._playingIdx = -1;
+				this.setData({ voicePlayingIdx: -1 });
+				return;
+			}
+
+			let that = this;
+
+			// 初始化音频播放器
+			if (!this._audioCtx) {
+				this._audioCtx = wx.createInnerAudioContext();
+
+				this._audioCtx.onPlay(() => {
+					that._isPlaying = true;
+					that.setData({ voicePlayingIdx: that._playingIdx });
+				});
+
+				this._audioCtx.onEnded(() => {
+					that._isPlaying = false;
+					that._playingIdx = -1;
+					that.setData({ voicePlayingIdx: -1 });
+				});
+
+				this._audioCtx.onError((err) => {
+					console.error('语音播放错误', err);
+					that._isPlaying = false;
+					that._playingIdx = -1;
+					that.setData({ voicePlayingIdx: -1 });
+					wx.showToast({
+						title: '播放失败',
+						icon: 'none'
+					});
+				});
+
+				this._audioCtx.onStop(() => {
+					that._isPlaying = false;
+					that._playingIdx = -1;
+					that.setData({ voicePlayingIdx: -1 });
+				});
+			}
+
+			// 如果是云文件ID，需要先获取临时链接
+			if (fileID.startsWith('cloud://')) {
+				wx.cloud.getTempFileURL({
+					fileList: [fileID],
+					success(res) {
+						if (res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
+							that._playingIdx = idx;
+							that._audioCtx.src = res.fileList[0].tempFileURL;
+							that._audioCtx.play();
+						} else {
+							wx.showToast({
+								title: '获取语音链接失败',
+								icon: 'none'
+							});
+						}
+					},
+					fail(err) {
+						console.error('获取临时链接失败', err);
+						wx.showToast({
+							title: '播放失败',
+							icon: 'none'
+						});
+					}
+				});
+			} else {
+				// 本地临时文件直接播放
+				this._playingIdx = idx;
+				this._audioCtx.src = fileID;
+				this._audioCtx.play();
+			}
+		},
+
+		/**
+		 * 删除已上传的语音
+		 */
+		bindVoiceDelete: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let that = this;
+			pageHelper.showConfirm('确定要删除该语音吗？', function () {
+				that._setForm(idx, '');
+			});
+		},
+
+		/**
+		 * 选择地理位置
+		 */
+		bindLocationChoose: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let that = this;
+
+			wx.chooseLocation({
+				success(res) {
+					// 设置表单值为位置对象
+					let location = {
+						name: res.name,
+						address: res.address,
+						latitude: res.latitude,
+						longitude: res.longitude
+					};
+					that._setForm(idx, location);
+				},
+				fail(err) {
+					console.log('选择位置取消或失败', err);
+				}
+			});
+		},
+
+		/**
+		 * 在地图中打开位置
+		 */
+		bindLocationOpen: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let location = this.data.forms[idx].val;
+
+			if (!location || !location.latitude) return;
+
+			wx.openLocation({
+				latitude: location.latitude,
+				longitude: location.longitude,
+				name: location.name || '',
+				address: location.address || '',
+				scale: 18
+			});
+		},
+
+		/**
+		 * 清除已选择的位置
+		 */
+		bindLocationDelete: function (e) {
+			let idx = pageHelper.dataset(e, 'idx');
+			let that = this;
+			pageHelper.showConfirm('确定要清除该位置吗？', function () {
+				that._setForm(idx, '');
+			});
 		},
 
 		bindLineBlur: function (e) {

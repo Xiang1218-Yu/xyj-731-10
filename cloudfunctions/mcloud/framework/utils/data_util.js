@@ -42,7 +42,8 @@ const genRandomAlpha = len => {
 function getTitleByForm(arr) {
 	let formTitle = [];
 	for (let k = 0; k < arr.length; k++) {
-		if (arr.type == 'image' || arr.type == 'content') continue;
+		// 图片、图文、语音类型不导出为列（媒体文件单独处理）
+		if (arr[k].type == 'image' || arr[k].type == 'content' || arr[k].type == 'voice') continue;
 
 		formTitle.push({
 			column: arr[k].title,
@@ -60,12 +61,27 @@ function getValByForm(arr, mark, title) {
 		if (arr[k].mark == mark || arr[k].title == title) {
 			if (arr[k].type == 'image') return '[图片]';
 			if (arr[k].type == 'content') return '[图文内容]';
+			if (arr[k].type == 'voice') return '[语音]';
 
 			if (arr[k].type == 'switch') {
 				if (arr[k].val === true)
 					return '是';
 				else
 					return '否';
+			}
+
+			// 地理位置类型：格式化输出名称和地址
+			if (arr[k].type == 'location') {
+				let val = arr[k].val;
+				if (val && typeof val === 'object') {
+					return (val.name || '') + (val.address ? ' ' + val.address : '');
+				}
+				return val || '';
+			}
+
+			// 多选类型：数组转逗号分隔字符串
+			if (arr[k].type == 'checkbox' && Array.isArray(arr[k].val)) {
+				return arr[k].val.join(',');
 			}
 
 			return arr[k].val;

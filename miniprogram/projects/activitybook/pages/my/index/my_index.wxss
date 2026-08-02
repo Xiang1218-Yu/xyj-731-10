@@ -147,3 +147,119 @@
 	border-bottom-left-radius: 40rpx !important;
 	border-top-right-radius: 40rpx !important;
 }
+
+/* 统计卡片区域 */
+.main .stat {
+	width: 100%;
+	box-sizing: border-box;
+	margin-top: 20rpx;
+}
+
+/* 统计卡片2x2网格 */
+.main .stat .stat-grid {
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	background-color: #fff;
+	border-radius: 20rpx !important;
+	padding: 10rpx 0;
+	box-sizing: border-box;
+}
+
+/* 单个统计卡片 */
+.main .stat .stat-grid .stat-card {
+	width: 50%;
+	display: flex;
+	align-items: center;
+	padding: 30rpx 20rpx;
+	box-sizing: border-box;
+}
+
+/* 图标容器 */
+.main .stat .stat-grid .stat-card .stat-icon {
+	width: 80rpx;
+	height: 80rpx;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 16rpx;
+	flex-shrink: 0;
+}
+
+.main .stat .stat-grid .stat-card .stat-icon text {
+	font-size: 40rpx;
+	color: #fff;
+}
+
+/* 图标颜色 */
+.main .stat .stat-grid .stat-card .icon-bg-blue {
+	background-color: #26d9f5;
+}
+
+.main .stat .stat-grid .stat-card .icon-bg-red {
+	background-color: #f79091;
+}
+
+.main .stat .stat-grid .stat-card .icon-bg-orange {
+	background-color: #f7a35c;
+}
+
+.main .stat .stat-grid .stat-card .icon-bg-purple {
+	background-color: #9b59b6;
+}
+
+.main .stat .stat-grid .stat-card .icon-bg-grey {
+	background-color: #ccc;
+}
+
+/* 统计文字信息 */
+.main .stat .stat-grid .stat-card .stat-info {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+.main .stat .stat-grid .stat-card .stat-info .stat-num {
+	font-size: 40rpx;
+	font-weight: bold;
+	color: #333;
+	line-height: 1.2;
+}
+
+.main .stat .stat-grid .stat-card .stat-info .stat-label {
+	font-size: 24rpx;
+	color: #999;
+	margin-top: 6rpx;
+}
+
+/* 待审核数为0时卡片变灰 */
+.main .stat .stat-grid .stat-card.stat-card-disabled .stat-info .stat-num {
+	color: #ccc;
+}
+
+.main .stat .stat-grid .stat-card.stat-card-disabled .stat-info .stat-label {
+	color: #ccc;
+}
+
+/* 图表区域 */
+.main .stat .stat-chart {
+	width: 100%;
+	background-color: #fff;
+	border-radius: 20rpx !important;
+	margin-top: 20rpx;
+	padding: 20rpx 0;
+	box-sizing: border-box;
+}
+
+.main .stat .stat-chart .chart-title {
+	font-size: 30rpx;
+	font-weight: bold;
+	color: #333;
+	padding: 10rpx 30rpx 20rpx;
+}
+
+.main .stat .stat-chart .chart-canvas {
+	width: 100%;
+	height: 400rpx;
+}

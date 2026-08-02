@@ -118,23 +118,34 @@ Page({
 				activityId: this.data.id,
 				forms
 			}
-			await cloudHelper.callCloudSumbit('activity/join', params, opts).then(res => {
-				let content = (res.data.check == 0) ? '报名成功！' : '报名完成，请耐心等待系统审核';
+			let res = await cloudHelper.callCloudSumbit('activity/join', params, opts);
 
-				let activityJoinId = res.data.activityJoinId;
-				let parent = pageHelper.getPrevPage(2);
-				if (parent) parent._loadDetail();
-				wx.showModal({
-					title: '温馨提示',
-					showCancel: false,
-					content,
-					success() {
-						let ck = () => {
-							wx.navigateBack();
-						}
-						ck();
+			// 需要审核时，请求用户订阅消息（失败不影响主流程）
+			if (res.data.check == 1) {
+				try {
+					await wx.requestSubscribeMessage({
+						tmplIds: ['ACTIVITY_JOIN_TEMPLATE_ID']
+					});
+				} catch (subErr) {
+					console.log('请求订阅消息失败', subErr);
+				}
+			}
+
+			let content = (res.data.check == 0) ? '报名成功！' : '报名完成，请耐心等待系统审核';
+
+			let activityJoinId = res.data.activityJoinId;
+			let parent = pageHelper.getPrevPage(2);
+			if (parent) parent._loadDetail();
+			wx.showModal({
+				title: '温馨提示',
+				showCancel: false,
+				content,
+				success() {
+					let ck = () => {
+						wx.navigateBack();
 					}
-				})
+					ck();
+				}
 			})
 		} catch (err) {
 			console.log(err);

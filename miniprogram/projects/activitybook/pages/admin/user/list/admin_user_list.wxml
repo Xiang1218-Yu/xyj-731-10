@@ -1,15 +1,33 @@
 <block wx:if="{{isAdmin&&isLoad}}">
-	<cmpt-comm-list id="cmpt-comm-list" source='admin' type="admin-meet" search="{{search||''}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/user_list" sortMenusDefaultIndex="0" topBottom="50" placeholder="搜索" bind:list="bindCommListCmpt">
+	<cmpt-comm-list id="cmpt-comm-list" source='admin' type="admin-meet" search="{{search||''}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/user_list" sortMenusDefaultIndex="0" topBottom="{{batchMode?'140':'50'}}" placeholder="搜索" bind:list="bindCommListCmpt">
 
 		<view slot="searchEnd">
 			<button bindtap="url" data-url="../export/admin_user_export?condition={{dataList.condition}}" class="btn mid radius bg-admin text-white margin-right-s"><text class="icon-down margin-right-xxs"></text>导出用户资料</button>
+			<button bindtap="bindBatchModeTap" class="btn mid radius {{batchMode?'bg-orange':'bg-grey'}} light margin-right-s"><text class="icon-setting margin-right-xxs"></text>{{batchMode?'退出批量':'批量操作'}}</button>
 		</view>
+
+		<!-- 标签筛选栏 begin -->
+		<view wx:if="{{tagList.length>0}}" class="tag-filter-bar">
+			<text class="tag-filter-label">标签：</text>
+			<scroll-view scroll-x class="tag-filter-scroll">
+				<view class="tag-filter-list">
+					<view wx:for="{{tagList}}" wx:key="*this" bindtap="bindTagFilterTap" data-tag="{{item}}" class="tag small radius {{filterTag===item?'bg-admin text-white':'bg-grey light'}}">{{item}}</view>
+				</view>
+			</scroll-view>
+		</view>
+		<!-- 标签筛选栏 end -->
 
 		<!-- List Begin -->
 		<view class="admin-comm-list">
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录 </view>
 
-			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
+			<view class="item {{batchMode?'batch-item':''}}" wx:for="{{dataList.list}}" wx:key="key">
+				<!-- 批量选择复选框 -->
+				<view wx:if="{{batchMode}}" class="batch-check" bindtap="bindSelectItemTap" data-id="{{item.USER_MINI_OPENID}}">
+					<view class="checkbox {{selectedIds.indexOf(item.USER_MINI_OPENID)>-1?'checked':''}}">
+						<text wx:if="{{selectedIds.indexOf(item.USER_MINI_OPENID)>-1}}" class="icon-check"></text>
+					</view>
+				</view>
 				<view class="no">{{index+1}}</view>
 				<view class="header">
 					<view class="left text-cut">{{item.USER_NAME}}
@@ -46,6 +64,41 @@
 						<view class="content text-blue">查看更多用户资料...</view>
 					</view>
 
+					<!-- 标签展示与编辑 -->
+					<view class="info-item">
+						<view class="title">标签</view>
+						<view class="mao">：</view>
+						<view class="content tag-content">
+							<block wx:if="{{item.tagArr.length>0}}">
+								<text wx:for="{{item.tagArr}}" wx:for-item="tag" wx:key="*this" class="tag small bg-admin light radius margin-right-xs">{{tag}}</text>
+							</block>
+							<text wx:else class="text-grey">未设置</text>
+							<text bindtap="bindEditTagsTap" data-idx="{{index}}" class="text-blue margin-left-s">编辑标签</text>
+						</view>
+					</view>
+
+					<!-- 分组展示与设置 -->
+					<view class="info-item">
+						<view class="title">分组</view>
+						<view class="mao">：</view>
+						<view class="content">
+							<text wx:if="{{item.USER_GROUP}}" class="tag small bg-orange light radius">{{item.USER_GROUP}}</text>
+							<text wx:else class="text-grey">未分组</text>
+							<text bindtap="bindEditGroupTap" data-idx="{{index}}" class="text-blue margin-left-s">设置分组</text>
+						</view>
+					</view>
+
+					<!-- 管理员备注展示与编辑 -->
+					<view class="info-item">
+						<view class="title">备注</view>
+						<view class="mao">：</view>
+						<view class="content">
+							<text wx:if="{{item.USER_MEMO}}">{{item.USER_MEMO}}</text>
+							<text wx:else class="text-grey">未填写</text>
+							<text bindtap="bindEditRemarkTap" data-idx="{{index}}" class="text-blue margin-left-s">编辑备注</text>
+						</view>
+					</view>
+
 					<view class="oprt">
 
 						<block wx:if="{{userRegCheck}}">
@@ -71,6 +124,21 @@
 		<template is="listLoadTpl" data="{{skin:'text-grey',dataList}}" />
 		<!--load end-->
 
+		<!-- 批量操作底部栏 begin -->
+		<view wx:if="{{batchMode}}" class="batch-bar">
+			<view class="batch-bar-left" bindtap="bindSelectAllTap">
+				<view class="checkbox {{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length ?'checked':''}}">
+					<text wx:if="{{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length}}" class="icon-check"></text>
+				</view>
+				<text class="margin-left-xs">全选</text>
+			</view>
+			<view class="batch-bar-right">
+				<view class="btn batch-btn bg-olive light" bindtap="bindBatchStatusTap" data-status="1">批量启用</view>
+				<view class="btn batch-btn bg-grey light" bindtap="bindBatchStatusTap" data-status="9">批量禁用</view>
+				<view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
+			</view>
+		</view>
+		<!-- 批量操作底部栏 end -->
 
 	</cmpt-comm-list>
 
@@ -85,5 +153,41 @@
 			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
 		</view>
 	</cmpt-modal>
+
+	<!-- 标签编辑弹窗 begin -->
+	<cmpt-modal wx:if="{{tagModalShow}}" model:show="{{tagModalShow}}" type="dialog" title="编辑用户标签" bind:click="bindSetTagsCmpt" class="modal-form" cancelText="返回" confirmText="保存">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">标签 <text class="text-grey text-mid">(多个标签用英文逗号分隔)</text>：</view>
+			<view bindtap="bindClearTagsTap" style="width:150rpx;text-align: right;" class="text-grey"><text class="icon-roundclose"></text>清空</view>
+		</view>
+		<view class="form-group cancel-area">
+			<input placeholder-class="phc" placeholder="例如：VIP,活跃用户,重点客户" style="height:80rpx;padding:0 15rpx" model:value="{{formTags}}" maxlength="200" />
+		</view>
+	</cmpt-modal>
+	<!-- 标签编辑弹窗 end -->
+
+	<!-- 分组设置弹窗 begin -->
+	<cmpt-modal wx:if="{{groupModalShow}}" model:show="{{groupModalShow}}" type="dialog" title="设置用户分组" bind:click="bindSetGroupCmpt" class="modal-form" cancelText="返回" confirmText="保存">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">分组名称：</view>
+			<view bindtap="bindClearGroupTap" style="width:150rpx;text-align: right;" class="text-grey"><text class="icon-roundclose"></text>清空</view>
+		</view>
+		<view class="form-group cancel-area">
+			<input placeholder-class="phc" placeholder="请输入分组名称" style="height:80rpx;padding:0 15rpx" model:value="{{formGroup}}" maxlength="50" />
+		</view>
+	</cmpt-modal>
+	<!-- 分组设置弹窗 end -->
+
+	<!-- 管理员备注弹窗 begin -->
+	<cmpt-modal wx:if="{{remarkModalShow}}" model:show="{{remarkModalShow}}" type="dialog" title="编辑管理员备注" bind:click="bindSetRemarkCmpt" class="modal-form" cancelText="返回" confirmText="保存">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">备注内容：</view>
+			<view bindtap="bindClearRemarkTap" style="width:150rpx;text-align: right;" class="text-grey"><text class="icon-roundclose"></text>清空</view>
+		</view>
+		<view class="form-group cancel-area">
+			<textarea placeholder-class="phc" placeholder="请输入管理员备注信息" style="height:120rpx" model:value="{{formRemark}}" maxlength="200"></textarea>
+		</view>
+	</cmpt-modal>
+	<!-- 管理员备注弹窗 end -->
 
 </block>

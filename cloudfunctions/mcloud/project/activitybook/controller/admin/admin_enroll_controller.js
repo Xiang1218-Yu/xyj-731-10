@@ -363,6 +363,55 @@ class AdminEnrollController extends BaseProjectAdminController {
 		return await service.deleteEnrollJoinDataExcel();
 	}
 
+	/** 批量修改打卡状态 */
+	async batchStatusEnroll() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminEnrollService();
+		return await service.batchStatusEnroll(input.ids, input.status);
+	}
+
+	/** 批量删除打卡活动 */
+	async batchDelEnroll() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminEnrollService();
+		return await service.batchDelEnroll(input.ids);
+	}
+
+	/** 批量删除打卡记录 */
+	async batchDelEnrollJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminEnrollService();
+		return await service.batchDelEnrollJoin(input.ids);
+	}
+
 }
 
 module.exports = AdminEnrollController;

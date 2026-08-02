@@ -51,6 +51,8 @@ class AdminUserController extends BaseProjectAdminController {
 			sortVal: 'name=搜索类型值',
 			orderBy: 'object|name=排序',
 			whereEx: 'object|name=附加查询条件',
+			tag: 'string|name=标签筛选',
+			group: 'string|name=分组筛选',
 			page: 'must|int|default=1',
 			size: 'int',
 			isTotal: 'bool',
@@ -164,6 +166,122 @@ class AdminUserController extends BaseProjectAdminController {
 
 		let service = new AdminUserService();
 		return await service.deleteUserDataExcel();
+	}
+
+	/** 设置用户标签 */
+	async setUserTags() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			userId: 'must|string',
+			tags: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.setUserTags(input.userId, input.tags);
+	}
+
+	/** 设置用户分组 */
+	async setUserGroup() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			userId: 'must|string',
+			group: 'must|string',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.setUserGroup(input.userId, input.group);
+	}
+
+	/** 设置管理员备注 */
+	async setUserMemo() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			userId: 'must|string',
+			memo: 'must|string',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.setUserMemo(input.userId, input.memo);
+	}
+
+	/** 批量修改用户状态 */
+	async batchStatusUser() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.batchStatusUser(input.ids, input.status);
+	}
+
+	/** 批量删除用户 */
+	async batchDelUser() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.batchDelUser(input.ids);
+	}
+
+	/** 批量设置用户标签 mode='add'/'remove'/'set' */
+	async batchSetUserTags() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			tags: 'must|array',
+			mode: 'string|default=set',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.batchSetUserTags(input.ids, input.tags, input.mode);
+	}
+
+	/** 获取所有标签列表 */
+	async getUserTagList() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		return await service.getUserTagList();
 	}
 }
 
