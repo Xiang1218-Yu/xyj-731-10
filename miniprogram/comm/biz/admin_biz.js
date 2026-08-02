@@ -121,14 +121,18 @@ class AdminBiz extends BaseBiz {
 				// 构造一个超级管理员token写入缓存
 				admin = {
 					name: 'admin',
-					type: 1 // 超级管理员
+					type: 1, // 超级管理员
+					token: 'admin-no-login-token'
 				};
 				cacheHelper.set(constants.CACHE_ADMIN, admin, constants.ADMIN_TOKEN_EXPIRE);
 			}
-			that.setData({
-				isAdmin: true,
-				isSuperAdmin: true
-			});
+			// 避免重复setData导致页面闪烁
+			if (!that.data.isAdmin) {
+				that.setData({
+					isAdmin: true,
+					isSuperAdmin: true
+				});
+			}
 			return true;
 		}
 

@@ -2,7 +2,7 @@
 
 	<view class="login shadow">
 
-		<view class=pic"><text class="icon-settingsfill text-yellow"></text></view>
+		<view class="pic"><text class="icon-settingsfill text-yellow"></text></view>
 		<view class="hint">后台管理系统</view>
 
 		<view class="form-group margin-top">
