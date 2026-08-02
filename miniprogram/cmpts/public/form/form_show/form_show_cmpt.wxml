@@ -216,7 +216,7 @@
 			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
 	</block>
 
-	<block wx:if="{{item.type=='tag'}}">
+	<block wx:elif="{{item.type=='tag'}}">
 		<view class="form-group" id="form{{item.mark}}">
 			<view class="action text-bold text-l"><text class="text-red" wx:if="{{item.must}}">*</text>{{item.title}}
 			</view>
