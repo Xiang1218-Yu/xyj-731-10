@@ -324,16 +324,42 @@ class AdminActivityService extends BaseProjectAdminService {
 
 	/**批量修改活动状态 */
 	async batchStatusActivity(ids, status) {
-		for (let k = 0; k < ids.length; k++) {
-			await this.statusActivity(ids[k], status);
-		}
+		if (!Array.isArray(ids) || ids.length === 0) return;
+
+		// 一次批量更新状态（MultiModel.edit 自动追加 _pid）
+		await ActivityModel.edit({ _id: ['in', ids] }, { ACTIVITY_STATUS: Number(status) });
 	}
 
 	/**批量删除活动 */
 	async batchDelActivity(ids) {
-		for (let k = 0; k < ids.length; k++) {
-			await this.delActivity(ids[k]);
+		if (!Array.isArray(ids) || ids.length === 0) return;
+
+		// 一次查出所有待删除活动（用于清理云文件）
+		let activityList = await ActivityModel.getAllBig({ _id: ['in', ids] }, 'ACTIVITY_FORMS,ACTIVITY_QR');
+
+		// 循环清理每个活动的云文件（云存储不支持批量条件删除）
+		for (let k = 0; k < activityList.length; k++) {
+			await cloudUtil.handlerCloudFilesForForms(activityList[k].ACTIVITY_FORMS, []);
+
+			// 删除二维码
+			if (activityList[k].ACTIVITY_QR) {
+				await cloudUtil.deleteFiles(activityList[k].ACTIVITY_QR);
+			}
 		}
+
+		// 一次查出所有关联报名（用于清理报名表单云文件）
+		let joinList = await ActivityJoinModel.getAllBig({ ACTIVITY_JOIN_ACTIVITY_ID: ['in', ids] }, 'ACTIVITY_JOIN_FORMS');
+
+		// 循环清理报名表单云文件
+		for (let k = 0; k < joinList.length; k++) {
+			await cloudUtil.handlerCloudFilesForForms(joinList[k].ACTIVITY_JOIN_FORMS, []);
+		}
+
+		// 批量删除所有报名记录
+		await ActivityJoinModel.del({ ACTIVITY_JOIN_ACTIVITY_ID: ['in', ids] });
+
+		// 批量删除所有活动
+		await ActivityModel.del({ _id: ['in', ids] });
 	}
 
 	//#############################
@@ -550,15 +576,53 @@ class AdminActivityService extends BaseProjectAdminService {
 
 	/**批量修改报名状态 */
 	async batchStatusActivityJoin(ids, status, reason = '') {
-		for (let k = 0; k < ids.length; k++) {
-			await this.statusActivityJoin(ids[k], status, reason);
+		if (!Array.isArray(ids) || ids.length === 0) return;
+
+		// 一次查出所有报名记录（用于按活动去重重算统计）
+		let joinList = await ActivityJoinModel.getAllBig({ _id: ['in', ids] }, 'ACTIVITY_JOIN_ACTIVITY_ID');
+
+		// 一次批量更新状态与原因
+		await ActivityJoinModel.edit({ _id: ['in', ids] }, {
+			ACTIVITY_JOIN_STATUS: Number(status),
+			ACTIVITY_JOIN_REASON: reason || ''
+		});
+
+		// 提取不重复的 activityId，每个活动只重算一次统计
+		let aidSet = new Set();
+		for (let k = 0; k < joinList.length; k++) {
+			aidSet.add(joinList[k].ACTIVITY_JOIN_ACTIVITY_ID);
+		}
+
+		let service = new ActivityService();
+		for (let aid of aidSet) {
+			await service.statActivityJoin(aid);
 		}
 	}
 
 	/**批量删除报名 */
 	async batchDelActivityJoin(ids) {
-		for (let k = 0; k < ids.length; k++) {
-			await this.delActivityJoin(ids[k]);
+		if (!Array.isArray(ids) || ids.length === 0) return;
+
+		// 一次查出所有待删除报名（用于清理云文件与重算统计）
+		let joinList = await ActivityJoinModel.getAllBig({ _id: ['in', ids] }, 'ACTIVITY_JOIN_FORMS,ACTIVITY_JOIN_ACTIVITY_ID');
+
+		// 循环清理报名表单云文件（云存储不支持批量条件删除）
+		for (let k = 0; k < joinList.length; k++) {
+			await cloudUtil.handlerCloudFilesForForms(joinList[k].ACTIVITY_JOIN_FORMS, []);
+		}
+
+		// 批量删除报名记录
+		await ActivityJoinModel.del({ _id: ['in', ids] });
+
+		// 提取不重复的 activityId，每个活动只重算一次统计
+		let aidSet = new Set();
+		for (let k = 0; k < joinList.length; k++) {
+			aidSet.add(joinList[k].ACTIVITY_JOIN_ACTIVITY_ID);
+		}
+
+		let service = new ActivityService();
+		for (let aid of aidSet) {
+			await service.statActivityJoin(aid);
 		}
 	}
 

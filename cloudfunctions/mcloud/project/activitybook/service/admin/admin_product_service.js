@@ -151,16 +151,29 @@ class AdminProductService extends BaseProjectAdminService {
 
 	/**批量修改产品状态 */
 	async batchStatusProduct(ids, status) {
-		for (let k = 0; k < ids.length; k++) {
-			await this.statusProduct(ids[k], status);
-		}
+		if (!Array.isArray(ids) || !ids.length) return;
+
+		// 一次批量更新状态
+		await ProductModel.edit({ _id: ['in', ids] }, { PRODUCT_STATUS: Number(status) });
 	}
 
 	/**批量删除产品 */
 	async batchDelProduct(ids) {
-		for (let k = 0; k < ids.length; k++) {
-			await this.delProduct(ids[k]);
+		if (!Array.isArray(ids) || !ids.length) return;
+
+		// 一次查出所有产品（用于清理云文件）
+		let productList = await ProductModel.getAllBig({ _id: ['in', ids] }, 'PRODUCT_FORMS,PRODUCT_QR');
+
+		// 循环清理产品云文件（表单图片+二维码）
+		for (let k = 0; k < productList.length; k++) {
+			await cloudUtil.handlerCloudFilesForForms(productList[k].PRODUCT_FORMS, []);
+			if (productList[k].PRODUCT_QR) {
+				await cloudUtil.deleteFiles(productList[k].PRODUCT_QR);
+			}
 		}
+
+		// 批量删除产品
+		await ProductModel.del({ _id: ['in', ids] });
 	}
 
 	/**置顶与排序设定 */

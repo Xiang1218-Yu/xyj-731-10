@@ -307,16 +307,44 @@ class AdminEnrollService extends BaseProjectAdminService {
 
     /**批量修改打卡状态 */
     async batchStatusEnroll(ids, status) {
-        for (let k = 0; k < ids.length; k++) {
-            await this.statusEnroll(ids[k], status);
-        }
+        if (!Array.isArray(ids) || !ids.length) return;
+
+        // 一次批量更新状态
+        await EnrollModel.edit({ _id: ['in', ids] }, { ENROLL_STATUS: Number(status) });
     }
 
     /**批量删除打卡活动 */
     async batchDelEnroll(ids) {
-        for (let k = 0; k < ids.length; k++) {
-            await this.delEnroll(ids[k]);
+        if (!Array.isArray(ids) || !ids.length) return;
+
+        // 一次查出所有打卡活动（用于清理云文件）
+        let enrollList = await EnrollModel.getAllBig({ _id: ['in', ids] }, 'ENROLL_FORMS,ENROLL_QR');
+
+        // 循环清理活动云文件（表单图片+二维码）
+        for (let k = 0; k < enrollList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(enrollList[k].ENROLL_FORMS, []);
+            if (enrollList[k].ENROLL_QR) {
+                await cloudUtil.deleteFiles(enrollList[k].ENROLL_QR);
+            }
         }
+
+        // 一次查出所有关联打卡记录（用于清理云文件）
+        let joinList = await EnrollJoinModel.getAllBig(
+            { ENROLL_JOIN_ENROLL_ID: ['in', ids] },
+            'ENROLL_JOIN_FORMS'
+        );
+        for (let k = 0; k < joinList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(joinList[k].ENROLL_JOIN_FORMS, []);
+        }
+
+        // 批量删除打卡记录
+        await EnrollJoinModel.del({ ENROLL_JOIN_ENROLL_ID: ['in', ids] });
+
+        // 批量删除用户统计
+        await EnrollUserModel.del({ ENROLL_USER_ENROLL_ID: ['in', ids] });
+
+        // 批量删除打卡活动
+        await EnrollModel.del({ _id: ['in', ids] });
     }
 
 
@@ -418,8 +446,32 @@ class AdminEnrollService extends BaseProjectAdminService {
 
     /**批量删除打卡记录 */
     async batchDelEnrollJoin(ids) {
-        for (let k = 0; k < ids.length; k++) {
-            await this.delEnrollJoin(ids[k]);
+        if (!Array.isArray(ids) || !ids.length) return;
+
+        // 一次查出所有打卡记录（用于清理云文件和重算统计）
+        let joinList = await EnrollJoinModel.getAllBig(
+            { _id: ['in', ids] },
+            'ENROLL_JOIN_FORMS,ENROLL_JOIN_ENROLL_ID,ENROLL_JOIN_USER_ID'
+        );
+
+        // 循环清理打卡记录云文件
+        for (let k = 0; k < joinList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(joinList[k].ENROLL_JOIN_FORMS, []);
+        }
+
+        // 批量删除打卡记录
+        await EnrollJoinModel.del({ _id: ['in', ids] });
+
+        // 对每个唯一的(enrollId, userId)对重算统计（del=true会更新最近打卡时间）
+        let service = new EnrollService();
+        let statKeys = new Set();
+        for (let k = 0; k < joinList.length; k++) {
+            let enrollId = joinList[k].ENROLL_JOIN_ENROLL_ID;
+            let userId = joinList[k].ENROLL_JOIN_USER_ID;
+            let key = enrollId + '__' + userId;
+            if (statKeys.has(key)) continue;
+            statKeys.add(key);
+            await service.statEnrollJoin(enrollId, userId, true);
         }
     }
 
