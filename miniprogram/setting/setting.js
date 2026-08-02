@@ -10,6 +10,8 @@
 	IS_SUB: false, //分包模式 
 	IS_DEMO: false, //是否演示版  
 
+	ADMIN_NO_LOGIN: true, //后台是否免登录（开发测试使用）
+
 	MOBILE_CHECK: false, //手机号码是否真实性校验
 
 

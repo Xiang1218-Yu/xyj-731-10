@@ -16,6 +16,13 @@ Page({
 	 */
 	onLoad: function (options) {
 		AdminBiz.clearAdminToken();
+
+		const setting = require('../../../../../../setting/setting.js');
+		if (setting.ADMIN_NO_LOGIN) {
+			wx.reLaunch({
+				url: pageHelper.fmtURLByPID('/pages/admin/index/home/admin_home'),
+			});
+		}
 	},
 
 	/**
