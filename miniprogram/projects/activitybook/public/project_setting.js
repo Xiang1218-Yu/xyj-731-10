@@ -20,6 +20,10 @@ module.exports = { //activitybook
 		pic: 'formPic|must|string|name=头像',
 		forms: 'formForms|array'
 	},
+	// 预置用户标签（后台打标签弹窗可勾选，同时支持输入自定义标签）
+	USER_TAG_PRESETS: ['活跃用户', '资深书友', '新用户', '核心成员', '志愿者'],
+	// 预置用户分组（后台设分组弹窗单选）
+	USER_GROUP_PRESETS: ['读书会一组', '读书会二组', '读书会三组'],
 
 
 	NEWS_NAME: '公告通知',
@@ -61,6 +65,9 @@ module.exports = { //activitybook
 		{ mark: 'name', type: 'text', title: '姓名', must: true, max: 30 },
 		{ mark: 'phone', type: 'mobile', title: '手机', must: true, edit: false }
 	],
+
+	// 活动报名审核结果通知的订阅消息模板ID（需在微信公众平台-订阅消息中申请后填写，留空则不弹出订阅授权）
+	ACTIVITY_JOIN_NOTICE_TID: '',
 
 
 	COMMENT_NAME: '评价',

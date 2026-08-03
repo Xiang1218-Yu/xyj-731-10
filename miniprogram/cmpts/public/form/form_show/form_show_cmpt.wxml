@@ -65,6 +65,16 @@
 			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
 	</block>
 
+	<!-- 数字类型：弹出数字键盘 -->
+	<block wx:elif="{{item.type=='number'}}">
+		<view class="form-group" id="form{{item.mark}}">
+			<view class="title {{item.must?'must':''}}">{{item.title}}:</view>
+			<input type="digit" placeholder="{{item.desc||'请填写'+item.title}}" placeholder-class="phc" maxlength="{{item.max}}" bindinput="bindLineBlur" data-idx="{{index}}" value="{{item.val}}" focus="{{item.focus}}"></input>
+		</view>
+		<view wx:if="{{item.focus}}" class="hint-desc error">{{item.focus}}</view>
+			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
+	</block>
+
 	<block wx:elif="{{item.type=='select'}}">
 		<view class="form-group" id="form{{item.mark}}">
 			<view class="title {{item.must?'must':''}}">{{item.title}}</view>

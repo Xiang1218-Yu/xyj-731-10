@@ -6,6 +6,7 @@
 
 const BaseProjectService = require('./base_project_service.js');
 const util = require('../../../framework/utils/util.js');
+const cloudBase = require('../../../framework/cloud/cloud_base.js');
 
 const dataUtil = require('../../../framework/utils/data_util.js');
 const timeUtil = require('../../../framework/utils/time_util.js');
@@ -27,9 +28,39 @@ class ActivityService extends BaseProjectService {
 			return '报名结束';
 		else if (activity.ACTIVITY_MAX_CNT > 0
 			&& activity.ACTIVITY_JOIN_CNT >= activity.ACTIVITY_MAX_CNT)
-			return '报名已满';
+			return '名额已满'; // 达到人数上限自动截止报名，前端报名按钮置灰展示
 		else
 			return '报名中';
+	}
+
+	/** 功能点：活动海报 —— 获取活动小程序码（不存在则实时生成并回写，保证海报使用真实小程序码） */
+	async getActivityQr(id) {
+		let activity = await ActivityModel.getOne({ _id: id, ACTIVITY_STATUS: ActivityModel.STATUS.COMM }, 'ACTIVITY_QR');
+		if (!activity) this.AppError('活动不存在或者已停止');
+
+		// 已有小程序码直接返回
+		if (activity.ACTIVITY_QR) return { qr: activity.ACTIVITY_QR };
+
+		// 无小程序码：调用微信接口生成不限制数量的小程序码（scene为活动ID），上传云存储后回写活动
+		let cloud = cloudBase.getCloud();
+		let page = `projects/${this.getProjectId()}/pages/activity/detail/activity_detail`;
+		let result = await cloud.openapi.wxacode.getUnlimited({
+			scene: id,
+			width: 280,
+			check_path: false,
+			page
+		});
+
+		let cloudPath = `${this.getProjectId()}/activity/${id}/qr.png`;
+		let upload = await cloud.uploadFile({
+			cloudPath,
+			fileContent: result.buffer,
+		});
+		if (!upload || !upload.fileID) this.AppError('小程序码生成失败，请重试');
+
+		await ActivityModel.edit(id, { ACTIVITY_QR: upload.fileID });
+
+		return { qr: upload.fileID };
 	}
 
 	/** 浏览信息 */
@@ -359,6 +390,8 @@ class ActivityService extends BaseProjectService {
 		} 
 
 		await ActivityModel.edit(id, { ACTIVITY_JOIN_CNT: cnt, ACTIVITY_USER_LIST: list });
+
+		return cnt; // 返回最新报名人数（供审核超员校验使用）
 	}
 
 	/**  报名前获取关键信息 */
@@ -492,7 +525,8 @@ class ActivityService extends BaseProjectService {
 
 		let fields = 'ACTIVITY_TITLE,ACTIVITY_START,ACTIVITY_OBJ.cover';
 
-		let list = await ActivityModel.getAll(where, fields, orderBy);
+		// 功能点：限制单日活动列表条数，防止数据量过大拖慢日历页加载
+		let list = await ActivityModel.getAll(where, fields, orderBy, 50);
 
 		let retList = [];
 

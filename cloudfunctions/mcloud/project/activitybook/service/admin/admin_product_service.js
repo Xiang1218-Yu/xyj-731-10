@@ -136,6 +136,36 @@ class AdminProductService extends BaseProjectAdminService {
 		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
 	}
 
+	/** 批量删除书单（ids为记录_id数组） */
+	async batchDelProduct(ids) {
+		if (!Array.isArray(ids) || !ids.length)
+			this.AppError('请选择要操作的书单');
+
+		// 批量删除
+		let where = {
+			_id: ['in', ids]
+		};
+		let cnt = await ProductModel.del(where);
+		return { cnt };
+	}
+
+	/** 批量设置书单状态（status：1=上架 0=下架） */
+	async batchStatusProduct(ids, status) {
+		if (!Array.isArray(ids) || !ids.length)
+			this.AppError('请选择要操作的书单');
+
+		status = Number(status);
+		if (![ProductModel.STATUS.COMM, ProductModel.STATUS.UNUSE].includes(status))
+			this.AppError('状态值不正确');
+
+		// 批量更新状态
+		let where = {
+			_id: ['in', ids]
+		};
+		let cnt = await ProductModel.edit(where, { PRODUCT_STATUS: status });
+		return { cnt };
+	}
+
 	/**置顶与排序设定 */
 	async sortProduct(id, sort) {
 		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');

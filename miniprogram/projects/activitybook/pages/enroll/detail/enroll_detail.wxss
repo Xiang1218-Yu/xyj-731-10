@@ -441,6 +441,33 @@
 	width: 170rpx;
 }
 
+/* 功能点：语音打卡样式 */
+.list .right .voice-line {
+	margin-top: 20rpx;
+	display: inline-flex;
+	align-items: center;
+	align-self: flex-start;
+	padding: 12rpx 30rpx;
+	border-radius: 30rpx;
+	background-color: #f5f5f5;
+	color: #333;
+	font-size: 24rpx;
+}
+
+.list .right .voice-line.playing {
+	background-color: var(--projectColor);
+	color: #fff;
+}
+
+/* 功能点：位置打卡样式 */
+.list .right .addr-line {
+	margin-top: 15rpx;
+	display: flex;
+	align-items: center;
+	font-size: 24rpx;
+	color: #999;
+}
+
 .list .right .oprt {
 	width: 100%;
 	display: flex;

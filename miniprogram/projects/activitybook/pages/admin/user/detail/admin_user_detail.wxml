@@ -27,6 +27,28 @@
 					<view class="mao">：</view>
 					<view class="content">{{user.USER_ADD_TIME}} </view>
 				</view>
+				<view class="info-item">
+					<view class="title">标签</view>
+					<view class="mao">：</view>
+					<view class="content">
+						<!-- 彩色小标签展示 -->
+						<block wx:if="{{user.USER_TAGS && user.USER_TAGS.length}}">
+							<text wx:for="{{user.USER_TAGS}}" wx:for-item="tag" wx:key="*this" class="user-tag tag-color-{{index % 5}}">{{tag}}</text>
+						</block>
+						<text wx:else class="text-grey">未设置</text>
+					</view>
+				</view>
+				<view class="info-item">
+					<view class="title">分组</view>
+					<view class="mao">：</view>
+					<view class="content">{{user.USER_GROUP||'未分组'}} </view>
+				</view>
+
+				<!-- 标签/分组编辑操作 -->
+				<view class="oprt">
+					<view bindtap="bindEditTagTap" class="btn margin-right-s"><text class="icon-tag margin-right-xxs text-admin"></text>编辑标签</view>
+					<view bindtap="bindEditGroupTap" class="btn margin-right-s"><text class="icon-group margin-right-xxs text-admin"></text>设置分组</view>
+				</view>
 			</view>
 		</view>
 	</view>
@@ -35,5 +57,37 @@
 	<import src="../../../../../../tpls/public/admin_forms_detail_tpl.wxml" />
 	<template is="adminFormsDetailTpl" data="{{forms:user.USER_FORMS}}" />
 
+	<!-- 编辑标签弹窗（checkbox多选预置标签 + 自定义标签输入） -->
+	<cmpt-modal wx:if="{{tagModalShow}}" model:show="{{tagModalShow}}" type="dialog" title="编辑标签" bind:click="bindTagCmpt" class="modal-form" cancelText="返回" confirmText="确定">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">选择标签 (多选)：</view>
+		</view>
+		<view class="tag-select">
+			<view wx:for="{{tagItems}}" wx:key="tag" class="tag-item {{item.sel?'cur':''}}" bindtap="bindTagItemTap" data-idx="{{index}}">
+				<text class="icon-{{item.sel?'squarecheckfill':'square'}} margin-right-xxs"></text>{{item.tag}}
+			</view>
+		</view>
+		<view class="form-group" style="padding:20rpx 10rpx 0">
+			<view class="title">自定义标签 <text class="text-grey text-mid">(选填)</text>：</view>
+		</view>
+		<view class="form-group cancel-area">
+			<input placeholder-class="phc" placeholder="请输入自定义标签" model:value="{{formCustomTag}}" maxlength="10" />
+		</view>
+	</cmpt-modal>
+
+	<!-- 设分组弹窗（单选） -->
+	<cmpt-modal wx:if="{{groupModalShow}}" model:show="{{groupModalShow}}" type="dialog" title="设置分组" bind:click="bindGroupCmpt" class="modal-form" cancelText="返回" confirmText="确定">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">选择分组 (单选)：</view>
+		</view>
+		<view class="tag-select">
+			<view class="tag-item {{formGroup===''?'cur':''}}" bindtap="bindGroupItemTap" data-group="">
+				<text class="icon-{{formGroup===''?'roundcheckfill':'round'}} margin-right-xxs"></text>无分组
+			</view>
+			<view wx:for="{{groupPresets}}" wx:key="*this" class="tag-item {{formGroup===item?'cur':''}}" bindtap="bindGroupItemTap" data-group="{{item}}">
+				<text class="icon-{{formGroup===item?'roundcheckfill':'round'}} margin-right-xxs"></text>{{item}}
+			</view>
+		</view>
+	</cmpt-modal>
 
 </view>

@@ -21,7 +21,7 @@
 				<cmpt-picker style="flex:1" model:item="{{formType}}" sourceData="{{typeOptions}}" />
 			</view>
 
-			<block wx:if="{{formType=='text'||formType=='textarea'||formType=='int'||formType=='digit'}}">
+			<block wx:if="{{formType=='text'||formType=='textarea'||formType=='int'||formType=='digit'||formType=='number'}}">
 				<view class="form-group">
 					<view class="title must">最小需填字数</view>
 					<cmpt-picker style="flex:1" model:item="{{formMin}}" sourceData="{{minOptions}}" />
@@ -34,11 +34,12 @@
 
 
 			<!-- select begin -->
-			<block wx:if="{{formType=='select'||formType=='checkbox'}}">
-				<view class="form-group">
-					<view class="title must" wx:if="{{formType=='select'}}">单项选择-选项配置</view>
-					<view class="title must" wx:if="{{formType=='checkbox'}}">多项选择-选项配置</view>
-				</view>
+		<block wx:if="{{formType=='select'||formType=='radio'||formType=='checkbox'}}">
+			<view class="form-group">
+				<view class="title must" wx:if="{{formType=='select'}}">单项选择-选项配置</view>
+				<view class="title must" wx:if="{{formType=='radio'}}">单选按钮-选项配置</view>
+				<view class="title must" wx:if="{{formType=='checkbox'}}">多项选择-选项配置</view>
+			</view>
 
 				<view class="form-group" wx:for="{{formSelectOptions}}" wx:key="key">
 					<input bindinput='bindSelectOptionsBlur' data-idx="{{index}}" placeholder="请输入选项{{index+1}} （30字以内)" maxlength="30" placeholder-class="phc" value="{{item}}"></input><text bindtap="bindDelSelectOptionsTap" data-idx="{{index}}" class="icon-roundclose margin-left-xs text-red select-close"></text>

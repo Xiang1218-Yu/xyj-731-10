@@ -20,7 +20,7 @@ class BaseProjectService extends BaseService {
 	async initSetup() { 
 		let F = (c) => 'bx_' + c;
 		const INSTALL_CL = 'setup_activitybook';
-		const COLLECTIONS = ['setup', 'admin', 'log', 'news', 'activity', 'activity_join', 'comment', 'fav', 'user', 'enroll', 'enroll_user', 'enroll_join','product'];
+		const COLLECTIONS = ['setup', 'admin', 'log', 'news', 'activity', 'activity_join', 'comment', 'fav', 'user', 'enroll', 'enroll_user', 'enroll_join', 'product', 'notice']; // notice为站内通知集合
 		const CONST_PIC = '/images/cover.gif';
 
 

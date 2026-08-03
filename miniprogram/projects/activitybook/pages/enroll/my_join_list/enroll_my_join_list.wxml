@@ -8,9 +8,30 @@
 		<!-- List Begin -->
 		<view class="main">
 			<view class="list">
-				<view class="item shadow-project" wx:for="{{dataList.list}}" wx:key="index"> 
-					<view>第{{dataList.list.length-index}}次 </view>
-					<view class="margin-left-s">{{item.ENROLL_JOIN_ADD_TIME}}</view>
+				<view class="item shadow-project" wx:for="{{dataList.list}}" wx:key="index">
+					<view class="head">
+						<view class="no">第{{dataList.list.length-index}}次 </view>
+						<view class="time margin-left-s">{{item.ENROLL_JOIN_ADD_TIME}}</view>
+					</view>
+
+					<!-- 功能点：打卡文字内容 -->
+					<view class="content" wx:if="{{item.ENROLL_JOIN_OBJ.content}}">{{item.ENROLL_JOIN_OBJ.content}}</view>
+
+					<!-- 功能点：打卡图片（可预览） -->
+					<!-- 功能点：图片打卡展示（独立图片打卡UI + 表单图片合并后的云图片） -->
+					<view class="album" wx:if="{{item.ENROLL_JOIN_IMG&&item.ENROLL_JOIN_IMG.length}}">
+						<image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_IMG}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_IMG}}" wx:key="key1" wx:for-item="itm" class="loading" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+					</view>
+
+					<!-- 功能点：语音打卡（点击播放/暂停） -->
+					<view class="voice-line {{playingVoice==item.ENROLL_JOIN_VOICE.fileID?'playing':''}}" wx:if="{{item.ENROLL_JOIN_VOICE&&item.ENROLL_JOIN_VOICE.fileID}}" bindtap="bindVoiceTap" data-src="{{item.ENROLL_JOIN_VOICE.fileID}}">
+						<text class="icon-voice margin-right-xxs"></text>{{playingVoice==item.ENROLL_JOIN_VOICE.fileID?'播放中…':'语音'}} {{item.ENROLL_JOIN_VOICE.duration}}″
+					</view>
+
+					<!-- 功能点：位置打卡展示 -->
+					<view class="addr-line" wx:if="{{item.ENROLL_JOIN_ADDRESS}}">
+						<text class="icon-location margin-right-xxs"></text>{{item.ENROLL_JOIN_ADDRESS}}
+					</view>
 				</view>
 			</view>
 		</view>

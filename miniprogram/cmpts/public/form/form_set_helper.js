@@ -52,6 +52,7 @@ function initFields(defaultFields = null) {
 					break;
 				case 'digit':
 				case 'int':
+				case 'number': // 数字类型默认长度
 					max = 10;
 					break;
 			}
@@ -198,8 +199,8 @@ function checkForm(fields, forms, that) {
 			return pageHelper.showModal(hintOprt + '' + title);
 		}
 
-		// 填写后，字符串最大长度 
-		if (val.length > 0 && (type == 'text' || type == 'textarea' || type == 'int' || type == 'digit')) {
+		// 填写后，字符串最大长度
+		if (val.length > 0 && (type == 'text' || type == 'textarea' || type == 'int' || type == 'digit' || type == 'number')) {
 			if (fields[k].max == fields[k].min) {
 				let len = fields[k].max;
 				if (val.length != len) {
@@ -334,6 +335,13 @@ function checkForm(fields, forms, that) {
 				}
 				break;
 			}
+			case 'number': { // 数字类型校验
+				if (validate.checkDigit(val)) {
+					fields[k].focus = title + '必须为数字';
+					return pageHelper.showModal(title + '必须为数字');
+				}
+				break;
+			}
 		}
 
 	}
@@ -347,7 +355,8 @@ function mark() {
 function getTypeOptions() {
 	//return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,mobile=手机号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
 
-	return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
+	// 字段类型：文本(text)、单选(radio)、多选(checkbox)、数字(number) 等
+	return dataHelper.getSelectOptions('text=单行文本,radio=单选按钮,checkbox=多项选择,number=数字,select=下拉选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
 }
 
 // 重复性规则

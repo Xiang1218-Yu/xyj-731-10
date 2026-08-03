@@ -5,3 +5,65 @@ page {
 	background-color: #f8f8f8;
 }
 
+/* 列表项勾选框（批量操作） */
+.admin-comm-list .item .header .sel {
+	padding: 10rpx 10rpx 10rpx 0;
+	font-size: 36rpx;
+	display: flex;
+	align-items: center;
+}
+
+/* 底部批量操作栏 */
+.batch-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 999;
+	background-color: #fff;
+	border-top: 1rpx solid #eee;
+	box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
+	padding: 16rpx 20rpx;
+	display: flex;
+	flex-direction: column;
+}
+
+.batch-bar .batch-left {
+	display: flex;
+	align-items: center;
+	font-size: 28rpx;
+	color: #333;
+	padding: 6rpx 0 14rpx;
+}
+
+.batch-bar .batch-left .batch-cnt {
+	margin-left: 20rpx;
+	color: #999;
+	font-size: 24rpx;
+}
+
+.batch-bar .batch-btns {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.batch-bar .batch-btns .btn {
+	padding: 0 24rpx;
+	height: 60rpx;
+	line-height: 60rpx;
+	font-size: 26rpx;
+	border-radius: 8rpx;
+	background-color: #eee;
+	color: #333;
+	margin-right: 16rpx;
+	margin-bottom: 10rpx;
+	display: flex;
+	align-items: center;
+}
+
+.batch-bar .batch-btns .btn.del {
+	background-color: #fadbd9;
+	color: #e54d42;
+}
+

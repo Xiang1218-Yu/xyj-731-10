@@ -149,8 +149,8 @@ Page({
 		if (this.data.formType.length < 1) return pageHelper.showModal('字段填写类型必须选择哦');
 		let formType = this.data.formType;
 
-		if (formType == 'select' || formType == 'checkbox') {
-			// 下拉框
+		if (formType == 'select' || formType == 'radio' || formType == 'checkbox') {
+			// 下拉框/单选按钮/多项选择：校验选项配置
 			let formSelectOptions = this.data.formSelectOptions;
 
 			for (let k = 0; k < formSelectOptions.length; k++) {
@@ -166,7 +166,7 @@ Page({
 			this.data.formMax = 50;
 			this.data.formMin = 0;
 
-			if (formType == 'select') this.data.formCheckBoxLimit = 2;
+			if (formType == 'select' || formType == 'radio') this.data.formCheckBoxLimit = 2;
 
 		} else if (formType == 'mobile') {
 			//非本类型的排除
@@ -179,7 +179,7 @@ Page({
 			this.data.formSelectOptions = ['', ''];
 			this.data.formCheckBoxLimit = 2;
 
-			if (formType != 'text' && formType != 'textarea' && formType != 'int' && formType != 'digit') {
+			if (formType != 'text' && formType != 'textarea' && formType != 'int' && formType != 'digit' && formType != 'number') {
 				this.data.formMax = 50;
 				this.data.formMin = 0;
 			}

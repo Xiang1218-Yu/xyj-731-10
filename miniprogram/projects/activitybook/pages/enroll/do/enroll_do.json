@@ -1,6 +1,7 @@
 {
 	"usingComponents": {
-		"cmpt-form-show": "/cmpts/public/form/form_show/form_show_cmpt"
+		"cmpt-form-show": "/cmpts/public/form/form_show/form_show_cmpt",
+		"cmpt-img-upload": "/cmpts/public/img/img_upload_cmpt"
 	},
 	"enablePullDownRefresh": true,
 	"navigationBarTitleText": "打卡"

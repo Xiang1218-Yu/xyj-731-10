@@ -1,0 +1,27 @@
+<view wx:if="{{isLoad===null}}" class="margin-top load notexist text-l load-project"></view>
+<view wx:if="{{isLoad===false}}" class="margin-top load loading text-l load-project"></view>
+
+<block wx:if="{{isLoad}}">
+	<view class="poster-page">
+
+		<!-- 海报实时预览画布 -->
+		<view class="canvas-wrap shadow-project">
+			<canvas type="2d" id="posterCanvas" class="poster-canvas"></canvas>
+			<view wx:if="{{!isDraw}}" class="canvas-tip">海报生成中...</view>
+		</view>
+
+		<!-- 底部模版切换栏 -->
+		<view class="tpl-bar">
+			<view class="tpl-item {{curTemplate==index?'cur':''}}" wx:for="{{templates}}" wx:key="k" bindtap="bindTemplateTap" data-idx="{{index}}">
+				<view class="tpl-color" style="background-color: {{item.bg}};"></view>
+				<view class="tpl-name">{{item.name}}</view>
+			</view>
+		</view>
+
+		<!-- 保存到相册按钮 -->
+		<view class="save-wrap safe-bottom">
+			<view class="save-btn {{isDraw?'':'disabled'}}" bindtap="bindSaveTap">保存到相册</view>
+		</view>
+
+	</view>
+</block>

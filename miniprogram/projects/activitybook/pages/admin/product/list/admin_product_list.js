@@ -11,6 +11,10 @@ Page({
 	 */
 	data: {
 		isLoad: false,
+
+		// 批量操作相关
+		selIds: [], // 已勾选的书单id（_id）
+		isSelAll: false, // 是否已全选当前列表
 	},
 
 	/**
@@ -57,6 +61,99 @@ Page({
 
 	bindCommListCmpt: function (e) {
 		pageHelper.commListListener(this, e);
+
+		// 列表刷新（含搜索/筛选/分页）后清空勾选状态，避免误操作
+		if (this.data.selIds.length) this._setSel([]);
+	},
+
+	/** 同步勾选状态到列表数据（selIds为已勾选的书单id数组） */
+	_setSel: function (selIds) {
+		let dataList = this.data.dataList;
+		let list = (dataList && dataList.list) ? dataList.list : [];
+
+		// 是否已全选当前已加载的记录
+		let isSelAll = list.length > 0 && selIds.length >= list.length;
+		for (let k = 0; k < list.length; k++)
+			list[k]._sel = selIds.includes(list[k]._id);
+
+		this.setData({ selIds, isSelAll, dataList });
+	},
+
+	/** 勾选/取消勾选单个书单 */
+	bindSelTap: function (e) {
+		let idx = Number(pageHelper.dataset(e, 'idx'));
+		let list = this.data.dataList.list;
+		let id = list[idx]._id;
+
+		let selIds = this.data.selIds;
+		let pos = selIds.indexOf(id);
+		if (pos > -1)
+			selIds.splice(pos, 1); // 取消勾选
+		else
+			selIds.push(id); // 勾选
+
+		this._setSel(selIds);
+	},
+
+	/** 全选/反选当前列表 */
+	bindSelAllTap: function () {
+		let dataList = this.data.dataList;
+		if (!dataList || !dataList.list || !dataList.list.length) return;
+
+		// 已全选则反选（清空），否则全选当前已加载的记录
+		let selIds = this.data.isSelAll ? [] : dataList.list.map(item => item._id);
+		this._setSel(selIds);
+	},
+
+	/** 批量操作成功后刷新列表并清空勾选 */
+	_reloadList: function () {
+		this._setSel([]);
+		this.selectComponent('#cmpt-comm-list').reload(); // 刷新列表
+	},
+
+	/** 批量删除 */
+	bindBatchDelTap: function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selIds;
+		if (!ids.length) return pageHelper.showNoneToast('请先勾选' + this.data.PRODUCT_NAME);
+
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = { ids };
+				let opts = { title: '删除中' };
+				await cloudHelper.callCloudSumbit('admin/product_batch_del', params, opts).then(res => {
+					pageHelper.showSuccToast('删除成功');
+					that._reloadList();
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认删除选中的「' + ids.length + '」个' + this.data.PRODUCT_NAME + '？删除不可恢复', callback);
+	},
+
+	/** 批量上下架（status：1=上架 0=下架） */
+	bindBatchStatusTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let status = Number(pageHelper.dataset(e, 'status'));
+		let ids = this.data.selIds;
+		if (!ids.length) return pageHelper.showNoneToast('请先勾选' + this.data.PRODUCT_NAME);
+
+		let statusDesc = (status == 1) ? '上架' : '下架';
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = { ids, status };
+				await cloudHelper.callCloudSumbit('admin/product_batch_status', params).then(res => {
+					pageHelper.showSuccToast('操作成功');
+					that._reloadList();
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认将选中的「' + ids.length + '」个' + this.data.PRODUCT_NAME + '批量' + statusDesc + '？', callback);
 	},
 
 	bindStatusMoreTap: async function (e) {

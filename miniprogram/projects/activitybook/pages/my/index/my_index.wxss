@@ -133,6 +133,11 @@
 	color: #0E9489;
 }
 
+/* 功能点：站内通知入口未读数角标定位（tag.badge为绝对定位） */
+.main .comm-list.menu .item .content {
+	position: relative;
+}
+
 .main .site-footer {
 	width: 100%;
 	align-self: flex-end;
@@ -146,4 +151,88 @@
 	border-radius: 10rpx !important;
 	border-bottom-left-radius: 40rpx !important;
 	border-top-right-radius: 40rpx !important;
+}
+
+/* 功能点：我的数据统计卡片 */
+.main .stat {
+	width: 100%;
+	position: relative;
+	margin-top: 20rpx;
+}
+
+.main .stat .inner {
+	width: 100%;
+	background-color: #fff;
+	border-radius: 16rpx !important;
+	padding: 30rpx;
+	box-sizing: border-box;
+}
+
+.main .stat .stat-title {
+	display: flex;
+	align-items: center;
+	font-size: 30rpx;
+	font-weight: bold;
+}
+
+.main .stat .stat-title .icon-rank {
+	margin-right: 10rpx;
+	font-size: 34rpx;
+}
+
+.main .stat .stat-grid {
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	margin-top: 30rpx;
+}
+
+.main .stat .stat-grid .cell {
+	width: 33.33%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	margin-bottom: 30rpx;
+}
+
+.main .stat .stat-grid .cell .num {
+	font-size: 40rpx;
+	font-weight: bold;
+	color: var(--projectColor);
+}
+
+.main .stat .stat-grid .cell .label {
+	font-size: 24rpx;
+	color: #999;
+	margin-top: 6rpx;
+}
+
+.main .stat .chart-box {
+	width: 100%;
+	margin-top: 10rpx;
+}
+
+.main .stat .chart-box .chart-title {
+	font-size: 26rpx;
+	color: #666;
+	margin-bottom: 20rpx;
+}
+
+.main .stat .stat-canvas {
+	display: block;
+}
+
+.main .stat .stat-loading {
+	min-height: 200rpx;
+}
+
+.main .stat .stat-login {
+	display: flex;
+	align-items: center;
+	font-size: 28rpx;
+}
+
+.main .stat .stat-login .icon-rank {
+	margin-right: 10rpx;
+	font-size: 34rpx;
 }

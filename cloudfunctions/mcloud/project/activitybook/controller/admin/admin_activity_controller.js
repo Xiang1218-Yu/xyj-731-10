@@ -12,6 +12,7 @@ const ActivityService = require('../../service/activity_service.js');
 const timeUtil = require('../../../../framework/utils/time_util.js');
 const contentCheck = require('../../../../framework/validate/content_check.js');
 const ActivityModel = require('../../model/activity_model.js');
+const ActivityJoinModel = require('../../model/activity_join_model.js');
 
 class AdminActivityController extends BaseProjectAdminController {
 
@@ -257,6 +258,48 @@ class AdminActivityController extends BaseProjectAdminController {
 
 	}
 
+	/** 批量删除活动 */
+	async batchDelActivity() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=活动',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		let result = await service.batchDelActivity(input.ids);
+
+		this.logOther('批量删除了「' + input.ids.length + '」个活动');
+
+		return result;
+	}
+
+	/** 批量状态修改（启用/停用） */
+	async batchStatusActivity() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=活动',
+			status: 'must|int|name=状态',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		let result = await service.batchStatusActivity(input.ids, input.status);
+
+		let statusDesc = (input.status == ActivityModel.STATUS.COMM) ? '启用' : '停用';
+		this.logOther('批量' + statusDesc + '了「' + input.ids.length + '」个活动');
+
+		return result;
+	}
+
 	/** 更新图片信息 */
 	async updateActivityForms() {
 		await this.isAdmin();
@@ -362,6 +405,51 @@ class AdminActivityController extends BaseProjectAdminController {
 
 		let service = new AdminActivityService();
 		return await service.delActivityJoin(input.activityJoinId);
+	}
+
+	/** 批量审核报名（通过/拒绝，拒绝可统一填写理由） */
+	async batchStatusActivityJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			activityId: 'must|id',
+			ids: 'must|array|name=报名记录',
+			status: 'must|int|in:1,99|name=状态',
+			reason: 'string|max:200',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		let result = await service.batchStatusActivityJoin(input.activityId, input.ids, input.status, input.reason);
+
+		let statusDesc = (input.status == ActivityJoinModel.STATUS.SUCC) ? '通过' : '拒绝';
+		this.logOther('批量' + statusDesc + '了「' + input.ids.length + '」条报名记录');
+
+		return result;
+	}
+
+	/** 批量删除报名记录 */
+	async batchDelActivityJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			activityId: 'must|id',
+			ids: 'must|array|name=报名记录',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		let result = await service.batchDelActivityJoin(input.activityId, input.ids);
+
+		this.logOther('批量删除了「' + input.ids.length + '」条报名记录');
+
+		return result;
 	}
 
 	/** 生成自助签到码 */

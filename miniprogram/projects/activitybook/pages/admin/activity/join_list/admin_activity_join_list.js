@@ -29,7 +29,14 @@ Page({
 		cancelModalShow: false,
 		cancelAllModalShow: false,
 		formReason: '',
-		curIdx: -1
+		curIdx: -1,
+
+		// 批量操作相关
+		selIds: [], // 已勾选的报名记录id（_id）
+		isSelAll: false, // 是否已全选当前列表
+		canBatchPass: false, // 当前列表是否含可通过的记录（控制批量通过按钮显示）
+		canBatchRefuse: false, // 当前列表是否含可拒绝的记录（控制批量拒绝按钮显示）
+		refuseModalShow: false, // 批量拒绝弹窗是否显示
 	},
 
 	/**
@@ -375,8 +382,169 @@ Page({
 				this.setData({
 					sortType: e.detail.sortType,
 				});
+
+			// 列表刷新（含搜索/筛选/分页）后清空勾选状态，避免误操作
+			if (this.data.selIds.length) this._setSel([]);
 		}
 
+	},
+
+	/** 同步勾选状态到列表数据（selIds为已勾选的报名记录id数组） */
+	_setSel: function (selIds) {
+		let dataList = this.data.dataList;
+		let list = (dataList && dataList.list) ? dataList.list : [];
+
+		// 是否已全选当前已加载的记录
+		let isSelAll = list.length > 0 && selIds.length >= list.length;
+
+		// 统计当前列表中各状态的记录（控制批量按钮的显示）
+		let canBatchPass = false; // 含待审核/未过审的记录，可批量通过
+		let canBatchRefuse = false; // 含待审核/报名成功的记录，可批量拒绝
+		for (let k = 0; k < list.length; k++) {
+			list[k]._sel = selIds.includes(list[k]._id);
+			if (list[k].ACTIVITY_JOIN_STATUS == 0 || list[k].ACTIVITY_JOIN_STATUS == 99) canBatchPass = true;
+			if (list[k].ACTIVITY_JOIN_STATUS == 0 || list[k].ACTIVITY_JOIN_STATUS == 1) canBatchRefuse = true;
+		}
+
+		this.setData({ selIds, isSelAll, canBatchPass, canBatchRefuse, dataList });
+	},
+
+	/** 勾选/取消勾选单条报名记录 */
+	bindSelTap: function (e) {
+		let idx = Number(pageHelper.dataset(e, 'idx'));
+		let list = this.data.dataList.list;
+		let id = list[idx]._id;
+
+		let selIds = this.data.selIds;
+		let pos = selIds.indexOf(id);
+		if (pos > -1)
+			selIds.splice(pos, 1); // 取消勾选
+		else
+			selIds.push(id); // 勾选
+
+		this._setSel(selIds);
+	},
+
+	/** 全选/反选当前列表 */
+	bindSelAllTap: function () {
+		let dataList = this.data.dataList;
+		if (!dataList || !dataList.list || !dataList.list.length) return;
+
+		// 已全选则反选（清空），否则全选当前已加载的记录
+		let selIds = this.data.isSelAll ? [] : dataList.list.map(item => item._id);
+		this._setSel(selIds);
+	},
+
+	/** 批量操作成功后刷新列表并清空勾选 */
+	_reloadList: function () {
+		this._setSel([]);
+		this.selectComponent('#cmpt-comm-list').reload(); // 刷新列表
+	},
+
+	/** 展示批量审核结果（部分失败时给出明细提示，避免"部分成功部分失败"无感知） */
+	_showBatchResult: function (data) {
+		if (data && data.failCnt > 0) {
+			wx.showModal({
+				title: '部分处理失败',
+				content: '成功' + data.cnt + '条，失败' + data.failCnt + '条。失败原因：' + (data.failMsg || '未知'),
+				showCancel: false,
+				confirmText: '知道了'
+			});
+		} else {
+			pageHelper.showSuccToast('操作成功');
+		}
+	},
+
+	/** 批量审核通过 */
+	bindBatchStatusTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let status = Number(pageHelper.dataset(e, 'status'));
+		let ids = this.data.selIds;
+		if (!ids.length) return pageHelper.showNoneToast('请先勾选报名记录');
+
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = {
+					activityId: that.data.activityId,
+					ids,
+					status
+				};
+				let opts = { title: '处理中' };
+				await cloudHelper.callCloudSumbit('admin/activity_join_batch_status', params, opts).then(res => {
+					that._showBatchResult(res.data); // 展示批量处理结果（含部分失败明细）
+					that._reloadList();
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认将选中的「' + ids.length + '」条报名记录批量通过？', callback);
+	},
+
+	/** 打开批量拒绝弹窗 */
+	bindBatchRefuseTap: function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		if (!this.data.selIds.length) return pageHelper.showNoneToast('请先勾选报名记录');
+
+		this.setData({
+			formReason: cacheHelper.get(CACHE_REFUSE_REASON) || '',
+			refuseModalShow: true
+		});
+	},
+
+	/** 批量拒绝弹窗-确定（统一填写理由） */
+	bindRefuseCmpt: async function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selIds;
+		if (!ids.length) return;
+
+		cacheHelper.set(CACHE_REFUSE_REASON, this.data.formReason, 86400 * 365);
+
+		try {
+			let params = {
+				activityId: this.data.activityId,
+				ids,
+				status: 99,
+				reason: this.data.formReason
+			};
+			let opts = { title: '处理中' };
+			await cloudHelper.callCloudSumbit('admin/activity_join_batch_status', params, opts).then(res => {
+				this.setData({
+					refuseModalShow: false,
+					formReason: ''
+				});
+				this._showBatchResult(res.data); // 展示批量处理结果（含部分失败明细）
+				this._reloadList();
+			});
+		} catch (err) {
+			console.log(err);
+		}
+	},
+
+	/** 批量删除报名记录 */
+	bindBatchDelTap: function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selIds;
+		if (!ids.length) return pageHelper.showNoneToast('请先勾选报名记录');
+
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = {
+					activityId: that.data.activityId,
+					ids
+				};
+				let opts = { title: '删除中' };
+				await cloudHelper.callCloudSumbit('admin/activity_join_batch_del', params, opts).then(res => {
+					pageHelper.showSuccToast('删除成功');
+					that._reloadList();
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认删除选中的「' + ids.length + '」条报名记录？删除后用户将无法查询到报名记录', callback);
 	},
 
 	// 修改与展示状态菜单

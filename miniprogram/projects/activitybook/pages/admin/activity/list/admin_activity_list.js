@@ -11,6 +11,12 @@ Page({
 	 */
 	data: {
 		isLoad: false,
+
+		// 批量操作相关
+		selIds: [], // 已勾选的活动id（_id）
+		isSelAll: false, // 是否已全选当前列表
+		canBatchEnable: false, // 当前列表是否含停用的活动（控制批量启用按钮显示）
+		canBatchDisable: false, // 当前列表是否含正常的活动（控制批量停用按钮显示）
 	},
 
 	/**
@@ -57,6 +63,106 @@ Page({
 
 	bindCommListCmpt: function (e) {
 		pageHelper.commListListener(this, e);
+
+		// 列表刷新（含搜索/筛选/分页）后清空勾选状态，避免误操作
+		if (this.data.selIds.length) this._setSel([]);
+	},
+
+	/** 同步勾选状态到列表数据（selIds为已勾选的活动id数组） */
+	_setSel: function (selIds) {
+		let dataList = this.data.dataList;
+		let list = (dataList && dataList.list) ? dataList.list : [];
+
+		// 是否已全选当前已加载的记录
+		let isSelAll = list.length > 0 && selIds.length >= list.length;
+
+		// 统计当前列表中各状态的活动（控制批量按钮的显示）
+		let canBatchEnable = false; // 含停用状态的活动，可批量启用
+		let canBatchDisable = false; // 含正常状态的活动，可批量停用
+		for (let k = 0; k < list.length; k++) {
+			list[k]._sel = selIds.includes(list[k]._id);
+			if (list[k].ACTIVITY_STATUS == 0) canBatchEnable = true;
+			if (list[k].ACTIVITY_STATUS == 1) canBatchDisable = true;
+		}
+
+		this.setData({ selIds, isSelAll, canBatchEnable, canBatchDisable, dataList });
+	},
+
+	/** 勾选/取消勾选单个活动 */
+	bindSelTap: function (e) {
+		let idx = Number(pageHelper.dataset(e, 'idx'));
+		let list = this.data.dataList.list;
+		let id = list[idx]._id;
+
+		let selIds = this.data.selIds;
+		let pos = selIds.indexOf(id);
+		if (pos > -1)
+			selIds.splice(pos, 1); // 取消勾选
+		else
+			selIds.push(id); // 勾选
+
+		this._setSel(selIds);
+	},
+
+	/** 全选/反选当前列表 */
+	bindSelAllTap: function () {
+		let dataList = this.data.dataList;
+		if (!dataList || !dataList.list || !dataList.list.length) return;
+
+		// 已全选则反选（清空），否则全选当前已加载的记录
+		let selIds = this.data.isSelAll ? [] : dataList.list.map(item => item._id);
+		this._setSel(selIds);
+	},
+
+	/** 批量操作成功后刷新列表并清空勾选 */
+	_reloadList: function () {
+		this._setSel([]);
+		this.selectComponent('#cmpt-comm-list').reload(); // 刷新列表
+	},
+
+	/** 批量删除 */
+	bindBatchDelTap: function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selIds;
+		if (!ids.length) return pageHelper.showNoneToast('请先勾选' + this.data.ACTIVITY_NAME);
+
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = { ids };
+				let opts = { title: '删除中' };
+				await cloudHelper.callCloudSumbit('admin/activity_batch_del', params, opts).then(res => {
+					pageHelper.showSuccToast('删除成功');
+					that._reloadList();
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认删除选中的「' + ids.length + '」个' + this.data.ACTIVITY_NAME + '？删除后报名数据将一并删除且不可恢复', callback);
+	},
+
+	/** 批量设置状态（启用/停用） */
+	bindBatchStatusTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let status = Number(pageHelper.dataset(e, 'status'));
+		let ids = this.data.selIds;
+		if (!ids.length) return pageHelper.showNoneToast('请先勾选' + this.data.ACTIVITY_NAME);
+
+		let statusDesc = (status == 1) ? '启用' : '停用';
+		let that = this;
+		let callback = async () => {
+			try {
+				let params = { ids, status };
+				await cloudHelper.callCloudSumbit('admin/activity_batch_status', params).then(res => {
+					pageHelper.showSuccToast('操作成功');
+					that._reloadList();
+				});
+			} catch (err) {
+				console.log(err);
+			}
+		}
+		pageHelper.showConfirm('确认将选中的「' + ids.length + '」个' + this.data.ACTIVITY_NAME + '批量' + statusDesc + '？', callback);
 	},
 
 	bindJoinMoreTap: async function (e) {

@@ -12,6 +12,11 @@
 			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
 				<view class="no">{{index+1}}</view>
 				<view class="header">
+					<!-- 批量操作勾选框 -->
+					<view class="sel" catchtap="bindSelTap" data-idx="{{index}}">
+						<text wx:if="{{item._sel}}" class="icon-roundcheckfill text-admin"></text>
+						<text wx:else class="icon-round text-grey"></text>
+					</view>
 					<view class="left text-cut">{{item.USER_NAME}}
 					</view>
 					<view class="right">
@@ -38,6 +43,21 @@
 						<view class="title">注册</view>
 						<view class="mao">：</view>
 						<view class="content">{{item.USER_ADD_TIME}}</view>
+					</view>
+
+					<view class="info-item" wx:if="{{item.USER_TAGS && item.USER_TAGS.length}}">
+						<view class="title">标签</view>
+						<view class="mao">：</view>
+						<view class="content">
+							<!-- 彩色小标签展示 -->
+							<text wx:for="{{item.USER_TAGS}}" wx:for-item="tag" wx:key="*this" class="user-tag tag-color-{{index % 5}}">{{tag}}</text>
+						</view>
+					</view>
+
+					<view class="info-item" wx:if="{{item.USER_GROUP}}">
+						<view class="title">分组</view>
+						<view class="mao">：</view>
+						<view class="content">{{item.USER_GROUP}}</view>
 					</view>
 
 					<view class="info-item" bindtap="url" data-url="../detail/admin_user_detail?id={{item.USER_MINI_OPENID}}">
@@ -85,5 +105,57 @@
 			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
 		</view>
 	</cmpt-modal>
+
+	<!-- 打标签弹窗（checkbox多选预置标签 + 自定义标签输入） -->
+	<cmpt-modal wx:if="{{tagModalShow}}" model:show="{{tagModalShow}}" type="dialog" title="批量打标签 (已选{{selIds.length}}人)" bind:click="bindTagCmpt" class="modal-form" cancelText="返回" confirmText="确定">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">选择标签 (多选)：</view>
+		</view>
+		<view class="tag-select">
+			<view wx:for="{{tagItems}}" wx:key="tag" class="tag-item {{item.sel?'cur':''}}" bindtap="bindTagItemTap" data-idx="{{index}}">
+				<text class="icon-{{item.sel?'squarecheckfill':'square'}} margin-right-xxs"></text>{{item.tag}}
+				<!-- 功能点：全局删除该标签（同时从所有用户身上移除，清理用户数据） -->
+				<text class="icon-close tag-del" catchtap="bindTagGlobalDelTap" data-idx="{{index}}"></text>
+			</view>
+		</view>
+		<view class="form-group" style="padding:20rpx 10rpx 0">
+			<view class="title">自定义标签 <text class="text-grey text-mid">(选填)</text>：</view>
+		</view>
+		<view class="form-group cancel-area">
+			<input placeholder-class="phc" placeholder="请输入自定义标签" model:value="{{formCustomTag}}" maxlength="10" />
+		</view>
+	</cmpt-modal>
+
+	<!-- 设分组弹窗（单选） -->
+	<cmpt-modal wx:if="{{groupModalShow}}" model:show="{{groupModalShow}}" type="dialog" title="批量设分组 (已选{{selIds.length}}人)" bind:click="bindGroupCmpt" class="modal-form" cancelText="返回" confirmText="确定">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">选择分组 (单选)：</view>
+		</view>
+		<view class="tag-select">
+			<view class="tag-item {{formGroup===''?'cur':''}}" bindtap="bindGroupItemTap" data-group="">
+				<text class="icon-{{formGroup===''?'roundcheckfill':'round'}} margin-right-xxs"></text>无分组
+			</view>
+			<view wx:for="{{groupPresets}}" wx:key="*this" class="tag-item {{formGroup===item?'cur':''}}" bindtap="bindGroupItemTap" data-group="{{item}}">
+				<text class="icon-{{formGroup===item?'roundcheckfill':'round'}} margin-right-xxs"></text>{{item}}
+				<!-- 功能点：全局删除该分组（同时清空所有该分组用户的分组字段，清理用户数据） -->
+				<text class="icon-close tag-del" catchtap="bindGroupGlobalDelTap" data-idx="{{index}}"></text>
+			</view>
+		</view>
+	</cmpt-modal>
+
+	<!-- 底部批量操作栏（有勾选时出现） -->
+	<view class="batch-bar" wx:if="{{selIds.length}}">
+		<view class="batch-left" bindtap="bindSelAllTap">
+			<text class="icon-{{isSelAll?'roundcheckfill':'round'}} text-admin margin-right-xxs"></text>{{isSelAll?'反选':'全选'}}
+			<text class="batch-cnt">已选{{selIds.length}}项</text>
+		</view>
+		<view class="batch-btns">
+			<view class="btn" bindtap="bindBatchTagTap"><text class="icon-tag margin-right-xxs"></text>打标签</view>
+			<view class="btn" bindtap="bindBatchGroupTap"><text class="icon-group margin-right-xxs"></text>设分组</view>
+			<view class="btn" bindtap="bindBatchStatusTap" data-status="1"><text class="icon-check margin-right-xxs text-green"></text>启用</view>
+			<view class="btn" bindtap="bindBatchStatusTap" data-status="9"><text class="icon-close margin-right-xxs text-purple"></text>禁用</view>
+			<view class="btn del" bindtap="bindBatchDelTap"><text class="icon-delete margin-right-xxs"></text>删除</view>
+		</view>
+	</view>
 
 </block>

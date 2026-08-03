@@ -2,8 +2,123 @@
 
 page {
 	background-color: #f8f8f8;
-} 
+}
 
-.admin-comm-list .item .info .oprt { 
+.admin-comm-list .item .info .oprt {
     padding: 0rpx 0rpx;
+}
+
+/* 列表项勾选框（批量操作） */
+.admin-comm-list .item .header .sel {
+	padding: 10rpx 10rpx 10rpx 0;
+	font-size: 36rpx;
+	display: flex;
+	align-items: center;
+}
+
+/* 用户彩色小标签 */
+.user-tag {
+	font-size: 22rpx;
+	padding: 4rpx 16rpx;
+	border-radius: 20rpx;
+	margin-right: 12rpx;
+	margin-bottom: 8rpx;
+}
+
+.user-tag.tag-color-0 { background-color: #e8f5e9; color: #43a047; }
+.user-tag.tag-color-1 { background-color: #e3f2fd; color: #1e88e5; }
+.user-tag.tag-color-2 { background-color: #fff3e0; color: #fb8c00; }
+.user-tag.tag-color-3 { background-color: #f3e5f5; color: #8e24aa; }
+.user-tag.tag-color-4 { background-color: #ffebee; color: #e53935; }
+
+/* 底部批量操作栏 */
+.batch-bar {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 999;
+	background-color: #fff;
+	border-top: 1rpx solid #eee;
+	box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
+	padding: 16rpx 20rpx;
+	display: flex;
+	flex-direction: column;
+}
+
+.batch-bar .batch-left {
+	display: flex;
+	align-items: center;
+	font-size: 28rpx;
+	color: #333;
+	padding: 6rpx 0 14rpx;
+}
+
+.batch-bar .batch-left .batch-cnt {
+	margin-left: 20rpx;
+	color: #999;
+	font-size: 24rpx;
+}
+
+.batch-bar .batch-btns {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
+.batch-bar .batch-btns .btn {
+	padding: 0 24rpx;
+	height: 60rpx;
+	line-height: 60rpx;
+	font-size: 26rpx;
+	border-radius: 8rpx;
+	background-color: #eee;
+	color: #333;
+	margin-right: 16rpx;
+	margin-bottom: 10rpx;
+	display: flex;
+	align-items: center;
+}
+
+.batch-bar .batch-btns .btn.del {
+	background-color: #fadbd9;
+	color: #e54d42;
+}
+
+/* 打标签/设分组弹窗选项 */
+.tag-select {
+	display: flex;
+	flex-wrap: wrap;
+	padding: 10rpx 10rpx 0;
+}
+
+.tag-select .tag-item {
+	display: flex;
+	align-items: center;
+	font-size: 26rpx;
+	color: #555;
+	background-color: #f5f5f5;
+	border-radius: 8rpx;
+	padding: 12rpx 24rpx;
+	margin-right: 16rpx;
+	margin-bottom: 16rpx;
+	border: 1rpx solid transparent;
+}
+
+.tag-select .tag-item.cur {
+	color: #2499f2;
+	background-color: #eaf4fe;
+	border: 1rpx solid #2499f2;
+}
+
+/* 功能点：标签/分组的全局删除小图标 */
+.tag-select .tag-item .tag-del {
+	font-size: 24rpx;
+	color: #aaa;
+	margin-left: 12rpx;
+	padding: 4rpx;
+}
+
+.tag-select .tag-item .tag-del:hover {
+	color: #e64340;
 }

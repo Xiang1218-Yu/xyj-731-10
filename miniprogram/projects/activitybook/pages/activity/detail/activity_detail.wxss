@@ -303,6 +303,20 @@ swiper .wx-swiper-dot.wx-swiper-dot-active {
 	color: var(--yellow);
 }
 
+/* 底部按钮等分布局，以容纳“生成海报”入口 */
+.bottom-line .join {
+	flex: 1;
+	width: auto;
+	padding-left: 0;
+	padding-right: 0;
+}
+
+/* 生成海报按钮样式（白底主题色描边） */
+.bottom-line .join.poster {
+	background-color: #fff;
+	color: var(--projectColor);
+}
+
 .bottom-line .join.bg-grey { 
 	box-shadow: unset;
 }

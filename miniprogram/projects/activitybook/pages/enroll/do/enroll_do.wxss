@@ -1,1 +1,97 @@
 @import "../../../style/skin.wxss"; 
+
+/* 功能点：多媒体打卡（语音/位置）样式 */
+.media-box {
+	padding: 30rpx;
+}
+
+.media-box .media-item {
+	margin-bottom: 35rpx;
+}
+
+.media-box .media-item:last-child {
+	margin-bottom: 0;
+}
+
+.media-box .media-title {
+	font-size: 28rpx;
+	color: #333;
+	font-weight: bold;
+	margin-bottom: 20rpx;
+}
+
+.media-box .media-tip {
+	font-size: 24rpx;
+	color: #999;
+	font-weight: normal;
+}
+
+.media-box .voice-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 88rpx;
+	border: 2rpx dashed #ccc;
+	border-radius: 44rpx;
+	color: #666;
+	font-size: 28rpx;
+}
+
+.media-box .voice-btn.recording {
+	border-color: var(--projectColor);
+	color: var(--projectColor);
+	background-color: rgba(255, 199, 0, 0.08);
+}
+
+.media-box .voice-done {
+	display: flex;
+	align-items: center;
+}
+
+.media-box .voice-chip {
+	display: flex;
+	align-items: center;
+	padding: 16rpx 30rpx;
+	border-radius: 34rpx;
+	background-color: #f5f5f5;
+	color: #333;
+	font-size: 26rpx;
+}
+
+.media-box .voice-chip.playing {
+	background-color: var(--projectColor);
+	color: #fff;
+}
+
+.media-box .voice-del {
+	margin-left: 20rpx;
+	font-size: 32rpx;
+	color: #999;
+	padding: 10rpx;
+}
+
+.media-box .addr-box {
+	display: flex;
+	align-items: center;
+	min-height: 88rpx;
+	padding: 0 20rpx;
+	border: 2rpx dashed #ccc;
+	border-radius: 16rpx;
+	color: #666;
+	font-size: 28rpx;
+}
+
+.media-box .addr-box .addr-hint {
+	color: #999;
+}
+
+.media-box .addr-box .addr-text {
+	flex: 1;
+	color: #333;
+}
+
+.media-box .addr-box .addr-del {
+	font-size: 32rpx;
+	color: #999;
+	padding: 10rpx;
+}

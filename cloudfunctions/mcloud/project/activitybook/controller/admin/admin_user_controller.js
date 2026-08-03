@@ -114,6 +114,130 @@ class AdminUserController extends BaseProjectAdminController {
 		await service.statusUser(input.id, input.status, input.reason);
 	}
 
+	/** 批量删除用户 */
+	async batchDelUser() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=用户',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.batchDelUser(input.ids);
+
+		this.logUser('批量删除了「' + input.ids.length + '」个用户');
+
+		return result;
+	}
+
+	/** 批量设置用户状态（启用/禁用） */
+	async batchStatusUser() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=用户',
+			status: 'must|int|name=状态',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.batchStatusUser(input.ids, input.status);
+
+		let statusDesc = (input.status == UserModel.STATUS.COMM) ? '启用' : '禁用';
+		this.logUser('批量' + statusDesc + '了「' + input.ids.length + '」个用户');
+
+		return result;
+	}
+
+	/** 设置用户标签（单个/批量） */
+	async setUserTag() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=用户',
+			tags: 'array|name=标签',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.setUserTag(input.ids, input.tags || []);
+
+		this.logUser('批量设置用户标签「' + (input.tags || []).join('、') + '」，共「' + input.ids.length + '」个用户');
+
+		return result;
+	}
+
+	/** 设置用户分组（单个/批量） */
+	async setUserGroup() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array|name=用户',
+			group: 'string|max:30|name=分组',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.setUserGroup(input.ids, input.group || '');
+
+		this.logUser('批量设置用户分组「' + (input.group || '无分组') + '」，共「' + input.ids.length + '」个用户');
+
+		return result;
+	}
+
+	/** 功能点：全局删除标签（从所有用户身上移除该标签） */
+	async delUserTagGlobal() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			tag: 'must|string|max:30|name=标签',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.delUserTagGlobal(input.tag);
+
+		this.logUser('全局删除标签「' + input.tag + '」，清理了「' + result.cnt + '」个用户的标签数据');
+
+		return result;
+	}
+
+	/** 功能点：全局删除分组（清空所有属于该分组的用户分组字段） */
+	async delUserGroupGlobal() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			group: 'must|string|max:30|name=分组',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminUserService();
+		let result = await service.delUserGroupGlobal(input.group);
+
+		this.logUser('全局删除分组「' + input.group + '」，清理了「' + result.cnt + '」个用户的分组数据');
+
+		return result;
+	}
+
 	/************** 用户数据导出 BEGIN ********************* */
 	/** 当前是否有导出文件生成 */
 	async userDataGet() {

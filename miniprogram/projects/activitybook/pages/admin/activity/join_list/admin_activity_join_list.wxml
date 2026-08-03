@@ -19,6 +19,11 @@
 			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
 				<view class="header">
 					<view class="left">
+						<!-- 批量操作勾选框 -->
+						<view class="sel" catchtap="bindSelTap" data-idx="{{index}}">
+							<text wx:if="{{item._sel}}" class="icon-roundcheckfill text-admin"></text>
+							<text wx:else class="icon-round text-grey"></text>
+						</view>
 						<text class="icon-calendar margin-right-xxs"></text><text class="">{{item.ACTIVITY_JOIN_ADD_TIME}}</text>
 					</view>
 					<view class="right" bindtap="bindCopyTap" data-idx="{{index}}">
@@ -112,5 +117,30 @@
 			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
 		</view>
 	</cmpt-modal>
+
+	<!-- 批量拒绝弹窗（统一填写理由） -->
+	<cmpt-modal wx:if="{{refuseModalShow}}" model:show="{{refuseModalShow}}" type="dialog" title="批量拒绝 (已选{{selIds.length}}条)" bind:click="bindRefuseCmpt" class="modal-form" cancelText="返回" confirmText="确定">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">审核不过理由 <text class="text-grey text-mid">(选填)</text>：</view>
+			<view bindtap="bindClearReasonTap" style="width:150rpx;text-align: right;" class="text-grey"><text class="icon-roundclose"></text>清空</view>
+		</view>
+
+		<view class="form-group cancel-area">
+			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
+		</view>
+	</cmpt-modal>
+
+	<!-- 底部批量操作栏（有勾选时出现） -->
+	<view class="batch-bar" wx:if="{{selIds.length}}">
+		<view class="batch-left" bindtap="bindSelAllTap">
+			<text class="icon-{{isSelAll?'roundcheckfill':'round'}} text-admin margin-right-xxs"></text>{{isSelAll?'反选':'全选'}}
+			<text class="batch-cnt">已选{{selIds.length}}项</text>
+		</view>
+		<view class="batch-btns">
+			<view class="btn" wx:if="{{canBatchPass}}" bindtap="bindBatchStatusTap" data-status="1"><text class="icon-check margin-right-xxs text-green"></text>通过</view>
+			<view class="btn" wx:if="{{canBatchRefuse}}" bindtap="bindBatchRefuseTap"><text class="icon-close margin-right-xxs text-red"></text>拒绝</view>
+			<view class="btn del" bindtap="bindBatchDelTap"><text class="icon-delete margin-right-xxs"></text>删除</view>
+		</view>
+	</view>
 
 </block>

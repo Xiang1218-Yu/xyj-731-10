@@ -67,7 +67,8 @@ class EnrollService extends BaseProjectService {
             'ENROLL_JOIN_ADD_TIME': 'desc'
         };
 
-        let fields = 'ENROLL_JOIN_OBJ,ENROLL_JOIN_ADD_TIME,user.USER_NAME,user.USER_PIC';
+		// 功能点：打卡动态列表返回多媒体字段（图片/语音/位置）
+        let fields = 'ENROLL_JOIN_OBJ,ENROLL_JOIN_IMG,ENROLL_JOIN_VOICE,ENROLL_JOIN_ADDRESS,ENROLL_JOIN_ADDRESS_GEO,ENROLL_JOIN_ADD_TIME,user.USER_NAME,user.USER_PIC';
         return await EnrollJoinModel.getListJoin(joinParams, where, fields, orderBy, page, size, isTotal, oldTotal);
 	}
 
@@ -363,8 +364,8 @@ class EnrollService extends BaseProjectService {
 		return userList;
 	}
 
-	// 打卡 
-	async enrollJoin(userId, enrollId, forms) {
+	// 打卡
+	async enrollJoin(userId, enrollId, forms, img = [], voice = {}, address = '', addressGeo = {}) {
 
 		let user = await UserModel.getOne({ USER_MINI_OPENID: userId, USER_STATUS: UserModel.STATUS.COMM });
 		if (!user) this.AppError('用户不存在');
@@ -409,6 +410,12 @@ class EnrollService extends BaseProjectService {
 
             ENROLL_JOIN_OBJ: dataUtil.dbForms2Obj(forms),
             ENROLL_JOIN_FORMS: forms,
+
+			// 功能点：多媒体打卡（图片/语音/位置）入库
+			ENROLL_JOIN_IMG: Array.isArray(img) ? img : [], // 独立图片打卡UI上传的云fileID数组
+			ENROLL_JOIN_VOICE: (voice && voice.fileID) ? voice : {},
+			ENROLL_JOIN_ADDRESS: address || '',
+			ENROLL_JOIN_ADDRESS_GEO: addressGeo || {},
 		}
 
 		let enrollJoinId = await EnrollJoinModel.insert(data);
@@ -426,6 +433,13 @@ class EnrollService extends BaseProjectService {
         hasImageForms
     }) {
         await EnrollJoinModel.editForms(id, 'ENROLL_JOIN_FORMS', 'ENROLL_JOIN_OBJ', hasImageForms);
+
+		// 功能点：表单内图片转存云存储后，合并进打卡图片字段（与独立图片打卡UI上传的图片并存，供动态列表直接展示）
+		let enrollJoin = await EnrollJoinModel.getOne(id, 'ENROLL_JOIN_OBJ,ENROLL_JOIN_IMG');
+		if (enrollJoin && enrollJoin.ENROLL_JOIN_OBJ && Array.isArray(enrollJoin.ENROLL_JOIN_OBJ.img)) {
+			let imgList = Array.isArray(enrollJoin.ENROLL_JOIN_IMG) ? enrollJoin.ENROLL_JOIN_IMG : [];
+			await EnrollJoinModel.edit(id, { ENROLL_JOIN_IMG: imgList.concat(enrollJoin.ENROLL_JOIN_OBJ.img) });
+		}
 
 	}
 
@@ -525,6 +539,10 @@ class EnrollService extends BaseProjectService {
         }
 
         cloudUtil.handlerCloudFilesForForms(enrollJoin.ENROLL_JOIN_FORMS, []);
+
+		// 功能点：取消打卡时清理语音云文件
+		if (enrollJoin.ENROLL_JOIN_VOICE && enrollJoin.ENROLL_JOIN_VOICE.fileID)
+			await cloudUtil.deleteFiles([enrollJoin.ENROLL_JOIN_VOICE.fileID]);
 
         await EnrollJoinModel.del(where);
 

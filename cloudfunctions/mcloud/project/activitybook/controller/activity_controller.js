@@ -85,6 +85,20 @@ class ActivityController extends BaseProjectController {
 		return activity;
 	}
 
+	/** 功能点：活动海报 —— 获取（如无则生成）活动小程序码 */
+	async getActivityQr() {
+		// 数据校验
+		let rules = {
+			id: 'must|id',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new ActivityService();
+		return await service.getActivityQr(input.id);
+	}
+
 	/** 取得某一个报名分页列表 */
 	async getActivityJoinList() {
 

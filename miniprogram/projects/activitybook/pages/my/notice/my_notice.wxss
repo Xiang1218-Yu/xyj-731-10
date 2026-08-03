@@ -1,0 +1,47 @@
+@import "../../../style/skin.wxss";
+
+/* 功能点：站内通知中心列表 */
+.notice-list-box {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.notice-list-box .item {
+	position: relative;
+	padding: 30rpx;
+	margin-bottom: 20rpx;
+	overflow: hidden;
+}
+
+/* 未读红点标识 */
+.notice-list-box .item .dot {
+	position: absolute;
+	top: 36rpx;
+	right: 30rpx;
+	width: 16rpx;
+	height: 16rpx;
+	border-radius: 50%;
+	background-color: #dd514c;
+}
+
+.notice-list-box .item .title {
+	font-size: 30rpx;
+	font-weight: bold;
+	color: #333;
+	padding-right: 30rpx;
+}
+
+.notice-list-box .item .desc {
+	font-size: 26rpx;
+	color: #666;
+	line-height: 1.6;
+	margin-top: 14rpx;
+}
+
+.notice-list-box .item .time {
+	font-size: 24rpx;
+	color: #999;
+	margin-top: 16rpx;
+	display: flex;
+	align-items: center;
+}
