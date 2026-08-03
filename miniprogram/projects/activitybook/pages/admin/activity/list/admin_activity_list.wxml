@@ -1,16 +1,23 @@
 <block wx:if="{{isAdmin&&isLoad}}">
-	<cmpt-comm-list source='admin' type="admin-activity-list" search="{{search||''}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/activity_list" sortMenusDefaultIndex="0" topBottom="50" placeholder="搜索标题" bind:list="bindCommListCmpt">
+	<cmpt-comm-list id="cmpt-comm-list" source='admin' type="admin-activity-list" search="{{search||''}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/activity_list" sortMenusDefaultIndex="0" topBottom="{{batchMode?'140':'50'}}" placeholder="搜索标题" bind:list="bindCommListCmpt">
 
 		<view slot="searchEnd"> 
 			<button bindtap="url" data-url="../add/admin_activity_add" class="btn radius bg-admin text-white margin-right-s"><text class="icon-roundadd margin-right-xxs"></text>添加新{{ACTIVITY_NAME}}</button>
+			<button bindtap="bindBatchModeTap" class="btn radius {{batchMode?'bg-orange':'bg-grey'}} light margin-right-s"><text class="icon-setting margin-right-xxs"></text>{{batchMode?'退出批量':'批量操作'}}</button>
 		</view>
 		<!-- List Begin -->
 		<view class="admin-comm-list">
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录</view>
 
-			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
-				<view class="no">{{index+1}}</view>
-				<view class="header">
+			<view class="item {{batchMode?'batch-item':''}}" wx:for="{{dataList.list}}" wx:key="key">
+			<!-- 批量选择复选框 -->
+			<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectItemTap" data-id="{{item._id}}">
+				<view class="checkbox {{item._selected?'checked':''}}">
+					<text wx:if="{{item._selected}}" class="icon-check"></text>
+				</view>
+			</view>
+			<view class="no">{{index+1}}</view>
+			<view class="header">
 					<view class="left text-cut"><text wx:if="{{item.ACTIVITY_ORDER==0}}" class="text-black margin-right-xxs" style="font-weight:normal;font-size:24rpx">[置顶]</text><text wx:if="{{item.ACTIVITY_VOUCH==1}}" class="text-black margin-right-xxs" style="font-weight:normal;font-size:24rpx">[首页推荐]</text> {{item.ACTIVITY_TITLE}}
 					</view>
 					<view class="right">
@@ -107,7 +114,22 @@
 		<template is="listLoadTpl" data="{{dataList,skin:'text-grey'}}" />
 		<!--load end-->
 
-
 	</cmpt-comm-list>
+
+	<!-- 批量操作底部栏 begin -->
+	<view wx:if="{{batchMode}}" class="batch-bar">
+		<view class="batch-bar-left" bindtap="bindSelectAllTap">
+			<view class="checkbox {{_allSelected?'checked':''}}">
+				<text wx:if="{{_allSelected}}" class="icon-check"></text>
+			</view>
+			<text class="margin-left-xs">全选</text>
+		</view>
+		<view class="batch-bar-right">
+			<view class="btn batch-btn bg-olive light" bindtap="bindBatchStatusTap" data-status="1">批量启用</view>
+			<view class="btn batch-btn bg-grey light" bindtap="bindBatchStatusTap" data-status="0">批量停用</view>
+			<view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
+		</view>
+	</view>
+	<!-- 批量操作底部栏 end -->
 
 </block>

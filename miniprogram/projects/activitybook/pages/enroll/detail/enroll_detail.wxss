@@ -448,6 +448,72 @@
 	padding: 5rpx 0;
 }
 
-.cmpt-biz-detail-mode-btn>view,.cmpt-biz-detail-mode-btn>button{ 
+.cmpt-biz-detail-mode-btn>view,.cmpt-biz-detail-mode-btn>button{
 	border: 0rpx solid #999999!important;
+}
+
+/* ========== 打卡动态 - 语音播放条 ========== */
+.list .right .join-voice-bar {
+	margin-top: 20rpx;
+	display: flex;
+	align-items: center;
+	background-color: #f5f5f5;
+	border-radius: 12rpx;
+	padding: 20rpx 24rpx;
+	width: fit-content;
+	max-width: 60%;
+}
+
+.list .right .join-voice-bar .join-voice-icon {
+	font-size: 28rpx;
+	color: #07c160;
+	margin-right: 12rpx;
+	line-height: 1;
+}
+
+.list .right .join-voice-bar .join-voice-text {
+	font-size: 28rpx;
+	color: #333;
+}
+
+/* ========== 打卡动态 - 位置卡片 ========== */
+.list .right .join-location-card {
+	margin-top: 20rpx;
+	display: flex;
+	align-items: center;
+	background-color: #f5f5f5;
+	border-radius: 12rpx;
+	padding: 20rpx 24rpx;
+}
+
+.list .right .join-location-card .join-location-icon {
+	font-size: 36rpx;
+	margin-right: 16rpx;
+	flex-shrink: 0;
+}
+
+.list .right .join-location-card .join-location-info {
+	flex: 1;
+	min-width: 0;
+}
+
+.list .right .join-location-card .join-location-name {
+	font-size: 28rpx;
+	color: #333;
+	font-weight: 500;
+	margin-bottom: 4rpx;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.list .right .join-location-card .join-location-address {
+	font-size: 24rpx;
+	color: #999;
+	line-height: 1.4;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
 }

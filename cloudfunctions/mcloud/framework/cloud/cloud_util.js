@@ -65,6 +65,8 @@ async function handlerCloudFilesForForms(oldForms, newsForms) {
 	for (let k = 0; k < oldForms.length; k++) {
 		if (oldForms[k].type == 'image')
 			oldFiles = oldFiles.concat(oldForms[k].val);
+		else if (oldForms[k].type == 'voice')
+			oldFiles.push(oldForms[k].val);
 		else if (oldForms[k].type == 'content') {
 			let contentVal = oldForms[k].val;
 			for (let n in contentVal) {
@@ -73,11 +75,14 @@ async function handlerCloudFilesForForms(oldForms, newsForms) {
 			}
 
 		}
+		// location类型不是文件，不处理
 	}
 
 	for (let j in newsForms) {
 		if (newsForms[j].type == 'image')
 			newFiles = newFiles.concat(newsForms[j].val);
+		else if (newsForms[j].type == 'voice')
+			newFiles.push(newsForms[j].val);
 		else if (newsForms[j].type == 'content') {
 			let contentVal = newsForms[j].val;
 			for (let m in contentVal) {
@@ -86,6 +91,7 @@ async function handlerCloudFilesForForms(oldForms, newsForms) {
 			}
 
 		}
+		// location类型不是文件，不处理
 	}
 
 	await handlerCloudFiles(oldFiles, newFiles);

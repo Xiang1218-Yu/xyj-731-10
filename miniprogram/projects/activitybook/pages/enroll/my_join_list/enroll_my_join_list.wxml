@@ -8,9 +8,35 @@
 		<!-- List Begin -->
 		<view class="main">
 			<view class="list">
-				<view class="item shadow-project" wx:for="{{dataList.list}}" wx:key="index"> 
-					<view>第{{dataList.list.length-index}}次 </view>
-					<view class="margin-left-s">{{item.ENROLL_JOIN_ADD_TIME}}</view>
+				<view class="item shadow-project" wx:for="{{dataList.list}}" wx:key="index">
+					<!-- 打卡次数与时间 -->
+					<view class="my-join-head">
+						<text class="my-join-badge">第{{dataList.list.length-index}}次</text>
+						<text class="my-join-time">{{item.ENROLL_JOIN_ADD_TIME}}</text>
+					</view>
+
+					<!-- 打卡文字内容 -->
+					<view wx:if="{{item.ENROLL_JOIN_OBJ.content}}" class="my-join-content"><text>{{item.ENROLL_JOIN_OBJ.content}}</text></view>
+
+					<!-- 打卡图片 -->
+					<view wx:if="{{item.ENROLL_JOIN_OBJ.img && item.ENROLL_JOIN_OBJ.img.length>0}}" class="my-join-album">
+						<image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading my-join-img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+					</view>
+
+					<!-- 语音播放条 -->
+					<view wx:if="{{item.ENROLL_JOIN_OBJ.voice}}" class="join-voice-bar" bindtap="bindVoicePlay" data-key="myjoin-{{index}}" data-voice="{{item.ENROLL_JOIN_OBJ.voice}}">
+						<text class="join-voice-icon">{{voicePlayingKey=='myjoin-'+index?'⏸':'▶'}}</text>
+						<text class="join-voice-text">语音消息</text>
+					</view>
+
+					<!-- 位置卡片 -->
+					<view wx:if="{{item.ENROLL_JOIN_OBJ.location}}" class="join-location-card" bindtap="bindLocationOpen" data-location="{{item.ENROLL_JOIN_OBJ.location}}">
+						<text class="join-location-icon">📍</text>
+						<view class="join-location-info">
+							<view class="join-location-name">{{item.ENROLL_JOIN_OBJ.location.name}}</view>
+							<view class="join-location-address">{{item.ENROLL_JOIN_OBJ.location.address}}</view>
+						</view>
+					</view>
 				</view>
 			</view>
 		</view>

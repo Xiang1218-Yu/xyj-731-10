@@ -34,6 +34,12 @@ Component({
 		config: { // 图形参数
 			type: Object,
 			value: null,
+			observer: function (newVal) {
+				// 配置更新且弹窗已显示时自动生成
+				if (newVal && this.data.show) {
+					this._autoCreate();
+				}
+			}
 		},
 		isQr: { // 是否叠加小程序码
 			type: Boolean,
@@ -49,7 +55,13 @@ Component({
 		},
 		show: { // 显示
 			type: Boolean,
-			value: false
+			value: false,
+			observer: function (newVal) {
+				// 弹窗显示时自动生成海报
+				if (newVal && this.data.config) {
+					this._autoCreate();
+				}
+			}
 		},
 		img: { //图片文件
 			type: String,
@@ -62,6 +74,7 @@ Component({
 	 */
 	data: {
 		isLoad: false,
+		isCreate: false,
 	},
 
 	lifetimes: {
@@ -84,18 +97,39 @@ Component({
 
 		},
 
+		/**
+		 * 自动生成海报（弹窗打开时调用）
+		 */
+		_autoCreate: function () {
+			// 重置状态
+			this.setData({
+				isCreate: true,
+				isLoad: false,
+				img: ''
+			});
+			// 延迟一帧确保DOM就绪后再生成
+			setTimeout(() => {
+				this.createPoster();
+			}, 100);
+		},
+
 		bindPosterTap: function (e) {
 			this.setData({
-				isCreate:true,
+				isCreate: true,
 				isLoad: false,
+				img: ''
 			}, async () => {
 				await this.createPoster();
 			});
 		},
 		bindCloseTap: function () {
 			this.setData({
-				show: false
+				show: false,
+				isCreate: false,
+				isLoad: false,
+				img: ''
 			});
+			this.triggerEvent('close');
 		},
 
 		/**

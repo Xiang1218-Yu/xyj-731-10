@@ -1,16 +1,21 @@
 const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
-const ProjectBiz = require('../../../biz/project_biz.js'); 
+const ProjectBiz = require('../../../biz/project_biz.js');
 const projectSetting = require('../../../public/project_setting.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
 const ActivityBiz = require('../../../biz/activity_biz.js');
+const posterCmptHelper = require('../../../../../cmpts/public/poster/poster_cmpt_helper.js');
 
 Page({
 	/**
 	 * 页面的初始数据
 	 */
 	data: {
-		isLoad: false, 
+		isLoad: false,
+		// 海报弹窗显示控制
+		posterShow: false,
+		// 海报配置
+		posterConfig: null,
 	},
 
 	/**
@@ -109,7 +114,61 @@ Page({
 	},
 	url: function (e) {
 		pageHelper.url(e, this);
-	}, 
+	},
+
+	/**
+	 * 生成海报按钮 - 打开海报弹窗
+	 */
+	bindPosterTap: async function (e) {
+		let activity = this.data.activity;
+		if (!activity) {
+			pageHelper.showNoneToast('活动信息加载中，请稍后');
+			return;
+		}
+
+		// 海报模板选择
+		let templateList = ['简约蓝', '温馨橙', '文艺绿'];
+		let that = this;
+
+		wx.showActionSheet({
+			itemList: templateList,
+			success: async function (res) {
+				let templateIdx = res.tapIndex;
+				let templateKey = 'template' + (templateIdx + 1);
+
+				wx.showLoading({ title: '生成海报中...', mask: true });
+				try {
+					let posterConfig = await posterCmptHelper.generateActivityPosterConfig(activity, templateKey);
+					if (!posterConfig) {
+						wx.hideLoading();
+						pageHelper.showNoneToast('海报生成失败，请重试');
+						return;
+					}
+					that.setData({
+						posterConfig,
+						posterShow: true,
+					});
+				} catch (err) {
+					console.error('海报生成失败', err);
+					let errMsg = '海报生成失败，请重试';
+					if (err && err.errMsg && err.errMsg.includes('-501000')) {
+						errMsg = '云环境未找到，请检查云环境配置';
+					}
+					pageHelper.showNoneToast(errMsg);
+				}
+				wx.hideLoading();
+			}
+		});
+	},
+
+	/**
+	 * 关闭海报弹窗
+	 */
+	bindPosterClose: function (e) {
+		this.setData({
+			posterShow: false,
+		});
+	},
 
 	onPageScroll: function (e) {
 		// 回页首按钮
@@ -118,6 +177,14 @@ Page({
 	},
 
 	onShareAppMessage: function (res) {
+		// 支持分享海报图片
+		let img = res.target.dataset.img;
+		if (img) {
+			return {
+				title: this.data.activity.ACTIVITY_TITLE,
+				imageUrl: img,
+			}
+		}
 		return {
 			title: this.data.activity.ACTIVITY_TITLE,
 			imageUrl: this.data.activity.ACTIVITY_OBJ.cover[0]

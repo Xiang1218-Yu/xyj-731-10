@@ -109,12 +109,17 @@ class AdminEnrollService extends BaseProjectAdminService {
 
     /**置顶与排序设定 */
     async sortEnroll(id, sort) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        sort = Number(sort);
+        let data = {
+            ENROLL_ORDER: sort
+        };
+        await EnrollModel.edit(id, data);
     }
 
     /**推荐设定 */
     async vouchEnroll(id, vouch) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        let data = { ENROLL_VOUCH: Number(vouch) };
+        await EnrollModel.edit(id, data);
     }
 
     /**添加 */
@@ -130,13 +135,81 @@ class AdminEnrollService extends BaseProjectAdminService {
         joinForms,
     }) {
 
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        // 时间转换
+        start = timeUtil.time2Timestamp(start);
+        end = timeUtil.time2Timestamp(end);
+
+        // 计算打卡天数和日期数组
+        let dayCnt = this.caclEnrollDay(start, end);
+        let startDay = timeUtil.time2Timestamp(timeUtil.timestamp2Time(start, 'Y-M-D'));
+        let endDay = timeUtil.time2Timestamp(timeUtil.timestamp2Time(end, 'Y-M-D'));
+        let days = this.calcEnrollDays(startDay, endDay);
+
+        // 表单处理
+        let obj = dataUtil.dbForms2Obj(forms);
+
+        let data = {
+            ENROLL_TITLE: title,
+            ENROLL_CATE_ID: cateId,
+            ENROLL_CATE_NAME: cateName,
+
+            ENROLL_START: start,
+            ENROLL_END: end,
+            ENROLL_DAY_CNT: dayCnt,
+            ENROLL_DAYS: days,
+
+            ENROLL_ORDER: order,
+            ENROLL_FORMS: forms,
+            ENROLL_OBJ: obj,
+
+            ENROLL_JOIN_FORMS: joinForms,
+
+            ENROLL_STATUS: EnrollModel.STATUS.COMM
+        }
+
+        let id = await EnrollModel.insert(data);
+
+        // 生成二维码
+        let qr = await this.genDetailQr('enroll', id);
+        if (qr) {
+            await EnrollModel.edit(id, { ENROLL_QR: qr });
+        }
+
+        return { id };
     }
 
     /**删除数据 */
     async delEnroll(id) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        // 先获取打卡活动信息
+        let enroll = await EnrollModel.getOne(id, 'ENROLL_FORMS,ENROLL_QR');
+        if (!enroll) return;
 
+        // 删除活动表单图片
+        await cloudUtil.handlerCloudFilesForForms(enroll.ENROLL_FORMS, []);
+
+        // 删除二维码
+        if (enroll.ENROLL_QR) {
+            await cloudUtil.deleteFiles(enroll.ENROLL_QR);
+        }
+
+        // 删除关联的打卡记录
+        let whereJoin = {
+            ENROLL_JOIN_ENROLL_ID: id
+        }
+        let joinList = await EnrollJoinModel.getAllBig(whereJoin, 'ENROLL_JOIN_FORMS', {}, 10000);
+        for (let k = 0; k < joinList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(joinList[k].ENROLL_JOIN_FORMS, []);
+        }
+        await EnrollJoinModel.del(whereJoin);
+
+        // 删除关联的用户统计记录
+        let whereUser = {
+            ENROLL_USER_ENROLL_ID: id
+        }
+        await EnrollUserModel.del(whereUser);
+
+        // 删除打卡活动
+        await EnrollModel.del(id);
     }
 
     /**获取信息 */
@@ -158,7 +231,15 @@ class AdminEnrollService extends BaseProjectAdminService {
         id,
         hasImageForms
     }) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        // 获取旧表单
+        let enroll = await EnrollModel.getOne(id, 'ENROLL_FORMS');
+        if (!enroll) return;
+
+        // 处理图片删除
+        await cloudUtil.handlerCloudFilesForForms(enroll.ENROLL_FORMS, hasImageForms);
+
+        // 更新表单
+        await EnrollModel.editForms(id, 'ENROLL_FORMS', 'ENROLL_OBJ', hasImageForms);
 
     }
 
@@ -167,7 +248,7 @@ class AdminEnrollService extends BaseProjectAdminService {
     async editEnroll({
         id,
         title,
-        cateId, // 二级分类 
+        cateId, // 二级分类
         cateName,
 
         start,
@@ -178,12 +259,92 @@ class AdminEnrollService extends BaseProjectAdminService {
         joinForms
     }) {
 
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        // 获取旧打卡活动
+        let oldEnroll = await EnrollModel.getOne(id, 'ENROLL_FORMS');
+        if (!oldEnroll) return;
+
+        // 时间转换
+        start = timeUtil.time2Timestamp(start);
+        end = timeUtil.time2Timestamp(end);
+
+        // 计算打卡天数和日期数组
+        let dayCnt = this.caclEnrollDay(start, end);
+        let startDay = timeUtil.time2Timestamp(timeUtil.timestamp2Time(start, 'Y-M-D'));
+        let endDay = timeUtil.time2Timestamp(timeUtil.timestamp2Time(end, 'Y-M-D'));
+        let days = this.calcEnrollDays(startDay, endDay);
+
+        // 处理表单图片删除
+        await cloudUtil.handlerCloudFilesForForms(oldEnroll.ENROLL_FORMS, forms);
+
+        // 表单处理
+        let obj = dataUtil.dbForms2Obj(forms);
+
+        let data = {
+            ENROLL_TITLE: title,
+            ENROLL_CATE_ID: cateId,
+            ENROLL_CATE_NAME: cateName,
+
+            ENROLL_START: start,
+            ENROLL_END: end,
+            ENROLL_DAY_CNT: dayCnt,
+            ENROLL_DAYS: days,
+
+            ENROLL_ORDER: order,
+            ENROLL_FORMS: forms,
+            ENROLL_OBJ: obj,
+
+            ENROLL_JOIN_FORMS: joinForms,
+        }
+
+        await EnrollModel.edit(id, data);
     }
 
     /**修改状态 */
     async statusEnroll(id, status) {
-        this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        let data = { ENROLL_STATUS: Number(status) };
+        await EnrollModel.edit(id, data);
+    }
+
+    /**批量修改打卡状态 */
+    async batchStatusEnroll(ids, status) {
+        if (!Array.isArray(ids) || !ids.length) return;
+
+        // 一次批量更新状态
+        await EnrollModel.edit({ _id: ['in', ids] }, { ENROLL_STATUS: Number(status) });
+    }
+
+    /**批量删除打卡活动 */
+    async batchDelEnroll(ids) {
+        if (!Array.isArray(ids) || !ids.length) return;
+
+        // 一次查出所有打卡活动（用于清理云文件）
+        let enrollList = await EnrollModel.getAllBig({ _id: ['in', ids] }, 'ENROLL_FORMS,ENROLL_QR');
+
+        // 循环清理活动云文件（表单图片+二维码）
+        for (let k = 0; k < enrollList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(enrollList[k].ENROLL_FORMS, []);
+            if (enrollList[k].ENROLL_QR) {
+                await cloudUtil.deleteFiles(enrollList[k].ENROLL_QR);
+            }
+        }
+
+        // 一次查出所有关联打卡记录（用于清理云文件）
+        let joinList = await EnrollJoinModel.getAllBig(
+            { ENROLL_JOIN_ENROLL_ID: ['in', ids] },
+            'ENROLL_JOIN_FORMS'
+        );
+        for (let k = 0; k < joinList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(joinList[k].ENROLL_JOIN_FORMS, []);
+        }
+
+        // 批量删除打卡记录
+        await EnrollJoinModel.del({ ENROLL_JOIN_ENROLL_ID: ['in', ids] });
+
+        // 批量删除用户统计
+        await EnrollUserModel.del({ ENROLL_USER_ENROLL_ID: ['in', ids] });
+
+        // 批量删除打卡活动
+        await EnrollModel.del({ _id: ['in', ids] });
     }
 
 
@@ -236,13 +397,82 @@ class AdminEnrollService extends BaseProjectAdminService {
 
     /** 清空 */
     async clearEnrollAll(enrollId) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        // 删除所有打卡记录
+        let where = {
+            ENROLL_JOIN_ENROLL_ID: enrollId
+        }
+
+        // 获取所有打卡记录的表单图片用于删除
+        let joinList = await EnrollJoinModel.getAllBig(where, 'ENROLL_JOIN_FORMS', {}, 10000);
+        for (let k = 0; k < joinList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(joinList[k].ENROLL_JOIN_FORMS, []);
+        }
+
+        await EnrollJoinModel.del(where);
+
+        // 删除用户统计记录
+        let whereUser = {
+            ENROLL_USER_ENROLL_ID: enrollId
+        }
+        await EnrollUserModel.del(whereUser);
+
+        // 更新统计
+        let service = new EnrollService();
+        await service.statEnrollJoin(enrollId);
+
+        // 清空用户头像列表
+        await EnrollModel.edit(enrollId, { ENROLL_USER_LIST: [] });
     }
 
     /** 删除打卡 */
     async delEnrollJoin(enrollJoinId) {
-        this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        let where = {
+            _id: enrollJoinId
+        }
 
+        // 获取打卡记录
+        let enrollJoin = await EnrollJoinModel.getOne(where, 'ENROLL_JOIN_FORMS,ENROLL_JOIN_ENROLL_ID,ENROLL_JOIN_USER_ID');
+        if (!enrollJoin) return;
+
+        // 删除表单图片
+        await cloudUtil.handlerCloudFilesForForms(enrollJoin.ENROLL_JOIN_FORMS, []);
+
+        await EnrollJoinModel.del(where);
+
+        // 更新统计
+        let service = new EnrollService();
+        await service.statEnrollJoin(enrollJoin.ENROLL_JOIN_ENROLL_ID, enrollJoin.ENROLL_JOIN_USER_ID, true);
+    }
+
+    /**批量删除打卡记录 */
+    async batchDelEnrollJoin(ids) {
+        if (!Array.isArray(ids) || !ids.length) return;
+
+        // 一次查出所有打卡记录（用于清理云文件和重算统计）
+        let joinList = await EnrollJoinModel.getAllBig(
+            { _id: ['in', ids] },
+            'ENROLL_JOIN_FORMS,ENROLL_JOIN_ENROLL_ID,ENROLL_JOIN_USER_ID'
+        );
+
+        // 循环清理打卡记录云文件
+        for (let k = 0; k < joinList.length; k++) {
+            await cloudUtil.handlerCloudFilesForForms(joinList[k].ENROLL_JOIN_FORMS, []);
+        }
+
+        // 批量删除打卡记录
+        await EnrollJoinModel.del({ _id: ['in', ids] });
+
+        // 对每个唯一的(enrollId, userId)对重算统计（del=true会更新最近打卡时间）
+        let service = new EnrollService();
+        let statKeys = new Set();
+        for (let k = 0; k < joinList.length; k++) {
+            let enrollId = joinList[k].ENROLL_JOIN_ENROLL_ID;
+            let userId = joinList[k].ENROLL_JOIN_USER_ID;
+            let key = enrollId + '__' + userId;
+            if (statKeys.has(key)) continue;
+            statKeys.add(key);
+            await service.statEnrollJoin(enrollId, userId, true);
+        }
     }
 
     // #####################导出打卡数据
@@ -262,7 +492,82 @@ class AdminEnrollService extends BaseProjectAdminService {
         start,
         end,
     }) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+        // 获取打卡活动信息（包含打卡表单设置）
+        let enroll = await EnrollModel.getOne(enrollId, 'ENROLL_TITLE,ENROLL_JOIN_FORMS');
+        if (!enroll)
+            this.AppError('打卡活动不存在');
+
+        let joinForms = enroll.ENROLL_JOIN_FORMS || [];
+
+        // 构建表头
+        let title = [
+            { column: '序号', wch: 10 },
+            { column: '昵称', wch: 20 },
+            { column: '手机号', wch: 20 },
+            { column: '打卡日期', wch: 15 },
+        ];
+
+        // 添加自定义表单字段列
+        let formTitle = dataUtil.getTitleByForm(joinForms);
+        title = title.concat(formTitle);
+
+        title.push({ column: '打卡时间', wch: 25 });
+        title.push({ column: '状态', wch: 15 });
+
+        // 查询条件
+        let where = {
+            ENROLL_JOIN_ENROLL_ID: enrollId,
+            ENROLL_JOIN_DAY: ['between', start, end]
+        }
+
+        // 关联用户表
+        let joinParams = {
+            from: UserModel.CL,
+            localField: 'ENROLL_JOIN_USER_ID',
+            foreignField: 'USER_MINI_OPENID',
+            as: 'user',
+        };
+
+        let orderBy = {
+            'ENROLL_JOIN_ADD_TIME': 'desc'
+        }
+
+        // 获取所有数据（不分页）
+        let result = await EnrollJoinModel.getListJoin(joinParams, where, '*', orderBy, 1, 10000, false, 0);
+        let list = result.list || [];
+
+        let data = [];
+        data.push(title.map(t => t.column));
+
+        for (let k = 0; k < list.length; k++) {
+            let row = [];
+            row.push(k + 1);
+            row.push(list[k].user ? (list[k].user.USER_NAME || '') : '');
+            row.push(list[k].user ? (list[k].user.USER_MOBILE || '') : '');
+            row.push(list[k].ENROLL_JOIN_DAY || '');
+
+            // 自定义表单字段
+            let forms = list[k].ENROLL_JOIN_FORMS || [];
+            for (let j = 0; j < joinForms.length; j++) {
+                if (joinForms[j].type == 'image' || joinForms[j].type == 'content') continue;
+                let val = dataUtil.getValByForm(forms, joinForms[j].mark, joinForms[j].title);
+                row.push(val);
+            }
+
+            row.push(timeUtil.timestamp2Time(list[k].ENROLL_JOIN_ADD_TIME));
+            row.push(EnrollJoinModel.getDesc('STATUS', list[k].ENROLL_JOIN_STATUS));
+
+            data.push(row);
+        }
+
+        let total = data.length - 1;
+
+        return await exportUtil.exportDataExcel(
+            EXPORT_ENROLL_JOIN_DATA_KEY,
+            enroll.ENROLL_TITLE + '-打卡数据',
+            total,
+            data
+        );
 
     }
 

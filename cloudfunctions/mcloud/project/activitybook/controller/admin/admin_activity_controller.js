@@ -463,6 +463,73 @@ class AdminActivityController extends BaseProjectAdminController {
 		let service = new AdminActivityService();
 		return await service.deleteActivityJoinDataExcel();
 	}
+
+	/** 批量修改活动状态 */
+	async batchStatusActivity() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		return await service.batchStatusActivity(input.ids, input.status);
+	}
+
+	/** 批量删除活动 */
+	async batchDelActivity() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		return await service.batchDelActivity(input.ids);
+	}
+
+	/** 批量修改报名状态 */
+	async batchStatusActivityJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+			reason: 'string|max:200',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		return await service.batchStatusActivityJoin(input.ids, input.status, input.reason);
+	}
+
+	/** 批量删除报名 */
+	async batchDelActivityJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		return await service.batchDelActivityJoin(input.ids);
+	}
 }
 
 module.exports = AdminActivityController;

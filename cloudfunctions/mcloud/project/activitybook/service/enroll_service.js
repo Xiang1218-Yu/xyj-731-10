@@ -524,7 +524,7 @@ class EnrollService extends BaseProjectService {
             this.AppError('未找到可取消的记录');
         }
 
-        cloudUtil.handlerCloudFilesForForms(enrollJoin.ENROLL_JOIN_FORMS, []);
+        await cloudUtil.handlerCloudFilesForForms(enrollJoin.ENROLL_JOIN_FORMS, []);
 
         await EnrollJoinModel.del(where);
 

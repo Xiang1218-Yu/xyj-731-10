@@ -29,7 +29,14 @@ Page({
 		cancelModalShow: false,
 		cancelAllModalShow: false,
 		formReason: '',
-		curIdx: -1
+		curIdx: -1,
+
+		// 批量操作相关
+		batchMode: false, // 是否批量选择模式
+		selectedIds: [], // 已选中的报名记录ID
+		_allSelected: false, // 当前页是否全选
+		batchRefuseModalShow: false, // 批量拒绝理由弹窗
+		batchFormReason: '', // 批量拒绝理由
 	},
 
 	/**
@@ -362,9 +369,11 @@ Page({
 			});
 		else {
 			let dataList = e.detail.dataList;
-			if (dataList) {
+			if (dataList && dataList.list) {
+				let selectedIds = this.data.selectedIds;
 				for (let k = 0; k < dataList.list.length; k++) {
 					dataList.list[k].fold = this.data.isAllFold;
+					dataList.list[k]._selected = selectedIds.indexOf(dataList.list[k]._id) > -1;
 				}
 			}
 
@@ -403,5 +412,176 @@ Page({
 		this.setData({
 			formReason: ''
 		})
-	}
+	},
+
+	// 清空批量拒绝理由
+	bindBatchClearReasonTap: function (e) {
+		this.setData({
+			batchFormReason: ''
+		})
+	},
+
+	// 切换批量选择模式
+	bindBatchModeTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let batchMode = !this.data.batchMode;
+		let dataList = this.data.dataList;
+		let updateData = { batchMode, selectedIds: [], _allSelected: false };
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				updateData['dataList.list[' + k + ']._selected'] = false;
+			}
+		}
+		this.setData(updateData);
+	},
+
+	// 单选/取消某条报名记录
+	bindSelectItemTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let id = pageHelper.dataset(e, 'id');
+		let selectedIds = this.data.selectedIds.slice();
+		let idx = selectedIds.indexOf(id);
+		if (idx > -1) {
+			selectedIds.splice(idx, 1);
+		} else {
+			selectedIds.push(id);
+		}
+		let isSelected = selectedIds.indexOf(id) > -1;
+		let list = (this.data.dataList && this.data.dataList.list) || [];
+		let updateData = { selectedIds };
+		for (let k = 0; k < list.length; k++) {
+			if (list[k]._id === id) {
+				updateData['dataList.list[' + k + ']._selected'] = isSelected;
+				break;
+			}
+		}
+		updateData._allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
+		this.setData(updateData);
+	},
+
+	// 全选/取消全选（当前页）
+	bindSelectAllTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let list = (this.data.dataList && this.data.dataList.list) || [];
+		let selectedIds = this.data.selectedIds.slice();
+		let allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
+		let updateData = {};
+		if (allSelected) {
+			let pageIds = list.map(item => item._id);
+			selectedIds = selectedIds.filter(id => pageIds.indexOf(id) == -1);
+		} else {
+			for (let k = 0; k < list.length; k++) {
+				if (selectedIds.indexOf(list[k]._id) == -1) {
+					selectedIds.push(list[k]._id);
+				}
+			}
+		}
+		for (let k = 0; k < list.length; k++) {
+			updateData['dataList.list[' + k + ']._selected'] = selectedIds.indexOf(list[k]._id) > -1;
+		}
+		updateData.selectedIds = selectedIds;
+		updateData._allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
+		this.setData(updateData);
+	},
+
+	// 批量审核通过
+	bindBatchApproveTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selectedIds;
+		if (!ids.length) {
+			pageHelper.showNoneToast('请先选择记录');
+			return;
+		}
+
+		let callback = async () => {
+			try {
+				let opts = { title: '处理中' };
+				let params = { ids, status: 1 };
+				await cloudHelper.callCloudSumbit('admin/activity_join_batch_status', params, opts).then(res => {
+					this._afterBatch();
+					pageHelper.showSuccToast('批量审核通过成功');
+				});
+			} catch (err) {
+				console.error(err);
+			}
+		}
+		pageHelper.showConfirm('确认批量审核通过选中的' + ids.length + '条报名记录？', callback);
+	},
+
+	// 弹出批量拒绝理由输入框
+	bindBatchRefuseTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selectedIds;
+		if (!ids.length) {
+			pageHelper.showNoneToast('请先选择记录');
+			return;
+		}
+		this.setData({
+			batchRefuseModalShow: true,
+			batchFormReason: ''
+		});
+	},
+
+	// 确认批量拒绝
+	bindBatchRefuseCmpt: async function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selectedIds;
+		if (!ids.length) {
+			pageHelper.showNoneToast('请先选择记录');
+			return;
+		}
+
+		let callback = async () => {
+			try {
+				let opts = { title: '处理中' };
+				let params = { ids, status: 99, reason: this.data.batchFormReason };
+				await cloudHelper.callCloudSumbit('admin/activity_join_batch_status', params, opts).then(res => {
+					this.setData({ batchRefuseModalShow: false });
+					this._afterBatch();
+					pageHelper.showSuccToast('批量拒绝成功');
+				});
+			} catch (err) {
+				console.error(err);
+			}
+		}
+		pageHelper.showConfirm('确认批量拒绝选中的' + ids.length + '条报名记录？', callback);
+	},
+
+	// 批量删除
+	bindBatchDelTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		let ids = this.data.selectedIds;
+		if (!ids.length) {
+			pageHelper.showNoneToast('请先选择记录');
+			return;
+		}
+
+		let callback = async () => {
+			try {
+				let opts = { title: '删除中' };
+				let params = { ids };
+				await cloudHelper.callCloudSumbit('admin/activity_join_batch_del', params, opts).then(res => {
+					this._afterBatch();
+					pageHelper.showSuccToast('批量删除成功');
+				});
+			} catch (err) {
+				console.error(err);
+			}
+		}
+		pageHelper.showConfirm('确认批量删除选中的' + ids.length + '条报名记录？删除后不可恢复', callback);
+	},
+
+	// 批量操作后统一处理：退出批量模式并刷新列表
+	_afterBatch: function () {
+		let dataList = this.data.dataList;
+		let updateData = { batchMode: false, selectedIds: [], _allSelected: false, batchFormReason: '' };
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				updateData['dataList.list[' + k + ']._selected'] = false;
+			}
+		}
+		this.setData(updateData);
+		let listComp = this.selectComponent('#cmpt-comm-list');
+		if (listComp) listComp.reload();
+	},
 })

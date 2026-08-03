@@ -10,9 +10,11 @@ const ProjectBiz = require('../../../biz/project_biz.js');
 const AdminBiz = require('../../../../../comm/biz/admin_biz.js');
 const setting = require('../../../../../setting/setting.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
+const wxCharts = require('../../../../../lib/tools/wxcharts-min.js');
 
 Page({
 	data: {
+		stat: null, // 统计数据
 	},
 
 	/**
@@ -32,14 +34,21 @@ Page({
 	/**
 	 * 生命周期函数--监听页面初次渲染完成
 	 */
-	onReady: function () { },
+	onReady: function () {
+		this._isReady = true;
+		// 若统计数据已就绪则初始化图表
+		if (this.data.stat) {
+			this._initChart(this.data.stat);
+		}
+	},
 
 	/**
 	 * 生命周期函数--监听页面显示
 	 */
-	onShow: async function () {  
-		PassportBiz.loginSilenceMust(this); 
+	onShow: async function () {
+		PassportBiz.loginSilenceMust(this);
 		this._loadUser();
+		this._loadStat();
 	},
 
 	/**
@@ -75,10 +84,81 @@ Page({
 	},
 
 	/**
+	 * 加载我的统计数据
+	 */
+	_loadStat: async function () {
+		let opts = {
+			title: 'bar'
+		}
+		let stat = await cloudHelper.callCloudData('my/stat', {}, opts);
+		if (!stat) {
+			this.setData({
+				stat: null
+			});
+			return;
+		}
+
+		this.setData({
+			stat
+		}, () => {
+			// 数据渲染完成后，若页面已就绪则初始化图表
+			if (this._isReady) {
+				this._initChart(stat);
+			}
+		});
+	},
+
+	/**
+	 * 初始化最近30天打卡趋势折线图
+	 */
+	_initChart: function (stat) {
+		if (!stat || !stat.last30DaysTrend || !stat.last30DaysTrend.length) return;
+
+		let trend = stat.last30DaysTrend;
+		let categories = trend.map(item => item.date);
+		let data = trend.map(item => item.count);
+
+		// 获取屏幕宽度以自适应图表尺寸
+		let systemInfo = wx.getSystemInfoSync();
+		let chartWidth = systemInfo.windowWidth - 50; // 减去左右padding
+
+		this.chart = new wxCharts({
+			canvasId: 'statChart',
+			type: 'line',
+			categories: categories,
+			series: [{
+				name: '打卡次数',
+				data: data,
+				color: '#4b94e7',
+				format: function (val) {
+					return val + '次';
+				}
+			}],
+			yAxis: {
+				title: '打卡次数',
+				format: function (val) {
+					return val;
+				},
+				min: 0
+			},
+			width: chartWidth,
+			height: 200,
+			dataLabel: false,
+			dataPointShape: true,
+			enableScroll: true,
+			extra: {
+				lineStyle: 'curve',
+				legendTextColor: '#333333'
+			}
+		});
+	},
+
+	/**
 	 * 页面相关事件处理函数--监听用户下拉动作
 	 */
-	onPullDownRefresh: async function () { 
+	onPullDownRefresh: async function () {
 		await this._loadUser();
+		await this._loadStat();
 		wx.stopPullDownRefresh();
 	},
 

@@ -18,11 +18,18 @@
 				<text>转发给朋友</text>
 			</button>
 
-			<view wx:if="{{doPoster}}" class="item" bindtap="bindPosterTap" style="padding-top:12rpx">
+			<view wx:if="{{isLoad}}" class="item" bindtap="bindSaveTap" style="padding-top:12rpx">
 				<view class="pic">
 					<image class='friend' src="images/friend.png" />
 				</view>
-				<text>生成海报</text>
+				<text>保存到相册</text>
+			</view>
+
+			<view wx:if="{{doPoster && !isLoad}}" class="item" bindtap="bindPosterTap" style="padding-top:12rpx">
+				<view class="pic">
+					<image class='friend' src="images/friend.png" />
+				</view>
+				<text>重新生成</text>
 			</view>
 		</view>
 

@@ -16,6 +16,9 @@ module.exports = {
 	'passport/register': 'passport_controller@register',
 	'passport/edit_base': 'passport_controller@editBase',
 
+	// 我的
+	'my/stat': 'my_controller@getMyStat',
+
 	// 收藏
 	'fav/update': 'fav_controller@updateFav',
 	'fav/del': 'fav_controller@delFav',
@@ -50,6 +53,14 @@ module.exports = {
 	'admin/user_data_export': 'admin/admin_user_controller@userDataExport',
 	'admin/user_data_del': 'admin/admin_user_controller@userDataDel',
 
+	'admin/user_set_tags': 'admin/admin_user_controller@setUserTags',
+	'admin/user_set_group': 'admin/admin_user_controller@setUserGroup',
+	'admin/user_set_memo': 'admin/admin_user_controller@setUserMemo',
+	'admin/user_batch_status': 'admin/admin_user_controller@batchStatusUser',
+	'admin/user_batch_del': 'admin/admin_user_controller@batchDelUser',
+	'admin/user_batch_tags': 'admin/admin_user_controller@batchSetUserTags',
+	'admin/user_tag_list': 'admin/admin_user_controller@getUserTagList',
+
 	// 产品 
 	'product/list': 'product_controller@getProductList',
 	'product/view': 'product_controller@viewProduct',
@@ -63,6 +74,9 @@ module.exports = {
 	'admin/product_sort': 'admin/admin_product_controller@sortProduct#demo',
 	'admin/product_vouch': 'admin/admin_product_controller@vouchProduct#demo',
 	'admin/product_status': 'admin/admin_product_controller@statusProduct#demo',
+
+	'admin/product_batch_status': 'admin/admin_product_controller@batchStatusProduct',
+	'admin/product_batch_del': 'admin/admin_product_controller@batchDelProduct',
 
 
 
@@ -91,6 +105,10 @@ module.exports = {
 	'admin/enroll_join_data_get': 'admin/admin_enroll_controller@enrollJoinDataGet',
 	'admin/enroll_join_data_export': 'admin/admin_enroll_controller@enrollJoinDataExport',
 	'admin/enroll_join_data_del': 'admin/admin_enroll_controller@enrollJoinDataDel',
+
+	'admin/enroll_batch_status': 'admin/admin_enroll_controller@batchStatusEnroll',
+	'admin/enroll_batch_del': 'admin/admin_enroll_controller@batchDelEnroll',
+	'admin/enroll_join_batch_del': 'admin/admin_enroll_controller@batchDelEnrollJoin',
 
 
 	// 内容  
@@ -150,6 +168,11 @@ module.exports = {
 	'admin/activity_join_data_get': 'admin/admin_activity_controller@activityJoinDataGet',
 	'admin/activity_join_data_export': 'admin/admin_activity_controller@activityJoinDataExport',
 	'admin/activity_join_data_del': 'admin/admin_activity_controller@activityJoinDataDel',
+
+	'admin/activity_batch_status': 'admin/admin_activity_controller@batchStatusActivity',
+	'admin/activity_batch_del': 'admin/admin_activity_controller@batchDelActivity',
+	'admin/activity_join_batch_status': 'admin/admin_activity_controller@batchStatusActivityJoin',
+	'admin/activity_join_batch_del': 'admin/admin_activity_controller@batchDelActivityJoin',
 
 
 }

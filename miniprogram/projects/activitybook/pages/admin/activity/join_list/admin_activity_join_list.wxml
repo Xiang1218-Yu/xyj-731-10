@@ -3,9 +3,10 @@
 
 <block wx:if="{{isAdmin&&isLoad}}">
 
-	<cmpt-comm-list source='admin' id="cmpt-comm-list" type="admin-activity-join-list" search="{{search||''}}" _params="{{_params}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/activity_join_list" topBottom="50" placeholder="搜索" sortMenusDefaultIndex="0" bind:list="bindCommListCmpt">
+	<cmpt-comm-list source='admin' id="cmpt-comm-list" type="admin-activity-join-list" search="{{search||''}}" _params="{{_params}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/activity_join_list" topBottom="{{batchMode?'140':'50'}}" placeholder="搜索" sortMenusDefaultIndex="0" bind:list="bindCommListCmpt">
 
 		<view slot="searchEnd">
+			<button bindtap="bindBatchModeTap" class="btn mid radius {{batchMode?'bg-orange':'bg-grey'}} light margin-right-s"><text class="icon-setting margin-right-xxs"></text>{{batchMode?'退出批量':'批量审核'}}</button>
 			<!--<button bindtap="bindCancelAllTap" class="btn mid radius bg-orange margin-right-xs light">所有记录审核不通过</button>-->
 		</view>
 
@@ -16,7 +17,13 @@
 				<text wx:else bindtap="bindFoldAllTap" class="margin-left-xs icon-fold  text-admin">全部收起</text>
 			</view>
 
-			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
+			<view class="item {{batchMode?'batch-item':''}}" wx:for="{{dataList.list}}" wx:key="key">
+				<!-- 批量选择复选框 -->
+				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectItemTap" data-id="{{item._id}}">
+					<view class="checkbox {{item._selected?'checked':''}}">
+						<text wx:if="{{item._selected}}" class="icon-check"></text>
+					</view>
+				</view>
 				<view class="header">
 					<view class="left">
 						<text class="icon-calendar margin-right-xxs"></text><text class="">{{item.ACTIVITY_JOIN_ADD_TIME}}</text>
@@ -88,8 +95,35 @@
 		<template is="listLoadTpl" data="{{dataList,skin:'text-grey',noHint:'暂无记录'}}" />
 		<!--load end-->
 
-
 	</cmpt-comm-list>
+
+	<!-- 批量操作底部栏 begin -->
+	<view wx:if="{{batchMode}}" class="batch-bar">
+		<view class="batch-bar-left" bindtap="bindSelectAllTap">
+			<view class="checkbox {{_allSelected?'checked':''}}">
+				<text wx:if="{{_allSelected}}" class="icon-check"></text>
+			</view>
+			<text class="margin-left-xs">全选</text>
+		</view>
+		<view class="batch-bar-right">
+			<view class="btn batch-btn bg-olive light" bindtap="bindBatchApproveTap">批量通过</view>
+			<view class="btn batch-btn bg-grey light" bindtap="bindBatchRefuseTap">批量拒绝</view>
+			<view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
+		</view>
+	</view>
+	<!-- 批量操作底部栏 end -->
+
+	<!-- 批量拒绝理由弹窗 begin -->
+	<cmpt-modal wx:if="{{batchRefuseModalShow}}" model:show="{{batchRefuseModalShow}}" type="dialog" title="批量拒绝理由" bind:click="bindBatchRefuseCmpt" class="modal-form" cancelText="返回" confirmText="确定拒绝">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">拒绝理由 <text class="text-grey text-mid">(选填)</text>：</view>
+			<view bindtap="bindBatchClearReasonTap" style="width:150rpx;text-align: right;" class="text-grey"><text class="icon-roundclose"></text>清空</view>
+		</view>
+		<view class="form-group cancel-area">
+			<textarea placeholder-class="phc" placeholder="请输入批量拒绝理由 (非必填)" style="height:110rpx" model:value="{{batchFormReason}}" maxlength="100"></textarea>
+		</view>
+	</cmpt-modal>
+	<!-- 批量拒绝理由弹窗 end -->
 
 	<cmpt-modal wx:if="{{cancelAllModalShow}}" model:show="{{cancelAllModalShow}}" type="dialog" title="所有记录审核不过" bind:click="bindCancelAllCmpt" class="modal-form" cancelText="返回" confirmText="确定">
 		<view class="form-group" style="padding:0 10rpx">

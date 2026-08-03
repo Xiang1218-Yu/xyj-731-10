@@ -36,6 +36,60 @@
 		</view>
 
 	</view>
+
+	<!--统计卡片区域 begin-->
+	<view class="stat padding-project" wx:if="{{stat}}">
+		<view class="stat-grid card-project shadow-project">
+			<!-- 活动报名数 -->
+			<view class="stat-card" bindtap="url" data-url="../../activity/my_join_list/activity_my_join_list">
+				<view class="stat-icon icon-bg-blue">
+					<text class="icon-activityfill"></text>
+				</view>
+				<view class="stat-info">
+					<view class="stat-num">{{stat.activityJoinCnt}}</view>
+					<view class="stat-label">活动报名数</view>
+				</view>
+			</view>
+			<!-- 打卡天数 -->
+			<view class="stat-card" bindtap="url" data-url="../../enroll/my_user_list/enroll_my_user_list">
+				<view class="stat-icon icon-bg-red">
+					<text class="icon-formfill"></text>
+				</view>
+				<view class="stat-info">
+					<view class="stat-num">{{stat.enrollJoinCnt}}</view>
+					<view class="stat-label">打卡天数</view>
+				</view>
+			</view>
+			<!-- 收藏数 -->
+			<view class="stat-card" bindtap="url" data-url="../fav/my_fav">
+				<view class="stat-icon icon-bg-orange">
+					<text class="icon-favor"></text>
+				</view>
+				<view class="stat-info">
+					<view class="stat-num">{{stat.favCnt}}</view>
+					<view class="stat-label">收藏数</view>
+				</view>
+			</view>
+			<!-- 待审核数：为0时灰色 -->
+			<view class="stat-card {{stat.activityWaitCnt==0?'stat-card-disabled':''}}" bindtap="url" data-url="../../activity/my_join_list/activity_my_join_list">
+				<view class="stat-icon {{stat.activityWaitCnt==0?'icon-bg-grey':'icon-bg-purple'}}">
+					<text class="icon-activity"></text>
+				</view>
+				<view class="stat-info">
+					<view class="stat-num">{{stat.activityWaitCnt}}</view>
+					<view class="stat-label">待审核数</view>
+				</view>
+			</view>
+		</view>
+
+		<!-- 30天打卡趋势图 -->
+		<view class="stat-chart card-project shadow-project" wx:if="{{stat.last30DaysTrend&&stat.last30DaysTrend.length>0}}">
+			<view class="chart-title">近30天打卡趋势</view>
+			<canvas canvas-id="statChart" class="chart-canvas" id="statChart"></canvas>
+		</view>
+	</view>
+	<!--统计卡片区域 end-->
+
 	<!--down area begin-->
 	<view class="down padding-project">
 

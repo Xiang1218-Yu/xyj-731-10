@@ -34,8 +34,20 @@ class AdminProductService extends BaseProjectAdminService {
 
 	/**删除数据 */
 	async delProduct(id) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		// 先获取产品信息
+		let product = await ProductModel.getOne(id, 'PRODUCT_FORMS,PRODUCT_QR');
+		if (!product) return;
 
+		// 删除产品表单图片
+		await cloudUtil.handlerCloudFilesForForms(product.PRODUCT_FORMS, []);
+
+		// 删除二维码
+		if (product.PRODUCT_QR) {
+			await cloudUtil.deleteFiles(product.PRODUCT_QR);
+		}
+
+		// 删除产品
+		await ProductModel.del(id);
 	}
 
 	/**获取信息 */
@@ -133,7 +145,35 @@ class AdminProductService extends BaseProjectAdminService {
 
 	/**修改状态 */
 	async statusProduct(id, status) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let data = { PRODUCT_STATUS: Number(status) };
+		await ProductModel.edit(id, data);
+	}
+
+	/**批量修改产品状态 */
+	async batchStatusProduct(ids, status) {
+		if (!Array.isArray(ids) || !ids.length) return;
+
+		// 一次批量更新状态
+		await ProductModel.edit({ _id: ['in', ids] }, { PRODUCT_STATUS: Number(status) });
+	}
+
+	/**批量删除产品 */
+	async batchDelProduct(ids) {
+		if (!Array.isArray(ids) || !ids.length) return;
+
+		// 一次查出所有产品（用于清理云文件）
+		let productList = await ProductModel.getAllBig({ _id: ['in', ids] }, 'PRODUCT_FORMS,PRODUCT_QR');
+
+		// 循环清理产品云文件（表单图片+二维码）
+		for (let k = 0; k < productList.length; k++) {
+			await cloudUtil.handlerCloudFilesForForms(productList[k].PRODUCT_FORMS, []);
+			if (productList[k].PRODUCT_QR) {
+				await cloudUtil.deleteFiles(productList[k].PRODUCT_QR);
+			}
+		}
+
+		// 批量删除产品
+		await ProductModel.del({ _id: ['in', ids] });
 	}
 
 	/**置顶与排序设定 */

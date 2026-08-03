@@ -27,6 +27,22 @@
 			<view wx:if="{{item.type=='image'}}" class="form-group-show-text">
 				<image bindtap="url" data-type="image" data-url="{{itm}}" wx:for="{{item.val}}" lazy-load="{{true}}" wx:key="key1" wx:for-item="itm" src="{{itm}}" class="loading form-group-show-img" show-menu-by-longpress="{{true}}" />
 			</view>
+			<!-- 语音展示 -->
+			<view wx:elif="{{item.type=='voice'}}" class="form-group-show-text">
+				<view wx:if="{{item.val}}" class="voice-show-item" bindtap="bindVoicePlay" data-idx="{{index}}">
+					<text class="voice-icon">{{voicePlayingIdx===index?'⏸':'▶'}}</text>
+					<text class="voice-name">语音消息</text>
+				</view>
+				<text wx:else class="text-grey">未上传</text>
+			</view>
+			<!-- 位置展示 -->
+			<view wx:elif="{{item.type=='location'}}" class="form-group-show-text">
+				<view wx:if="{{item.val && item.val.name}}" class="location-show-item" bindtap="bindLocationOpen" data-idx="{{index}}">
+					<view class="location-name">📍 {{item.val.name}}</view>
+					<view class="location-address text-grey text-s">{{item.val.address}}</view>
+				</view>
+				<text wx:else class="text-grey">未选择</text>
+			</view>
 			<view wx:elif="{{item.type=='switch'}}" class="form-group-show-text">{{item.val===true?'是':'否'}}</view>
 			<view wx:elif="{{item.type=='content'}}" class="form-group-show-text">[图文]</view>
 			<view wx:elif="{{item.type=='rows'}}" class="form-group-show-text">[多条目]</view>
@@ -248,6 +264,82 @@
 			<view wx:if="{{item.ext.hint}}"  class="hint-desc info">{{item.ext.hint}}</view>
 	</block>
 
+	<!-- 语音上传 -->
+	<block wx:elif="{{item.type=='voice'}}">
+		<view class="form-group" id="form{{item.mark}}">
+			<view class="title {{item.must?'must':''}}">{{item.title}}:<text class="text-grey text-normal margin-left-xs">{{item.must?'(必填)':''}}</text></view>
+		</view>
+
+		<!-- 录音中状态 -->
+		<view wx:if="{{isRecording && recordingIdx===index}}" class="voice-recording">
+			<view class="voice-recording-info">
+				<view class="voice-recording-pulse"></view>
+				<text class="voice-recording-time">{{recordTime}}s / 60s</text>
+			</view>
+			<button class="btn voice-stop-btn" bindtap="bindVoiceRecord" data-idx="{{index}}">停止录音</button>
+		</view>
+
+		<!-- 已上传语音 -->
+		<view wx:elif="{{item.val}}" class="voice-uploaded">
+			<view class="voice-item">
+				<view class="voice-play-btn" bindtap="bindVoicePlay" data-idx="{{index}}">
+					<text class="voice-play-icon">{{voicePlayingIdx===index?'⏸':'▶'}}</text>
+				</view>
+				<view class="voice-info">
+					<text class="voice-label">语音消息</text>
+					<text class="voice-status text-grey text-s">{{voicePlayingIdx===index?'播放中...':'点击播放'}}</text>
+				</view>
+				<view class="voice-delete" bindtap="bindVoiceDelete" data-idx="{{index}}">✕</view>
+			</view>
+		</view>
+
+		<!-- 未上传语音：显示录音和选择按钮 -->
+		<view wx:else class="voice-actions">
+			<button class="btn voice-record-btn" bindtap="bindVoiceRecord" data-idx="{{index}}" loading="{{voiceUploading}}">
+				<text wx:if="{{!voiceUploading}}">🎤 开始录音</text>
+				<text wx:else>上传中...</text>
+			</button>
+			<button class="btn voice-choose-btn" bindtap="bindVoiceChoose" data-idx="{{index}}" disabled="{{voiceUploading}}">📁 从聊天选择</button>
+			<view class="voice-tip text-grey text-s">支持mp3格式，最长60秒</view>
+		</view>
+
+		<view wx:if="{{item.focus}}" class="hint-desc error">{{item.focus}}</view>
+		<view wx:if="{{item.ext.hint}}" class="hint-desc info">{{item.ext.hint}}</view>
+	</block>
+
+	<!-- 地理位置选择 -->
+	<block wx:elif="{{item.type=='location'}}">
+		<view class="form-group" id="form{{item.mark}}">
+			<view class="title {{item.must?'must':''}}">{{item.title}}:<text class="text-grey text-normal margin-left-xs">{{item.must?'(必填)':''}}</text></view>
+		</view>
+
+		<!-- 已选择位置 -->
+		<view wx:if="{{item.val && item.val.name}}" class="location-selected">
+			<view class="location-card" bindtap="bindLocationOpen" data-idx="{{index}}">
+				<view class="location-card-icon">📍</view>
+				<view class="location-card-info">
+					<view class="location-card-name">{{item.val.name}}</view>
+					<view class="location-card-address text-grey text-s">{{item.val.address}}</view>
+				</view>
+				<view class="location-card-arrow">›</view>
+			</view>
+			<view class="location-card-actions">
+				<button class="btn location-rechoose-btn" bindtap="bindLocationChoose" data-idx="{{index}}">重新选择</button>
+				<button class="btn location-delete-btn" bindtap="bindLocationDelete" data-idx="{{index}}">清除位置</button>
+			</view>
+		</view>
+
+		<!-- 未选择位置 -->
+		<view wx:else>
+			<button class="btn location-choose-btn" bindtap="bindLocationChoose" data-idx="{{index}}">
+				<text>📍 选择位置</text>
+			</button>
+		</view>
+
+		<view wx:if="{{item.focus}}" class="hint-desc error">{{item.focus}}</view>
+		<view wx:if="{{item.ext.hint}}" class="hint-desc info">{{item.ext.hint}}</view>
+	</block>
+
 	<block wx:elif="{{item.type=='mobile' && mobileCheck}}">
 		<view class="form-group" id="form{{item.mark}}">
 			<view class="title {{item.must?'must':''}}">{{item.title}}:</view>
@@ -275,6 +367,8 @@
 	<view class="item" wx:for="{{forms}}" wx:key="key">
 		<view class="title">{{item.title}}：</view>
 		<view class="content" wx:if="{{item.val===true|| item.val===false}}">{{item.val?'是':'否'}}</view>
+		<view class="content" wx:elif="{{item.type=='voice'}}">{{item.val?'[语音]':'未上传'}}</view>
+		<view class="content" wx:elif="{{item.type=='location'}}">{{item.val && item.val.name ? item.val.name : '未选择'}}</view>
 		<view class="content" wx:else>{{item.val}}</view>
 	</view>
 </cmpt-modal>
