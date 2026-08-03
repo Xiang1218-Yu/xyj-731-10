@@ -127,7 +127,12 @@ class AdminUserService extends BaseProjectAdminService {
 
 	/**设置用户标签 */
 	async setUserTags(userId, tags) {
+		// 确保tags是数组（允许空数组用于清空标签）
 		if (!Array.isArray(tags)) tags = [];
+		// 过滤空值并去重
+		tags = tags.filter(t => t && String(t).trim()).map(t => String(t).trim());
+		// 去重
+		tags = [...new Set(tags)];
 		await UserModel.edit({ USER_MINI_OPENID: userId }, { USER_TAGS: tags });
 	}
 

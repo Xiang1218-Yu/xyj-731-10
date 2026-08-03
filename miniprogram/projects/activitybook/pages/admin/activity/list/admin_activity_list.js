@@ -2,6 +2,7 @@ const AdminBiz = require('../../../../../../comm/biz/admin_biz.js');
 const ActivityBiz = require('../../../../biz/activity_biz.js');
 const pageHelper = require('../../../../../../helper/page_helper.js');
 const cloudHelper = require('../../../../../../helper/cloud_helper.js');
+const helper = require('../../../../../../helper/helper.js');
 const projectSetting = require('../../../../public/project_setting.js');
 
 Page({
@@ -15,6 +16,7 @@ Page({
 		// 批量操作相关
 		batchMode: false, // 是否批量选择模式
 		selectedIds: [], // 已选中的记录ID
+		_allSelected: false, // 当前页是否全选
 	},
 
 	/**
@@ -60,7 +62,20 @@ Page({
 	},
 
 	bindCommListCmpt: function (e) {
-		pageHelper.commListListener(this, e);
+		if (helper.isDefined(e.detail.search)) {
+			this.setData({ search: '', sortType: '' });
+		} else {
+			let dataList = e.detail.dataList;
+			if (dataList && dataList.list) {
+				let selectedIds = this.data.selectedIds;
+				for (let k = 0; k < dataList.list.length; k++) {
+					dataList.list[k]._selected = selectedIds.indexOf(dataList.list[k]._id) > -1;
+				}
+			}
+			this.setData({ dataList });
+			if (e.detail.sortType)
+				this.setData({ sortType: e.detail.sortType });
+		}
 	},
 
 	bindJoinMoreTap: async function (e) {
@@ -360,10 +375,14 @@ Page({
 	bindBatchModeTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
 		let batchMode = !this.data.batchMode;
-		this.setData({
-			batchMode,
-			selectedIds: []
-		});
+		let dataList = this.data.dataList;
+		let updateData = { batchMode, selectedIds: [], _allSelected: false };
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				updateData['dataList.list[' + k + ']._selected'] = false;
+			}
+		}
+		this.setData(updateData);
 	},
 
 	// 单选/取消某条记录
@@ -377,7 +396,17 @@ Page({
 		} else {
 			selectedIds.push(id);
 		}
-		this.setData({ selectedIds });
+		let isSelected = selectedIds.indexOf(id) > -1;
+		let list = (this.data.dataList && this.data.dataList.list) || [];
+		let updateData = { selectedIds };
+		for (let k = 0; k < list.length; k++) {
+			if (list[k]._id === id) {
+				updateData['dataList.list[' + k + ']._selected'] = isSelected;
+				break;
+			}
+		}
+		updateData._allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
+		this.setData(updateData);
 	},
 
 	// 全选/取消全选（当前页）
@@ -387,6 +416,7 @@ Page({
 		let selectedIds = this.data.selectedIds.slice();
 		// 当前页是否已全部选中
 		let allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
+		let updateData = {};
 		if (allSelected) {
 			// 取消当前页选中
 			let pageIds = list.map(item => item._id);
@@ -399,7 +429,12 @@ Page({
 				}
 			}
 		}
-		this.setData({ selectedIds });
+		for (let k = 0; k < list.length; k++) {
+			updateData['dataList.list[' + k + ']._selected'] = selectedIds.indexOf(list[k]._id) > -1;
+		}
+		updateData.selectedIds = selectedIds;
+		updateData._allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
+		this.setData(updateData);
 	},
 
 	// 批量启用/禁用
@@ -455,10 +490,14 @@ Page({
 
 	// 批量操作后统一处理：退出批量模式并刷新列表
 	_afterBatch: function () {
-		this.setData({
-			batchMode: false,
-			selectedIds: []
-		});
+		let dataList = this.data.dataList;
+		let updateData = { batchMode: false, selectedIds: [], _allSelected: false };
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				updateData['dataList.list[' + k + ']._selected'] = false;
+			}
+		}
+		this.setData(updateData);
 		// 刷新列表组件
 		let listComp = this.selectComponent('#cmpt-comm-list');
 		if (listComp) listComp.reload();

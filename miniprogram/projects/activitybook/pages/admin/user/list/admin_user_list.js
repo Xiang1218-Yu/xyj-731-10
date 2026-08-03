@@ -22,6 +22,7 @@ Page({
 		// 批量操作相关
 		batchMode: false, // 是否批量选择模式
 		selectedIds: [], // 已选中的用户ID
+		_allSelected: false, // 当前页是否全选
 
 		// 标签编辑弹窗
 		tagModalShow: false,
@@ -95,9 +96,11 @@ Page({
 		} else {
 			let dataList = e.detail.dataList;
 			if (dataList && dataList.list) {
+				let selectedIds = this.data.selectedIds;
 				for (let k = 0; k < dataList.list.length; k++) {
 					let item = dataList.list[k];
 					item.tagArr = item.USER_TAGS || [];
+					item._selected = selectedIds.indexOf(item.USER_MINI_OPENID) > -1;
 				}
 			}
 			this.setData({
@@ -259,10 +262,14 @@ Page({
 	bindBatchModeTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
 		let batchMode = !this.data.batchMode;
-		this.setData({
-			batchMode,
-			selectedIds: []
-		});
+		let dataList = this.data.dataList;
+		let updateData = { batchMode, selectedIds: [], _allSelected: false };
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				updateData['dataList.list[' + k + ']._selected'] = false;
+			}
+		}
+		this.setData(updateData);
 	},
 
 	// 单选/取消某条用户
@@ -276,7 +283,17 @@ Page({
 		} else {
 			selectedIds.push(id);
 		}
-		this.setData({ selectedIds });
+		let isSelected = selectedIds.indexOf(id) > -1;
+		let list = (this.data.dataList && this.data.dataList.list) || [];
+		let updateData = { selectedIds };
+		for (let k = 0; k < list.length; k++) {
+			if (list[k].USER_MINI_OPENID === id) {
+				updateData['dataList.list[' + k + ']._selected'] = isSelected;
+				break;
+			}
+		}
+		updateData._allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item.USER_MINI_OPENID) > -1);
+		this.setData(updateData);
 	},
 
 	// 全选/取消全选（当前页）
@@ -285,6 +302,7 @@ Page({
 		let list = (this.data.dataList && this.data.dataList.list) || [];
 		let selectedIds = this.data.selectedIds.slice();
 		let allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item.USER_MINI_OPENID) > -1);
+		let updateData = {};
 		if (allSelected) {
 			let pageIds = list.map(item => item.USER_MINI_OPENID);
 			selectedIds = selectedIds.filter(id => pageIds.indexOf(id) == -1);
@@ -295,7 +313,12 @@ Page({
 				}
 			}
 		}
-		this.setData({ selectedIds });
+		for (let k = 0; k < list.length; k++) {
+			updateData['dataList.list[' + k + ']._selected'] = selectedIds.indexOf(list[k].USER_MINI_OPENID) > -1;
+		}
+		updateData.selectedIds = selectedIds;
+		updateData._allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item.USER_MINI_OPENID) > -1);
+		this.setData(updateData);
 	},
 
 	// 批量启用/禁用
@@ -350,10 +373,14 @@ Page({
 
 	// 批量操作后统一处理
 	_afterBatch: function () {
-		this.setData({
-			batchMode: false,
-			selectedIds: []
-		});
+		let dataList = this.data.dataList;
+		let updateData = { batchMode: false, selectedIds: [], _allSelected: false };
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				updateData['dataList.list[' + k + ']._selected'] = false;
+			}
+		}
+		this.setData(updateData);
 		this._loadTagList();
 		let listComp = this.selectComponent('#cmpt-comm-list');
 		if (listComp) listComp.reload();

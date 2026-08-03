@@ -172,10 +172,10 @@ class AdminUserController extends BaseProjectAdminController {
 	async setUserTags() {
 		await this.isAdmin();
 
-		// 数据校验
+		// 数据校验（tags允许空数组，用于清空标签）
 		let rules = {
 			userId: 'must|string',
-			tags: 'must|array',
+			tags: 'array',
 		};
 
 		// 取得数据

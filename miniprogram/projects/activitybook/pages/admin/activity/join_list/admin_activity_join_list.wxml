@@ -19,9 +19,9 @@
 
 			<view class="item {{batchMode?'batch-item':''}}" wx:for="{{dataList.list}}" wx:key="key">
 				<!-- 批量选择复选框 -->
-				<view wx:if="{{batchMode}}" class="batch-check" bindtap="bindSelectItemTap" data-id="{{item._id}}">
-					<view class="checkbox {{selectedIds.indexOf(item._id)>-1?'checked':''}}">
-						<text wx:if="{{selectedIds.indexOf(item._id)>-1}}" class="icon-check"></text>
+				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectItemTap" data-id="{{item._id}}">
+					<view class="checkbox {{item._selected?'checked':''}}">
+						<text wx:if="{{item._selected}}" class="icon-check"></text>
 					</view>
 				</view>
 				<view class="header">
@@ -100,8 +100,8 @@
 	<!-- 批量操作底部栏 begin -->
 	<view wx:if="{{batchMode}}" class="batch-bar">
 		<view class="batch-bar-left" bindtap="bindSelectAllTap">
-			<view class="checkbox {{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length ?'checked':''}}">
-				<text wx:if="{{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length}}" class="icon-check"></text>
+			<view class="checkbox {{_allSelected?'checked':''}}">
+				<text wx:if="{{_allSelected}}" class="icon-check"></text>
 			</view>
 			<text class="margin-left-xs">全选</text>
 		</view>
