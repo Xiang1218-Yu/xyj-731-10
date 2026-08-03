@@ -60,6 +60,49 @@ function formatActivityTime(dateStr) {
 }
 
 /**
+ * 将网络图片预下载到本地临时路径
+ * wxa-plugin-canvas 的 getImageInfo 在某些环境下无法直接处理远程URL，
+ * 需要先 downloadFile 到本地再传给海报组件
+ * @param {string} url 网络图片URL
+ * @returns {string} 本地临时文件路径，失败时返回空字符串
+ */
+async function preDownloadImage(url) {
+	if (!url) return '';
+	// 本地路径直接返回
+	if (url.includes('tmp') || url.includes('temp') || url.includes('wxfile') || url.startsWith('http://tmp')) {
+		return url;
+	}
+	// cloud:// 协议需要先转临时URL
+	if (url.startsWith('cloud://')) {
+		try {
+			url = await cloudHelper.getTempFileURLOne(url);
+		} catch (e) {
+			console.warn('云文件转临时URL失败', e);
+			return '';
+		}
+	}
+	if (!url) return '';
+	// 下载到本地
+	return new Promise((resolve) => {
+		wx.downloadFile({
+			url: url,
+			success(res) {
+				if (res.statusCode === 200) {
+					resolve(res.tempFilePath);
+				} else {
+					console.warn('图片下载失败 statusCode=' + res.statusCode);
+					resolve('');
+				}
+			},
+			fail(err) {
+				console.warn('图片下载失败', err);
+				resolve('');
+			}
+		});
+	});
+}
+
+/**
  * 生成活动海报配置（支持3种模板）
  * @param {object} activity 活动数据
  * @param {string} template 模板名称 template1/template2/template3
@@ -70,28 +113,16 @@ async function generateActivityPosterConfig(activity, template = 'template1') {
 
 	let colors = ACTIVITY_TEMPLATES[template] || ACTIVITY_TEMPLATES.template1;
 
-	// 获取封面图和小程序码（云存储ID转临时URL，失败时降级处理）
+	// 获取封面图（云存储ID转临时URL再下载到本地，确保canvas能读取）
 	let cover = '';
 	if (activity.ACTIVITY_OBJ && activity.ACTIVITY_OBJ.cover && activity.ACTIVITY_OBJ.cover.length > 0) {
-		cover = activity.ACTIVITY_OBJ.cover[0];
-		if (cover && cover.startsWith('cloud')) {
-			try {
-				cover = await cloudHelper.getTempFileURLOne(cover);
-			} catch (e) {
-				console.warn('封面URL获取失败', e);
-				cover = '';
-			}
-		}
+		cover = await preDownloadImage(activity.ACTIVITY_OBJ.cover[0]);
 	}
 
-	let qr = activity.ACTIVITY_QR || '';
-	if (qr && qr.startsWith('cloud')) {
-		try {
-			qr = await cloudHelper.getTempFileURLOne(qr);
-		} catch (e) {
-			console.warn('二维码URL获取失败', e);
-			qr = '';
-		}
+	// 获取小程序码（同样预下载）
+	let qr = '';
+	if (activity.ACTIVITY_QR) {
+		qr = await preDownloadImage(activity.ACTIVITY_QR);
 	}
 
 	let title = activity.ACTIVITY_TITLE || '';
@@ -251,17 +282,10 @@ async function config1({
     user = '',
     avatar = '' //头像
 }) {
-	if (cover && cover.startsWith('cloud')) {
-		try { cover = await cloudHelper.getTempFileURLOne(cover); } catch (e) { console.warn('封面URL获取失败', e); cover = ''; }
-	}
-
-	if (qr && qr.startsWith('cloud')) {
-		try { qr = await cloudHelper.getTempFileURLOne(qr); } catch (e) { console.warn('二维码URL获取失败', e); qr = ''; }
-	}
-
-    if (avatar && avatar.startsWith('cloud')) {
-        try { avatar = await cloudHelper.getTempFileURLOne(avatar); } catch (e) { console.warn('头像URL获取失败', e); avatar = ''; }
-    }
+	// 预下载所有图片到本地，确保canvas能读取
+	if (cover) cover = await preDownloadImage(cover);
+	if (qr) qr = await preDownloadImage(qr);
+    if (avatar) avatar = await preDownloadImage(avatar);
 
 	let posterConfig = {
 		width: 480, // rpx

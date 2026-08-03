@@ -211,8 +211,15 @@ const main = {
 		// 本方法比create早执行，所以要预先设定ratio by cc 2021/10/25
 		this.pixelRatio = pixelRatio || this.pixelRatio;
 
+		// 单张图片下载失败不阻断整体海报生成，catch后resolve跳过该图片
 		const drawList = [];
-		images.forEach((image, index) => drawList.push(this._downloadImageAndInfo(image, index)));
+		images.forEach((image, index) => {
+			drawList.push(
+				this._downloadImageAndInfo(image, index).catch((err) => {
+					console.warn('海报图片加载失败，跳过该图片', err);
+				})
+			);
+		});
 		return Promise.all(drawList);
 	},
 	initCanvas(w, h, debug) {
@@ -465,9 +472,15 @@ const helper = {
 	 */
 	_downImage(imageUrl) {
 		return new Promise((resolve, reject) => {
+			// 空URL直接拒绝，避免getImageInfo报file not found
+			if (!imageUrl) {
+				reject('empty image url');
+				return;
+			}
 			if (imageUrl.includes('tmp') || imageUrl.includes('temp') || imageUrl.includes('wxfile')) {
 				// 支持本地地址
 				resolve(imageUrl); //2021/2/17 by cc
+				return;
 			}
 
 			if (/^http/.test(imageUrl) && !new RegExp(wx.env.USER_DATA_PATH).test(imageUrl)) {
