@@ -70,18 +70,28 @@ async function generateActivityPosterConfig(activity, template = 'template1') {
 
 	let colors = ACTIVITY_TEMPLATES[template] || ACTIVITY_TEMPLATES.template1;
 
-	// 获取封面图和小程序码（云存储ID转临时URL）
+	// 获取封面图和小程序码（云存储ID转临时URL，失败时降级处理）
 	let cover = '';
 	if (activity.ACTIVITY_OBJ && activity.ACTIVITY_OBJ.cover && activity.ACTIVITY_OBJ.cover.length > 0) {
 		cover = activity.ACTIVITY_OBJ.cover[0];
 		if (cover && cover.startsWith('cloud')) {
-			cover = await cloudHelper.getTempFileURLOne(cover);
+			try {
+				cover = await cloudHelper.getTempFileURLOne(cover);
+			} catch (e) {
+				console.warn('封面URL获取失败', e);
+				cover = '';
+			}
 		}
 	}
 
 	let qr = activity.ACTIVITY_QR || '';
 	if (qr && qr.startsWith('cloud')) {
-		qr = await cloudHelper.getTempFileURLOne(qr);
+		try {
+			qr = await cloudHelper.getTempFileURLOne(qr);
+		} catch (e) {
+			console.warn('二维码URL获取失败', e);
+			qr = '';
+		}
 	}
 
 	let title = activity.ACTIVITY_TITLE || '';
@@ -241,14 +251,17 @@ async function config1({
     user = '',
     avatar = '' //头像
 }) {
-	if (cover.startsWith('cloud'))
-		cover = await cloudHelper.getTempFileURLOne(cover);
+	if (cover && cover.startsWith('cloud')) {
+		try { cover = await cloudHelper.getTempFileURLOne(cover); } catch (e) { console.warn('封面URL获取失败', e); cover = ''; }
+	}
 
-	if (qr.startsWith('cloud'))
-		qr = await cloudHelper.getTempFileURLOne(qr);
+	if (qr && qr.startsWith('cloud')) {
+		try { qr = await cloudHelper.getTempFileURLOne(qr); } catch (e) { console.warn('二维码URL获取失败', e); qr = ''; }
+	}
 
-    if (avatar.startsWith('cloud'))
-        avatar = await cloudHelper.getTempFileURLOne(avatar);
+    if (avatar && avatar.startsWith('cloud')) {
+        try { avatar = await cloudHelper.getTempFileURLOne(avatar); } catch (e) { console.warn('头像URL获取失败', e); avatar = ''; }
+    }
 
 	let posterConfig = {
 		width: 480, // rpx

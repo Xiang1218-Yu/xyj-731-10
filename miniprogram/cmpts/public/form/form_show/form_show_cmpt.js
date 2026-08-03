@@ -67,7 +67,7 @@ Component({
 		isRecording: false,
 		recordingIdx: -1,
 		recordTime: 0,
-		voiceUploading: false,
+		voiceUploading: false, // 保留字段，语音改为提交时统一上传
 		voicePlayingIdx: -1,
 	},
 
@@ -488,9 +488,9 @@ Component({
 						recordTime: 0
 					});
 
-					// 上传语音文件
+					// 录音完成，直接保存临时文件路径（提交时统一上传）
 					if (res.tempFilePath && that._currentRecordIdx !== undefined) {
-						that._uploadVoice(res.tempFilePath, that._currentRecordIdx);
+						that._setForm(that._currentRecordIdx, res.tempFilePath);
 					}
 					that._currentRecordIdx = undefined;
 				});
@@ -556,89 +556,14 @@ Component({
 						if (tempFile.size > 10 * 1024 * 1024) {
 							return pageHelper.showModal('语音文件大小不能超过10MB');
 						}
-						that._uploadVoice(tempFile.path, idx);
+						// 直接保存临时文件路径（提交时统一上传）
+						that._setForm(idx, tempFile.path);
 					}
 				},
 				fail(err) {
 					console.log('选择文件取消', err);
 				}
 			});
-		},
-
-		/**
-		 * 删除云存储中的语音文件
-		 */
-		_deleteCloudVoice: function (fileID) {
-			if (!fileID || typeof fileID !== 'string' || !fileID.startsWith('cloud://')) return;
-			wx.cloud.deleteFile({
-				fileList: [fileID],
-				fail(err) {
-					console.warn('语音文件删除失败', err);
-				}
-			});
-		},
-
-		/**
-		 * 上传语音文件到云存储
-		 */
-		_uploadVoice: async function (filePath, idx) {
-			let that = this;
-
-			// 如果已有语音文件，先删除旧文件
-			let oldVal = this.data.forms[idx] ? this.data.forms[idx].val : '';
-			if (oldVal && oldVal.startsWith('cloud://')) {
-				this._deleteCloudVoice(oldVal);
-			}
-
-			// 获取文件扩展名
-			let ext = '.mp3';
-			let match = filePath.match(/\.[^.]+?$/);
-			if (match) ext = match[0];
-
-			// 生成云存储路径
-			let rd = dataHelper.genRandomNum(1000000, 9999999);
-			let cloudPath = 'voice/' + rd + ext;
-
-			// 加上项目标识
-			if (pageHelper.getPID()) {
-				cloudPath = pageHelper.getPID() + '/' + cloudPath;
-			}
-
-			that.setData({ voiceUploading: true });
-			wx.showLoading({
-				title: '语音上传中...',
-				mask: true
-			});
-
-			try {
-				let res = await wx.cloud.uploadFile({
-					cloudPath: cloudPath,
-					filePath: filePath
-				});
-
-				if (res.fileID) {
-					// 设置表单值为文件ID
-					that._setForm(idx, res.fileID);
-					wx.showToast({
-						title: '上传成功',
-						icon: 'success'
-					});
-				} else {
-					wx.showToast({
-						title: '上传失败',
-						icon: 'none'
-					});
-				}
-			} catch (err) {
-				console.error('语音上传失败', err);
-				wx.showToast({
-					title: '上传失败，请重试',
-					icon: 'none'
-				});
-			} finally {
-				that.setData({ voiceUploading: false });
-				wx.hideLoading();
-			}
 		},
 
 		/**
@@ -729,17 +654,12 @@ Component({
 		},
 
 		/**
-		 * 删除已上传的语音
+		 * 删除语音（仅清空表单值，云端文件由后端提交时统一处理）
 		 */
 		bindVoiceDelete: function (e) {
 			let idx = pageHelper.dataset(e, 'idx');
 			let that = this;
 			pageHelper.showConfirm('确定要删除该语音吗？', function () {
-				// 删除云端文件
-				let val = that.data.forms[idx] ? that.data.forms[idx].val : '';
-				if (val && val.startsWith('cloud://')) {
-					that._deleteCloudVoice(val);
-				}
 				// 停止播放
 				if (that._isPlaying && that._playingIdx === idx) {
 					if (that._audioCtx) that._audioCtx.stop();
@@ -747,6 +667,7 @@ Component({
 					that._playingIdx = -1;
 					that.setData({ voicePlayingIdx: -1 });
 				}
+				// 只清空表单值，临时文件无需手动删除；云端旧文件由后端处理
 				that._setForm(idx, '');
 			});
 		},

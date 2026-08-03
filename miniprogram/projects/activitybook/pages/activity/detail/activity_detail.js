@@ -121,7 +121,10 @@ Page({
 	 */
 	bindPosterTap: async function (e) {
 		let activity = this.data.activity;
-		if (!activity) return;
+		if (!activity) {
+			pageHelper.showNoneToast('活动信息加载中，请稍后');
+			return;
+		}
 
 		// 海报模板选择
 		let templateList = ['简约蓝', '温馨橙', '文艺绿'];
@@ -133,16 +136,25 @@ Page({
 				let templateIdx = res.tapIndex;
 				let templateKey = 'template' + (templateIdx + 1);
 
-				wx.showLoading({ title: '生成海报中...' });
+				wx.showLoading({ title: '生成海报中...', mask: true });
 				try {
 					let posterConfig = await posterCmptHelper.generateActivityPosterConfig(activity, templateKey);
+					if (!posterConfig) {
+						wx.hideLoading();
+						pageHelper.showNoneToast('海报生成失败，请重试');
+						return;
+					}
 					that.setData({
 						posterConfig,
 						posterShow: true,
 					});
 				} catch (err) {
 					console.error('海报生成失败', err);
-					pageHelper.showNoneToast('海报生成失败，请重试');
+					let errMsg = '海报生成失败，请重试';
+					if (err && err.errMsg && err.errMsg.includes('-501000')) {
+						errMsg = '云环境未找到，请检查云环境配置';
+					}
+					pageHelper.showNoneToast(errMsg);
 				}
 				wx.hideLoading();
 			}

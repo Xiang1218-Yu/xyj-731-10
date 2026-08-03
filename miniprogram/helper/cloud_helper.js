@@ -320,15 +320,18 @@ async function transTempPics(imgList, dir, id, prefix = '') {
 			cloudPath = pageHelper.getPID() + '/' + cloudPath;
 
 
-			await wx.cloud.uploadFile({
-				cloudPath,
-				filePath: filePath, // 文件路径
-			}).then(res => {
-				imgList[i] = res.fileID;
-			}).catch(error => {
-				// handle error TODO:剔除图片
-				console.error(error);
-			})
+			try {
+				let uploadRes = await wx.cloud.uploadFile({
+					cloudPath,
+					filePath: filePath,
+				});
+				if (uploadRes && uploadRes.fileID) {
+					imgList[i] = uploadRes.fileID;
+				}
+			} catch (error) {
+				// 上传失败，保留临时路径并记录错误
+				console.error('图片上传失败', error);
+			}
 		}
 	}
 
@@ -412,9 +415,34 @@ async function transFormsTempPics(forms, dir, id, route) {
 			}
 			hasImageForms.push(forms[k]);
 		}
+		else if (forms[k].type == 'voice') {
+			// 语音临时文件上传到云存储
+			let voicePath = forms[k].val;
+			if (voicePath && (voicePath.includes('tmp') || voicePath.includes('temp') || voicePath.includes('wxfile'))) {
+				let ext = '.mp3';
+				let match = voicePath.match(/\.[^.]+?$/);
+				if (match) ext = match[0];
+				let rd = 'voice_' + dataHelper.genRandomNum(1000000, 9999999);
+				let cloudPath = dir + id + '/' + rd + ext;
+				if (pageHelper.getPID()) cloudPath = pageHelper.getPID() + '/' + cloudPath;
+				try {
+					let uploadRes = await wx.cloud.uploadFile({ cloudPath, filePath: voicePath });
+					if (uploadRes && uploadRes.fileID) {
+						forms[k].val = uploadRes.fileID;
+					}
+				} catch (err) {
+					console.error('语音上传失败', err);
+				}
+			}
+			hasImageForms.push(forms[k]); // 也需要更新到数据库
+		}
 	}
 
-	if (hasImageForms.length == 0) return;
+	// 无论是否有表单需要更新，都要隐藏loading
+	if (hasImageForms.length == 0) {
+		wx.hideLoading();
+		return;
+	}
 
 	let params = {
 		id,
@@ -422,9 +450,11 @@ async function transFormsTempPics(forms, dir, id, route) {
 	}
 
 	try {
-		await callCloudSumbit(route, params);
+		await callCloudSumbit(route, params, { title: '保存中...' });
 	} catch (err) {
 		console.error(err);
+	} finally {
+		wx.hideLoading();
 	}
 }
 

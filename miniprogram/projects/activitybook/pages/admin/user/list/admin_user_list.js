@@ -269,7 +269,7 @@ Page({
 	bindSelectItemTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
 		let id = pageHelper.dataset(e, 'id');
-		let selectedIds = this.data.selectedIds;
+		let selectedIds = this.data.selectedIds.slice();
 		let idx = selectedIds.indexOf(id);
 		if (idx > -1) {
 			selectedIds.splice(idx, 1);
@@ -283,7 +283,7 @@ Page({
 	bindSelectAllTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
 		let list = (this.data.dataList && this.data.dataList.list) || [];
-		let selectedIds = this.data.selectedIds;
+		let selectedIds = this.data.selectedIds.slice();
 		let allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item.USER_MINI_OPENID) > -1);
 		if (allSelected) {
 			let pageIds = list.map(item => item.USER_MINI_OPENID);

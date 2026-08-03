@@ -124,23 +124,23 @@
 		<template is="listLoadTpl" data="{{skin:'text-grey',dataList}}" />
 		<!--load end-->
 
-		<!-- 批量操作底部栏 begin -->
-		<view wx:if="{{batchMode}}" class="batch-bar">
-			<view class="batch-bar-left" bindtap="bindSelectAllTap">
-				<view class="checkbox {{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length ?'checked':''}}">
-					<text wx:if="{{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length}}" class="icon-check"></text>
-				</view>
-				<text class="margin-left-xs">全选</text>
-			</view>
-			<view class="batch-bar-right">
-				<view class="btn batch-btn bg-olive light" bindtap="bindBatchStatusTap" data-status="1">批量启用</view>
-				<view class="btn batch-btn bg-grey light" bindtap="bindBatchStatusTap" data-status="9">批量禁用</view>
-				<view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
-			</view>
-		</view>
-		<!-- 批量操作底部栏 end -->
-
 	</cmpt-comm-list>
+
+	<!-- 批量操作底部栏 begin -->
+	<view wx:if="{{batchMode}}" class="batch-bar">
+		<view class="batch-bar-left" bindtap="bindSelectAllTap">
+			<view class="checkbox {{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length ?'checked':''}}">
+				<text wx:if="{{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length}}" class="icon-check"></text>
+			</view>
+			<text class="margin-left-xs">全选</text>
+		</view>
+		<view class="batch-bar-right">
+			<view class="btn batch-btn bg-olive light" bindtap="bindBatchStatusTap" data-status="1">批量启用</view>
+			<view class="btn batch-btn bg-grey light" bindtap="bindBatchStatusTap" data-status="9">批量禁用</view>
+			<view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
+		</view>
+	</view>
+	<!-- 批量操作底部栏 end -->
 
 
 	<cmpt-modal wx:if="{{checkModalShow}}" model:show="{{checkModalShow}}" type="dialog" title="审核不过" bind:click="bindCheckCmpt" class="modal-form" cancelText="返回" confirmText="确定">

@@ -78,23 +78,22 @@
         <template is="listLoadTpl" data="{{dataList,skin:'text-grey'}}" />
         <!--load end-->
 
-        <!-- 批量操作底部栏 begin -->
-        <view wx:if="{{batchMode}}" class="batch-bar">
-            <view class="batch-bar-left" bindtap="bindSelectAllTap">
-                <view class="checkbox {{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length ?'checked':''}}">
-                    <text wx:if="{{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length}}" class="icon-check"></text>
-                </view>
-                <text class="margin-left-xs">全选</text>
-            </view>
-            <view class="batch-bar-right">
-                <view class="btn batch-btn bg-olive light" bindtap="bindBatchStatusTap" data-status="1">批量启用</view>
-                <view class="btn batch-btn bg-grey light" bindtap="bindBatchStatusTap" data-status="0">批量停用</view>
-                <view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
-            </view>
-        </view>
-        <!-- 批量操作底部栏 end -->
-
-
     </cmpt-comm-list>
+
+    <!-- 批量操作底部栏 begin -->
+    <view wx:if="{{batchMode}}" class="batch-bar">
+        <view class="batch-bar-left" bindtap="bindSelectAllTap">
+            <view class="checkbox {{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length ?'checked':''}}">
+                <text wx:if="{{dataList.list && dataList.list.length>0 && selectedIds.length>=dataList.list.length}}" class="icon-check"></text>
+            </view>
+            <text class="margin-left-xs">全选</text>
+        </view>
+        <view class="batch-bar-right">
+            <view class="btn batch-btn bg-olive light" bindtap="bindBatchStatusTap" data-status="1">批量启用</view>
+            <view class="btn batch-btn bg-grey light" bindtap="bindBatchStatusTap" data-status="0">批量停用</view>
+            <view class="btn batch-btn bg-orange light" bindtap="bindBatchDelTap">批量删除</view>
+        </view>
+    </view>
+    <!-- 批量操作底部栏 end -->
 
 </block>

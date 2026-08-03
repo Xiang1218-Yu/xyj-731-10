@@ -370,7 +370,7 @@ Page({
 	bindSelectItemTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
 		let id = pageHelper.dataset(e, 'id');
-		let selectedIds = this.data.selectedIds;
+		let selectedIds = this.data.selectedIds.slice();
 		let idx = selectedIds.indexOf(id);
 		if (idx > -1) {
 			selectedIds.splice(idx, 1);
@@ -384,7 +384,7 @@ Page({
 	bindSelectAllTap: function (e) {
 		if (!AdminBiz.isAdmin(this)) return;
 		let list = (this.data.dataList && this.data.dataList.list) || [];
-		let selectedIds = this.data.selectedIds;
+		let selectedIds = this.data.selectedIds.slice();
 		// 当前页是否已全部选中
 		let allSelected = list.length > 0 && list.every(item => selectedIds.indexOf(item._id) > -1);
 		if (allSelected) {
