@@ -220,6 +220,35 @@ class AdminActivityController extends BaseProjectAdminController {
 		return result;
 	}
 
+	/** 批量删除活动(含报名记录) */
+	async batchDelActivity() {
+		await this.isAdmin();
+
+		let rules = {
+			ids: 'must|array',
+		};
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		await service.batchDelActivity(input.ids);
+		this.logOther('批量删除了' + input.ids.length + '个活动');
+	}
+
+	/** 批量修改活动状态 */
+	async batchStatusActivity() {
+		await this.isAdmin();
+
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int',
+		};
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		await service.batchStatusActivity(input.ids, input.status);
+		this.logOther('批量修改了' + input.ids.length + '个活动的状态');
+	}
+
 	async clearActivityAll() {
 		await this.isAdmin();
 

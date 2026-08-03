@@ -34,8 +34,26 @@ class AdminProductService extends BaseProjectAdminService {
 
 	/**删除数据 */
 	async delProduct(id) {
-		this.AppError('[书友会]该功能暂不开放，如有需要请加作者微信：cclinux0730');
+		let product = await ProductModel.getOne(id);
+		if (!product) return;
 
+		// 异步清理封面等云文件
+		cloudUtil.handlerCloudFilesForForms(product.PRODUCT_FORMS, []);
+
+		await ProductModel.del({ _id: id });
+	}
+
+	/** 批量删除书单 */
+	async batchDelProduct(ids) {
+		if (!ids || ids.length == 0) return;
+		await ProductModel.del({ _id: ['in', ids] });
+	}
+
+	/** 批量修改书单状态 */
+	async batchStatusProduct(ids, status) {
+		if (!ids || ids.length == 0) return;
+		status = Number(status);
+		await ProductModel.edit({ _id: ['in', ids] }, { PRODUCT_STATUS: status });
 	}
 
 	/**获取信息 */

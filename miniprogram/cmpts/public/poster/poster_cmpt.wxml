@@ -10,6 +10,17 @@
 			<view class="save-hint text-project" wx:if="{{isLoad}}">长按图片保存或者转发</view>
 
 		</view>
+
+		<!-- 海报模板选择 (实时预览) -->
+		<view wx:if="{{showTemplate && posterData}}" class="poster-template">
+			<view class="poster-template-title">选择海报模板</view>
+			<view class="poster-template-list">
+				<view wx:for="{{templates}}" wx:key="id" class="poster-template-item {{curTemplate==item.id?'active':''}}" bindtap="bindSelectTemplateTap" data-template="{{item.id}}">
+					{{item.name}}
+				</view>
+			</view>
+		</view>
+
 		<view class="poster-share">
 			<button class="item item-share clearbtn" open-type="share" data-img="{{img}}">
 				<view class="pic">

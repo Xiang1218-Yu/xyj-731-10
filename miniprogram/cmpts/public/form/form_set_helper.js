@@ -50,6 +50,10 @@ function initFields(defaultFields = null) {
 				case 'image':
 					max = 8;
 					break;
+				case 'audio':
+					// 语音: 最长录制秒数
+					max = 60;
+					break;
 				case 'digit':
 				case 'int':
 					max = 10;
@@ -170,6 +174,8 @@ function checkIDCard(idcode) {
 // 必填提示
 function getMustHint(type) {
 	if (type == 'image') return '请上传';
+	if (type == 'audio') return '请录制';
+	if (type == 'location') return '请选择';
 
 	let arr = ['select', 'date', 'month', 'hourminute', 'time', 'checkbox', 'radio','switch', 'area'];
 	if (arr.includes(type))
@@ -191,6 +197,16 @@ function checkForm(fields, forms, that) {
 
 		// 必填
 		let hintOprt = getMustHint(type); //提示动作
+
+		// 位置类型: 值为对象或null, 单独做必填校验(避免 null.length 报错)
+		if (type == 'location') {
+			if (fields[k].must && (!val || !val.name)) {
+				fields[k].focus = hintOprt + title;
+				pageHelper.anchor('form' + forms[k].mark, that);
+				return pageHelper.showModal(hintOprt + '' + title);
+			}
+			continue;
+		}
 
 		if (fields[k].must && type != 'switch' && (!helper.isDefined(val) || val.length == 0)) {
 			fields[k].focus = hintOprt + title;
@@ -347,7 +363,8 @@ function mark() {
 function getTypeOptions() {
 	//return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,mobile=手机号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
 
-	return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,idcard=身份证号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
+	// 新增: image=图片 audio=语音 location=位置 (支持多媒体打卡与自定义报名字段)
+	return dataHelper.getSelectOptions('text=单行文本,select=单项选择,checkbox=多项选择,switch=开关选择,textarea=多行文本,image=图片,audio=语音,location=位置,idcard=身份证号码,date=日期 (年 月 日),month=月份,year=年份,hourminute=时间点,area=省市区,int=整数数字,digit=带小数点的数字');
 }
 
 // 重复性规则

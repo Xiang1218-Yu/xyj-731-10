@@ -2,6 +2,7 @@ const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const pageHelper = require('../../../../../helper/page_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
+const projectSetting = require('../../../public/project_setting.js');
 
 Page({
 	/**
@@ -107,8 +108,27 @@ Page({
 		this.selectComponent("#form-show").checkForms();
 	},
 
+	// 请求订阅"审核结果通知"消息授权 (未配置模板ID则跳过)
+	_requestSubscribe: function () {
+		return new Promise((resolve) => {
+			let tmplId = projectSetting.SUBSCRIBE_ACTIVITY_JOIN_TMPL_ID;
+			if (!tmplId) return resolve();
+
+			wx.requestSubscribeMessage({
+				tmplIds: [tmplId],
+				complete() {
+					// 无论用户是否同意都继续报名流程
+					resolve();
+				}
+			});
+		});
+	},
+
 	bindSubmitCmpt: async function (e) {
 		let forms = e.detail;
+
+		// 若配置了订阅消息模板，先请求用户授权，以便后续审核结果推送
+		await this._requestSubscribe();
 
 		try {
 			let opts = {

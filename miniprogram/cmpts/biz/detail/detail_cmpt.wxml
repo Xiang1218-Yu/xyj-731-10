@@ -1,4 +1,4 @@
-﻿<view wx:if="{{mode!='btn'}}" style="height:200rpx"></view>
+<view wx:if="{{mode!='btn'}}" style="height:200rpx"></view>
 
 <view wx:if="{{doHome&&mode!='right'&&mode!='left'}}" bindtap="bindHomeTap" class="cmpt-fixed-home-btn"><text class="icon-home"></text><text style="font-size:22rpx;">首页</text></view>
 
@@ -134,4 +134,4 @@
 </view>
 <!--btn End-->
 
-<cmpt-poster model:show="{{showPoster}}" doPoster="{{doPoster}}" wx:if="{{ posterConfig}}" config="{{posterConfig}}" />
+<cmpt-poster model:show="{{showPoster}}" doPoster="{{doPoster}}" wx:if="{{posterConfig || posterData}}" config="{{posterConfig}}" posterData="{{posterData}}" showTemplate="{{true}}" />

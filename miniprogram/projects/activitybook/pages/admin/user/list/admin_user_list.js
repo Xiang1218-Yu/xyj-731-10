@@ -17,6 +17,13 @@ Page({
 
 		formReason: '',
 		curIdx: -1,
+
+		// 批量操作
+		batchMode: false,   // 是否进入批量选择模式
+		selectedIds: [],    // 已选中的用户openid数组
+		selectedMap: {},    // 选中ID映射 {id:true}, 供wxml判断选中态
+		tagModalShow: false, // 批量打标签弹窗
+		formTag: '',        // 待添加的标签
 	},
 
 	/**
@@ -177,6 +184,123 @@ Page({
 			pageHelper.showConfirm('确认执行此操作?', cb);
 	},
 
+	//############### 批量操作与标签/分组 ###############
+
+	// 切换批量选择模式
+	bindToggleBatchTap: function () {
+		this.setData({
+			batchMode: !this.data.batchMode,
+			selectedIds: [],
+			selectedMap: {}
+		});
+	},
+
+	// 选中/取消选中某个用户
+	bindSelectTap: function (e) {
+		let id = pageHelper.dataset(e, 'id');
+		let selectedIds = this.data.selectedIds;
+		let idx = selectedIds.indexOf(id);
+		if (idx >= 0)
+			selectedIds.splice(idx, 1);
+		else
+			selectedIds.push(id);
+		this.setData({ selectedIds, selectedMap: this._buildSelectedMap(selectedIds) });
+	},
+
+	// 全选/取消全选(当前页)
+	bindSelectAllTap: function () {
+		let list = this.data.dataList ? this.data.dataList.list : [];
+		let selectedIds = this.data.selectedIds;
+		if (selectedIds.length == list.length && list.length > 0) {
+			selectedIds = [];
+		} else {
+			selectedIds = list.map(item => item.USER_MINI_OPENID);
+		}
+		this.setData({ selectedIds, selectedMap: this._buildSelectedMap(selectedIds) });
+	},
+
+	// 由选中ID数组构建 {id:true} 映射, 供wxml通过 selectedMap[id] 判断选中态 (wxml不支持indexOf)
+	_buildSelectedMap: function (selectedIds) {
+		let map = {};
+		for (let k = 0; k < selectedIds.length; k++) map[selectedIds[k]] = true;
+		return map;
+	},
+
+	// 批量删除
+	bindBatchDelTap: function () {
+		if (!AdminBiz.isAdmin(this)) return;
+		if (this.data.selectedIds.length == 0)
+			return pageHelper.showNoneToast('请先选择用户');
+
+		let callback = async () => {
+			try {
+				let opts = { title: '删除中' };
+				await cloudHelper.callCloudSumbit('admin/user_batch_del', { ids: this.data.selectedIds }, opts).then(res => {
+					this._afterBatch('批量删除成功');
+				});
+			} catch (e) {
+				console.log(e);
+			}
+		}
+		pageHelper.showConfirm('确认删除选中的 ' + this.data.selectedIds.length + ' 个用户？删除不可恢复', callback);
+	},
+
+	// 批量修改状态 (data-status)
+	bindBatchStatusTap: function (e) {
+		if (!AdminBiz.isAdmin(this)) return;
+		if (this.data.selectedIds.length == 0)
+			return pageHelper.showNoneToast('请先选择用户');
+
+		let status = Number(pageHelper.dataset(e, 'status'));
+		let callback = async () => {
+			try {
+				let opts = { title: '处理中' };
+				await cloudHelper.callCloudSumbit('admin/user_batch_status', { ids: this.data.selectedIds, status }, opts).then(res => {
+					this._afterBatch('操作成功');
+				});
+			} catch (e) {
+				console.log(e);
+			}
+		}
+		pageHelper.showConfirm('确认对选中的 ' + this.data.selectedIds.length + ' 个用户执行此操作？', callback);
+	},
+
+	// 打开批量打标签弹窗
+	bindBatchTagTap: function () {
+		if (this.data.selectedIds.length == 0)
+			return pageHelper.showNoneToast('请先选择用户');
+		this.setData({ formTag: '', tagModalShow: true });
+	},
+
+	// 确认批量打标签
+	bindBatchTagCmpt: async function () {
+		let tag = (this.data.formTag || '').trim();
+		if (!tag) return pageHelper.showNoneToast('请输入标签');
+
+		try {
+			let opts = { title: '处理中' };
+			await cloudHelper.callCloudSumbit('admin/user_batch_add_tag', { ids: this.data.selectedIds, tag }, opts).then(res => {
+				this.setData({ tagModalShow: false, formTag: '' });
+				this._afterBatch('打标签成功');
+			});
+		} catch (e) {
+			console.log(e);
+		}
+	},
+
+	// 批量操作后刷新列表
+	_afterBatch: function (msg) {
+		this.setData({
+			batchMode: false,
+			selectedIds: [],
+			selectedMap: {}
+		});
+		pageHelper.showSuccToast(msg, 1500, () => {
+			let cmpt = this.selectComponent('#cmpt-comm-list');
+			if (cmpt) cmpt.reload();
+		});
+	},
+
 	_getSearchMenu: async function () {
 
 		let sortItems1 = [
@@ -187,7 +311,9 @@ Page({
 		let sortMenus = [
 			{ label: '全部', type: '', value: '' },
 			{ label: '正常', type: 'status', value: 1 },
-			{ label: '禁用', type: 'status', value: 9 }
+			{ label: '禁用', type: 'status', value: 9 },
+			{ label: '活跃用户', type: 'tag', value: '活跃用户' },
+			{ label: '资深书友', type: 'tag', value: '资深书友' }
 
 		]
 

@@ -5,8 +5,15 @@
  */
 
 const BaseProjectController = require('./base_project_controller.js');
+const MyService = require('../service/my_service.js');
 
 class MyController extends BaseProjectController { 
+
+	/** 我的可视化数据统计 */
+	async getMyStat() {
+		let service = new MyService();
+		return await service.getMyStat(this._userId);
+	}
 
 }
 

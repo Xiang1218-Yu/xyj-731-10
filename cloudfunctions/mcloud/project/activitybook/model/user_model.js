@@ -26,6 +26,8 @@ UserModel.DB_STRUCTURE = {
 	USER_FORMS: 'array|true|default=[]',
 	USER_OBJ: 'object|true|default={}',
 
+	USER_TAGS: 'array|true|default=[]|comment=用户标签/分组 如活跃用户、资深书友',
+
 	USER_LOGIN_CNT: 'int|true|default=0|comment=登陆次数',
 	USER_LOGIN_TIME: 'int|false|comment=最近登录时间',
 

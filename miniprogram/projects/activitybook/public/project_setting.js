@@ -3,6 +3,9 @@ module.exports = { //activitybook
 	NAV_COLOR: '#ffffff',
 	NAV_BG: '#FFC700',
 
+	// 报名审核结果通知的订阅消息模板ID (需与云端 constants.js 中一致, 在微信公众平台申请后填入)
+	SUBSCRIBE_ACTIVITY_JOIN_TMPL_ID: '',
+
 
 	// setup
 	SETUP_CONTENT_ITEMS: [
@@ -112,5 +115,7 @@ module.exports = { //activitybook
 	ENROLL_JOIN_FIELDS: [
         { mark: 'content', title: '打卡内容', type: 'textarea', must: true },
 		{ mark: 'img', title: '图片', type: 'image', min: 0, max: 8, must: false },
+		{ mark: 'audio', title: '语音', type: 'audio', max: 60, must: false }, // 多媒体打卡: 语音
+		{ mark: 'location', title: '打卡位置', type: 'location', must: false }, // 多媒体打卡: 位置
 	],
 }

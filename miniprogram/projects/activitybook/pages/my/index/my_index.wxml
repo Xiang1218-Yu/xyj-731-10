@@ -22,6 +22,33 @@
 	</view>
 	<!--top area end-->
 
+	<!--数据统计卡片 begin-->
+	<view wx:if="{{stat}}" class="stat padding-project">
+		<view class="stat-inner card-project shadow-project">
+			<view class="stat-item" bindtap="url" data-url="../../activity/my_join_list/activity_my_join_list">
+				<view class="stat-num text-blue">{{stat.activityJoinCnt}}</view>
+				<view class="stat-label">报名活动</view>
+			</view>
+			<view class="stat-item">
+				<view class="stat-num text-green">{{stat.checkinCnt}}</view>
+				<view class="stat-label">已签到</view>
+			</view>
+			<view class="stat-item" bindtap="url" data-url="../../enroll/my_user_list/enroll_my_user_list">
+				<view class="stat-num text-orange">{{stat.enrollJoinCnt}}</view>
+				<view class="stat-label">打卡次数</view>
+			</view>
+			<view class="stat-item">
+				<view class="stat-num text-purple">{{stat.enrollDayCnt}}</view>
+				<view class="stat-label">打卡天数</view>
+			</view>
+			<view class="stat-item" bindtap="url" data-url="../fav/my_fav">
+				<view class="stat-num text-red">{{stat.favCnt}}</view>
+				<view class="stat-label">我的收藏</view>
+			</view>
+		</view>
+	</view>
+	<!--数据统计卡片 end-->
+
 	<view class="record padding-project">
 		<view class="inner card-project shadow-project">
 			<view class="item" bindtap="url" data-url="../../enroll/my_user_list/enroll_my_user_list">

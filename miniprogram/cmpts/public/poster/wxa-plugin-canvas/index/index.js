@@ -456,7 +456,11 @@ const helper = {
 					});
 					resolve();
 				})
-				.catch((err) => reject(err));
+				.catch((err) => {
+					// 单张图片下载/读取失败(如云环境异常、文件不存在)时跳过该图，不阻断整张海报生成
+					console.warn('[poster] 图片加载失败, 已跳过', imageUrl, err);
+					resolve();
+				});
 		});
 	},
 	/**

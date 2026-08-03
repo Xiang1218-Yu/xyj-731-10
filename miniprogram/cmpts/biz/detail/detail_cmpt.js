@@ -113,6 +113,7 @@ Component({
 		isFav: -1,
 		showPoster: false,
 		posterConfig: null,
+		posterData: null, // 海报原始数据，供模板切换实时重建
 	},
 
 	lifetimes: {
@@ -135,18 +136,28 @@ Component({
 
 			if (this.data.doShare) {
 
-				let posterConfig = await posterCmptHelper.config1({
+				// 海报原始数据，供模板选择时实时重建
+				let posterData = {
 					cover: this.data.cover,
 					title: this.data.title,
 					desc: this.data.desc,
 					qr: this.data.qr,
-                    bg: this.data.bg,
-                    user: this.data.user,
-                    avatar: this.data.avatar
-				})
-				this.setData({
-					posterConfig
-				});
+					bg: this.data.bg,
+					user: this.data.user,
+					avatar: this.data.avatar
+				};
+
+				try {
+					let posterConfig = await posterCmptHelper.config1(posterData)
+					this.setData({
+						posterConfig,
+						posterData
+					});
+				} catch (e) {
+					// 海报预生成失败(如云环境异常)不影响分享入口显示
+					console.warn('[detail] 海报预生成失败', e);
+					this.setData({ posterData });
+				}
 
 			}
 		},

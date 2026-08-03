@@ -18,6 +18,7 @@ import Poster from '../../../cmpts/public/poster/wxa-plugin-canvas/poster/poster
 const pageHelper = require('../../../helper/page_helper.js');
 const picHelper = require('../../../helper/pic_helper.js');
 const helper = require('../../../helper/helper.js');
+const posterCmptHelper = require('./poster_cmpt_helper.js');
 
 Component({
 	externalClasses: ['poster-class'],
@@ -34,6 +35,17 @@ Component({
 		config: { // 图形参数
 			type: Object,
 			value: null,
+		},
+		// 海报原始数据 {cover,title,desc,qr,bg,user,avatar}
+		// 传入后组件内部可根据模板编号实时切换并重新生成config
+		posterData: {
+			type: Object,
+			value: null,
+		},
+		// 是否显示模板选择 (需配合 posterData 使用)
+		showTemplate: {
+			type: Boolean,
+			value: false,
 		},
 		isQr: { // 是否叠加小程序码
 			type: Boolean,
@@ -62,6 +74,8 @@ Component({
 	 */
 	data: {
 		isLoad: false,
+		templates: posterCmptHelper.TEMPLATES, // 可选模板列表
+		curTemplate: 1, // 当前选中的模板编号
 	},
 
 	lifetimes: {
@@ -77,6 +91,17 @@ Component({
 	},
 
 	/**
+	 * 监听器：模板选择模式下，打开弹窗时自动生成一次预览，保证海报入口可见
+	 */
+	observers: {
+		'show': function (show) {
+			if (show && this.data.showTemplate && this.data.posterData && !this.data.isCreate) {
+				this._genByTemplate(this.data.curTemplate);
+			}
+		}
+	},
+
+	/**
 	 * 组件的方法列表 
 	 */
 	methods: {
@@ -87,6 +112,34 @@ Component({
 		bindPosterTap: function (e) {
 			this.setData({
 				isCreate:true,
+				isLoad: false,
+			}, async () => {
+				await this.createPoster();
+			});
+		},
+
+		// 选择海报模板并实时重新生成预览
+		bindSelectTemplateTap: async function (e) {
+			let template = Number(pageHelper.dataset(e, 'template'));
+			if (template == this.data.curTemplate && this.data.isCreate) return;
+			await this._genByTemplate(template);
+		},
+
+		// 根据模板编号 + posterData 生成海报config并渲染 (兼容父组件未传config的情况)
+		_genByTemplate: async function (template) {
+			let posterData = this.data.posterData;
+			let config = this.data.config;
+
+			// 有原始数据则按模板重建；否则回退到父组件传入的config
+			if (posterData) {
+				config = await posterCmptHelper.configByTemplate(template, posterData);
+			}
+			if (!config) return; // 既无posterData也无config, 无法生成
+
+			this.setData({
+				curTemplate: template,
+				config,
+				isCreate: true,
 				isLoad: false,
 			}, async () => {
 				await this.createPoster();

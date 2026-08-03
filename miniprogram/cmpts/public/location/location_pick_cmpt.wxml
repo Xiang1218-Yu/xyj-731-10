@@ -1,0 +1,20 @@
+<view class="form-group">
+	<view class="title"><text wx:if="{{must}}" class="text-red">*</text>{{title}}</view>
+</view>
+<view class="form-group padding">
+	<view class="location-box">
+		<block wx:if="{{location && location.name}}">
+			<view class="location-info" bindtap="bindViewTap">
+				<view class="location-name"><text class="icon-locationfill text-orange"></text> {{location.name}}</view>
+				<view class="location-addr text-gray">{{location.address}}</view>
+			</view>
+			<view class="location-oprt">
+				<view class="location-btn bg-olive" bindtap="bindChooseTap">重选</view>
+				<view class="location-btn bg-grey" bindtap="bindDelTap">删除</view>
+			</view>
+		</block>
+		<view wx:else class="location-choose" bindtap="bindChooseTap">
+			<text class="icon-location"></text> 点击选择位置
+		</view>
+	</view>
+</view>

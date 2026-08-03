@@ -60,6 +60,8 @@ function getValByForm(arr, mark, title) {
 		if (arr[k].mark == mark || arr[k].title == title) {
 			if (arr[k].type == 'image') return '[图片]';
 			if (arr[k].type == 'content') return '[图文内容]';
+			if (arr[k].type == 'audio') return arr[k].val ? '[语音]' : '';
+			if (arr[k].type == 'location') return (arr[k].val && arr[k].val.name) ? (arr[k].val.name + ' ' + (arr[k].val.address || '')) : '';
 
 			if (arr[k].type == 'switch') {
 				if (arr[k].val === true)

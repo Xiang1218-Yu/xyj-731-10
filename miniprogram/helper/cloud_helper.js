@@ -402,6 +402,14 @@ async function transFormsTempPics(forms, dir, id, route) {
 			forms[k].val = await transTempPics(forms[k].val, dir, id, 'image');
 			hasImageForms.push(forms[k]);
 		}
+		else if (forms[k].type == 'audio') {
+			// 语音: val为单个本地临时文件路径, 上传后替换为云fileID
+			if (forms[k].val) {
+				let ret = await transTempPics([forms[k].val], dir, id, 'audio');
+				forms[k].val = ret[0];
+			}
+			hasImageForms.push(forms[k]);
+		}
 		else if (forms[k].type == 'content') {
 			let contentVal = forms[k].val;
 			for (let j in contentVal) {

@@ -2,14 +2,33 @@
 	<cmpt-comm-list id="cmpt-comm-list" source='admin' type="admin-meet" search="{{search||''}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/user_list" sortMenusDefaultIndex="0" topBottom="50" placeholder="搜索" bind:list="bindCommListCmpt">
 
 		<view slot="searchEnd">
+			<button bindtap="bindToggleBatchTap" class="btn mid radius {{batchMode?'bg-red':'bg-grey'}} text-white margin-right-s"><text class="icon-check margin-right-xxs"></text>{{batchMode?'退出批量':'批量操作'}}</button>
 			<button bindtap="url" data-url="../export/admin_user_export?condition={{dataList.condition}}" class="btn mid radius bg-admin text-white margin-right-s"><text class="icon-down margin-right-xxs"></text>导出用户资料</button>
+		</view>
+
+		<!-- 批量操作工具栏 -->
+		<view wx:if="{{batchMode}}" class="batch-bar">
+			<view class="batch-left" bindtap="bindSelectAllTap">
+				<text class="{{selectedIds.length==dataList.list.length&&dataList.list.length>0?'icon-squarecheckfill text-green':'icon-squarecheck'}}"></text> 全选
+			</view>
+			<view class="batch-info">已选 {{selectedIds.length}} 项</view>
+			<view class="batch-oprt">
+				<view class="btn sm radius bg-green text-white margin-right-xs" bindtap="bindBatchStatusTap" data-status="1">恢复</view>
+				<view class="btn sm radius bg-purple text-white margin-right-xs" bindtap="bindBatchStatusTap" data-status="9">禁用</view>
+				<view class="btn sm radius bg-blue text-white margin-right-xs" bindtap="bindBatchTagTap">打标签</view>
+				<view class="btn sm radius bg-red text-white" bindtap="bindBatchDelTap">删除</view>
+			</view>
 		</view>
 
 		<!-- List Begin -->
 		<view class="admin-comm-list">
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录 </view>
 
-			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
+			<view class="item {{batchMode&&selectedMap[item.USER_MINI_OPENID]?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
+				<!-- 批量选择勾选框 -->
+				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectTap" data-id="{{item.USER_MINI_OPENID}}">
+					<text class="{{selectedMap[item.USER_MINI_OPENID]?'icon-squarecheckfill text-green':'icon-squarecheck text-grey'}}"></text>
+				</view>
 				<view class="no">{{index+1}}</view>
 				<view class="header">
 					<view class="left text-cut">{{item.USER_NAME}}
@@ -23,6 +42,14 @@
 				</view>
 
 				<view class="info">
+					<!-- 用户标签/分组 -->
+					<view wx:if="{{item.USER_TAGS && item.USER_TAGS.length}}" class="info-item">
+						<view class="title">标签</view>
+						<view class="mao">：</view>
+						<view class="content">
+							<text wx:for="{{item.USER_TAGS}}" wx:for-item="tag" wx:key="tagkey" class="tag small radius bg-blue light margin-right-xs">{{tag}}</text>
+						</view>
+					</view>
 					<view wx:if="{{item.USER_STATUS==8}}" class="info-item">
 						<view class="title">审核理由</view>
 						<view class="mao">：</view>
@@ -46,7 +73,7 @@
 						<view class="content text-blue">查看更多用户资料...</view>
 					</view>
 
-					<view class="oprt">
+					<view wx:if="{{!batchMode}}" class="oprt">
 
 						<block wx:if="{{userRegCheck}}">
 							<view wx:if="{{item.USER_STATUS==0}}" bindtap="bindStatusTap" data-status="1" data-idx="{{index}}" class="btn  margin-right-s text-green">审核通过</view> 
@@ -83,6 +110,16 @@
 
 		<view class="form-group cancel-area">
 			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
+		</view>
+	</cmpt-modal>
+
+	<!-- 批量打标签/分组弹窗 -->
+	<cmpt-modal wx:if="{{tagModalShow}}" model:show="{{tagModalShow}}" type="dialog" title="批量打标签/分组" bind:click="bindBatchTagCmpt" class="modal-form" cancelText="返回" confirmText="确定">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">为选中的 {{selectedIds.length}} 位用户添加标签：</view>
+		</view>
+		<view class="form-group">
+			<input placeholder-class="phc" placeholder="如：活跃用户、资深书友" model:value="{{formTag}}" maxlength="20"></input>
 		</view>
 	</cmpt-modal>
 
