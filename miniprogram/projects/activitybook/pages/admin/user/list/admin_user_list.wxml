@@ -9,7 +9,7 @@
 		<!-- 批量操作工具栏 -->
 		<view wx:if="{{batchMode}}" class="batch-bar">
 			<view class="batch-left" bindtap="bindSelectAllTap">
-				<text class="{{selectedIds.length==dataList.list.length&&dataList.list.length>0?'icon-checkboxfill text-green':'icon-checkbox'}}"></text> 全选
+				<text class="{{selectedIds.length==dataList.list.length&&dataList.list.length>0?'icon-squarecheckfill text-green':'icon-squarecheck'}}"></text> 全选
 			</view>
 			<view class="batch-info">已选 {{selectedIds.length}} 项</view>
 			<view class="batch-oprt">
@@ -27,7 +27,7 @@
 			<view class="item {{batchMode&&selectedIds.indexOf(item.USER_MINI_OPENID)>=0?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
 				<!-- 批量选择勾选框 -->
 				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectTap" data-id="{{item.USER_MINI_OPENID}}">
-					<text class="{{selectedIds.indexOf(item.USER_MINI_OPENID)>=0?'icon-checkboxfill text-green':'icon-checkbox text-grey'}}"></text>
+					<text class="{{selectedIds.indexOf(item.USER_MINI_OPENID)>=0?'icon-squarecheckfill text-green':'icon-squarecheck text-grey'}}"></text>
 				</view>
 				<view class="no">{{index+1}}</view>
 				<view class="header">

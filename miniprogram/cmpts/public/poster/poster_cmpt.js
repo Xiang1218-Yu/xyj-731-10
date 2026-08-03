@@ -91,6 +91,22 @@ Component({
 	},
 
 	/**
+	 * 监听器：模板选择模式下，打开弹窗时自动生成一次预览，保证海报入口可见
+	 */
+	observers: {
+		'show': function (show) {
+			if (show && this.data.showTemplate && this.data.posterData && !this.data.isCreate) {
+				this.setData({
+					isCreate: true,
+					isLoad: false,
+				}, async () => {
+					await this.createPoster();
+				});
+			}
+		}
+	},
+
+	/**
 	 * 组件的方法列表 
 	 */
 	methods: {
