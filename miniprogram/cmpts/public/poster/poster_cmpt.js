@@ -217,6 +217,11 @@ Component({
 				}
 			}
 
+			// 过滤掉 url 为空的图片，避免 getImageInfo:fail file not found
+			if (Array.isArray(config.images)) {
+				config.images = config.images.filter(img => img && img.url && typeof img.url === 'string' && img.url.trim() !== '');
+			}
+
 			//Object.assign(posterConfig, this.data.config); // TODO有问题
 
 			this.setData({

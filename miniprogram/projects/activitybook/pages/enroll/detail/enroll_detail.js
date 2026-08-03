@@ -194,16 +194,16 @@ Page({
 		if (typeof location === 'string') {
 			try { location = JSON.parse(location); } catch (err) { location = null; }
 		}
-		if (!location) return;
+		if (!location || typeof location !== 'object') return;
 
-		// 经纬度必须为合法数字，且在微信 openLocation 要求的范围内
+		// 经纬度统一转为 Number，微信 openLocation 要求合法数值
 		let latitude = Number(location.latitude);
 		let longitude = Number(location.longitude);
+
+		// 经纬度为 NaN 时不调用，避免微信内部报错
 		if (isNaN(latitude) || isNaN(longitude)) {
-			return pageHelper.showModal('位置坐标数据异常');
-		}
-		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-			return pageHelper.showModal('位置坐标超出合法范围（纬度-90~90，经度-180~180），当前值：' + latitude + ',' + longitude);
+			console.error('[openLocation] 经纬度非法', location);
+			return;
 		}
 
 		wx.openLocation({
@@ -214,7 +214,10 @@ Page({
 			scale: 18,
 			fail: (err) => {
 				console.log('[openLocation fail]', err);
-				pageHelper.showModal('打开地图失败，请检查位置权限');
+				// 仅在真正失败时提示，避免对合法坐标误报
+				if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+					pageHelper.showModal('打开地图失败：' + (err.errMsg || '未知错误'));
+				}
 			}
 		});
 	},

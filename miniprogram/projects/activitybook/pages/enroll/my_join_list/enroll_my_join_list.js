@@ -107,15 +107,13 @@ Page({
 		if (typeof location === 'string') {
 			try { location = JSON.parse(location); } catch (err) { location = null; }
 		}
-		if (!location) return;
+		if (!location || typeof location !== 'object') return;
 
 		let latitude = Number(location.latitude);
 		let longitude = Number(location.longitude);
 		if (isNaN(latitude) || isNaN(longitude)) {
-			return pageHelper.showModal('位置坐标数据异常');
-		}
-		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-			return pageHelper.showModal('位置坐标超出合法范围，当前值：' + latitude + ',' + longitude);
+			console.error('[openLocation] 经纬度非法', location);
+			return;
 		}
 
 		wx.openLocation({
@@ -126,7 +124,9 @@ Page({
 			scale: 18,
 			fail: (err) => {
 				console.log('[openLocation fail]', err);
-				pageHelper.showModal('打开地图失败，请检查位置权限');
+				if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+					pageHelper.showModal('打开地图失败：' + (err.errMsg || '未知错误'));
+				}
 			}
 		});
 	},

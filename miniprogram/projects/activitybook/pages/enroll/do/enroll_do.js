@@ -106,20 +106,19 @@ Page({
 
 			try {
 				let rd = dataHelper.genRandomNum(1000000, 9999999);
-				// 语音文件与打卡图片放在同一业务目录 enroll/join 下，
-				// 避免云存储安全规则仅放行特定目录导致 -503002 storage permission denied
+				// 语音统一存放在 enroll/join/{id}/ 目录下
 				let cloudPath = 'enroll/join/' + this.data.id + '/voice_' + rd + '.mp3';
 				if (pageHelper.getPID()) {
 					cloudPath = pageHelper.getPID() + '/' + cloudPath;
 				}
 
-				// 带重试的上传，避免网络抖动导致语音文件引用丢失
-				let uploadRes = await this._uploadFileWithRetry(res.tempFilePath, cloudPath, 3);
+				// 通过云函数上传语音，绕过前端直连云存储的安全权限限制（-503002 permission denied）
+				let fileID = await this._uploadVoiceByCloud(res.tempFilePath, cloudPath);
 
 				this.setData({
 					voicePath: res.tempFilePath,
 					voiceDuration: duration,
-					voiceFileID: uploadRes.fileID
+					voiceFileID: fileID
 				});
 				pageHelper.showSuccToast('语音已上传', 1000);
 			} catch (err) {
@@ -131,9 +130,9 @@ Page({
 					voiceFileID: ''
 				});
 				// 区分存储权限错误与网络错误，给出更有针对性的提示
-				let errMsg = (err && err.errMsg) ? err.errMsg : '';
+				let errMsg = (err && err.msg) || (err && err.errMsg) || '';
 				if (errMsg.indexOf('-503002') > -1 || errMsg.indexOf('permission') > -1) {
-					pageHelper.showModal('语音上传被云存储拒绝，请检查云开发存储安全规则是否允许上传到 enroll/join 目录');
+					pageHelper.showModal('语音上传失败，请稍后重试');
 				} else {
 					pageHelper.showModal('语音上传失败，请检查网络后重试录音');
 				}
@@ -153,33 +152,50 @@ Page({
 	},
 
 	/**
-	 * 带重试的云存储上传
-	 * @param {string} filePath 本地临时文件路径
+	 * 通过云函数上传语音文件（绕过前端直传云存储的权限限制）
+	 * @param {string} filePath 本地录音临时文件路径
 	 * @param {string} cloudPath 云存储路径
-	 * @param {number} retries 剩余重试次数（不含首次）
-	 * @returns {Promise<WechatMiniprogram.UploadFileSuccessCallbackResult>}
+	 * @returns {Promise<string>} 云文件 fileID
 	 */
-	_uploadFileWithRetry: function (filePath, cloudPath, retries = 3) {
-		let attempt = 0;
-		let delay = 500; // 首次重试间隔 500ms，之后指数退避
-		const maxDelay = 3000;
-
-		const doUpload = () => {
-			return wx.cloud.uploadFile({ cloudPath, filePath }).catch(err => {
-				attempt++;
-				if (attempt > retries) {
-					// 重试用尽，抛出最后一次错误
-					return Promise.reject(err);
+	_uploadVoiceByCloud: function (filePath, cloudPath) {
+		return new Promise((resolve, reject) => {
+			// 读取本地录音文件为 base64
+			wx.getFileSystemManager().readFile({
+				filePath,
+				encoding: 'base64',
+				success: async (readRes) => {
+					try {
+						// 带重试调用云函数上传
+						let lastErr = null;
+						for (let attempt = 0; attempt <= 2; attempt++) {
+							try {
+								let result = await cloudHelper.callCloudSumbit('enroll/upload_voice', {
+									cloudPath,
+									voiceBase64: readRes.data
+								}, { title: '上传中...' });
+								if (result && result.data && result.data.fileID) {
+									return resolve(result.data.fileID);
+								}
+								lastErr = new Error('云函数未返回fileID');
+							} catch (e) {
+								lastErr = e;
+								// 指数退避后重试
+								if (attempt < 2) {
+									await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt)));
+								}
+							}
+						}
+						reject(lastErr || new Error('语音上传失败'));
+					} catch (err) {
+						reject(err);
+					}
+				},
+				fail: (err) => {
+					console.log('[readFile fail]', err);
+					reject(new Error('读取录音文件失败'));
 				}
-				console.log('[voice upload] 第' + attempt + '次重试，' + delay + 'ms 后重试', err);
-				return new Promise(resolve => setTimeout(resolve, delay)).then(() => {
-					delay = Math.min(delay * 2, maxDelay); // 指数退避
-					return doUpload();
-				});
 			});
-		};
-
-		return doUpload();
+		});
 	},
 
 	/** 选择图片 */

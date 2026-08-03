@@ -94,6 +94,7 @@ module.exports = {
 	'enroll/view': 'enroll_controller@viewEnroll',
 	'enroll/join_day': 'enroll_controller@getEnrollJoinByDay',
 	'enroll/join': 'enroll_controller@enrollJoin',
+	'enroll/upload_voice': 'enroll_controller@uploadVoice',
 	'enroll/my_join_cancel': 'enroll_controller@cancelMyEnrollJoin',
 	'enroll/update_join_forms': 'enroll_controller@updateJoinForms',
 	'enroll/my_join_list': 'enroll_controller@getMyEnrollJoinList',

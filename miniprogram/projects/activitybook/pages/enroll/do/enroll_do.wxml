@@ -35,9 +35,9 @@
 			<block wx:else>
 				<view class="voice-result">
 					<view class="voice-play" bindtap="bindPlayVoice">
-						<text class="icon-playfill"></text>
-						<text>{{voiceDuration}}" </text>
-					</view>
+					<text class="icon-playfill"></text>
+					<text>{{voiceDuration}}″</text>
+				</view>
 					<view class="voice-oprt">
 						<view bindtap="bindReRecordVoice" class="voice-op">重录</view>
 						<view bindtap="bindDelVoice" class="voice-op text-red">删除</view>
