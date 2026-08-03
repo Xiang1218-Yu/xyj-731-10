@@ -364,6 +364,81 @@ class AdminActivityController extends BaseProjectAdminController {
 		return await service.delActivityJoin(input.activityJoinId);
 	}
 
+	/**批量审核报名 */
+	async batchStatusActivityJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			activityJoinIds: 'must|array',
+			status: 'must|int',
+			reason: 'string'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		await service.batchStatusActivityJoin(input.activityJoinIds, input.status, input.reason);
+
+		this.logOther('批量审核了报名（共' + input.activityJoinIds.length + '条）');
+	}
+
+	/**批量删除报名 */
+	async batchDelActivityJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			activityJoinIds: 'must|array'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		await service.batchDelActivityJoin(input.activityJoinIds);
+
+		this.logOther('批量删除了报名（共' + input.activityJoinIds.length + '条）');
+	}
+
+	/**批量删除活动 */
+	async batchDelActivity() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		await service.batchDelActivity(input.ids);
+
+		this.logOther('批量删除了活动（共' + input.ids.length + '条）');
+	}
+
+	/**批量修改活动状态 */
+	async batchStatusActivity() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminActivityService();
+		await service.batchStatusActivity(input.ids, input.status);
+
+		this.logOther('批量修改了活动状态（共' + input.ids.length + '条）');
+	}
+
 	/** 生成自助签到码 */
 	async genActivitySelfCheckinQr() {
 		await this.isAdmin();

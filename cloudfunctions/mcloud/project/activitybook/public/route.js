@@ -50,6 +50,29 @@ module.exports = {
 	'admin/user_data_export': 'admin/admin_user_controller@userDataExport',
 	'admin/user_data_del': 'admin/admin_user_controller@userDataDel',
 
+	// 用户标签
+	'admin/user_tag_list': 'admin/admin_user_controller@userTagList',
+	'admin/user_tag_save': 'admin/admin_user_controller@userTagSave',
+	'admin/user_tag_del': 'admin/admin_user_controller@userTagDel',
+
+	// 用户分组
+	'admin/user_group_list': 'admin/admin_user_controller@userGroupList',
+	'admin/user_group_save': 'admin/admin_user_controller@userGroupSave',
+	'admin/user_group_del': 'admin/admin_user_controller@userGroupDel',
+
+	// 用户标签分组设置
+	'admin/user_set_tags': 'admin/admin_user_controller@userSetTags',
+	'admin/user_set_group': 'admin/admin_user_controller@userSetGroup',
+
+	// 用户批量操作
+	'admin/user_batch_set_tags': 'admin/admin_user_controller@userBatchSetTags',
+	'admin/user_batch_set_group': 'admin/admin_user_controller@userBatchSetGroup',
+	'admin/user_batch_status': 'admin/admin_user_controller@userBatchStatus',
+	'admin/user_batch_del': 'admin/admin_user_controller@userBatchDel',
+
+	// 我的
+	'my/get_my_stat': 'my_controller@getMyStat',
+
 	// 产品 
 	'product/list': 'product_controller@getProductList',
 	'product/view': 'product_controller@viewProduct',
@@ -88,6 +111,9 @@ module.exports = {
 	'admin/enroll_status': 'admin/admin_enroll_controller@statusEnroll#demo',
 	'admin/enroll_join_list': 'admin/admin_enroll_controller@getEnrollJoinList',
 	'admin/enroll_join_del': 'admin/admin_enroll_controller@delEnrollJoin#demo',
+	'admin/enroll_batch_del_join': 'admin/admin_enroll_controller@batchDelEnrollJoin',
+	'admin/enroll_batch_del': 'admin/admin_enroll_controller@batchDelEnroll',
+	'admin/enroll_batch_status': 'admin/admin_enroll_controller@batchStatusEnroll',
 	'admin/enroll_join_data_get': 'admin/admin_enroll_controller@enrollJoinDataGet',
 	'admin/enroll_join_data_export': 'admin/admin_enroll_controller@enrollJoinDataExport',
 	'admin/enroll_join_data_del': 'admin/admin_enroll_controller@enrollJoinDataDel',
@@ -151,5 +177,10 @@ module.exports = {
 	'admin/activity_join_data_export': 'admin/admin_activity_controller@activityJoinDataExport',
 	'admin/activity_join_data_del': 'admin/admin_activity_controller@activityJoinDataDel',
 
+	// 活动批量操作
+	'admin/activity_batch_status_join': 'admin/admin_activity_controller@batchStatusActivityJoin',
+	'admin/activity_batch_del_join': 'admin/admin_activity_controller@batchDelActivityJoin',
+	'admin/activity_batch_del': 'admin/admin_activity_controller@batchDelActivity',
+	'admin/activity_batch_status': 'admin/admin_activity_controller@batchStatusActivity',
 
 }

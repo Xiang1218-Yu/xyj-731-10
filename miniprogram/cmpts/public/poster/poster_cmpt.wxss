@@ -82,3 +82,57 @@
 	padding: 30rpx 0 20rpx;
 	font-size: 32rpx;
 }
+
+/* ========== 海报多模板选择条 ========== */
+.tpl-bar {
+	width: 100%;
+	margin-top: 24rpx;
+	padding: 20rpx 0 10rpx;
+}
+
+.tpl-bar-title {
+	font-size: 26rpx;
+	color: #666;
+	margin-bottom: 16rpx;
+	padding-left: 10rpx;
+}
+
+.tpl-list {
+	width: 100%;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+}
+
+.tpl-item {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 8rpx;
+	border-radius: 12rpx;
+	border: 4rpx solid transparent;
+	transition: all .2s;
+}
+
+.tpl-item.active {
+	border-color: #4b94e7;
+	background-color: rgba(75, 148, 231, 0.08);
+}
+
+.tpl-thumb {
+	width: 120rpx;
+	height: 80rpx;
+	border-radius: 10rpx;
+	box-shadow: 0 4rpx 10rpx rgba(0, 0, 0, 0.12);
+}
+
+.tpl-name {
+	font-size: 22rpx;
+	color: #555;
+	margin-top: 8rpx;
+}
+
+.tpl-item.active .tpl-name {
+	color: #4b94e7;
+	font-weight: bold;
+}

@@ -38,10 +38,14 @@ Page({
         });
 
         let token = PassportBiz.getToken();
-        if (token) {
-            this.setData({ user: token.name + timeHelper.time('Y-M-D') + '打卡', avatar: token.pic })
-        }
+		if (token) {
+			this.setData({ user: token.name + timeHelper.time('Y-M-D') + '打卡', avatar: token.pic })
+		}
 
+		this._innerAudioContext = wx.createInnerAudioContext();
+		this._innerAudioContext.onError(() => {
+			pageHelper.showNoneToast('语音播放失败');
+		});
 	},
 
 	_loadDetail: async function () {
@@ -139,7 +143,12 @@ Page({
 	/**
 	 * 生命周期函数--监听页面卸载
 	 */
-	onUnload: function () { },
+	onUnload: function () {
+		if (this._innerAudioContext) {
+			this._innerAudioContext.destroy();
+			this._innerAudioContext = null;
+		}
+	},
 
 	/**
 	 * 页面相关事件处理函数--监听用户下拉动作
@@ -163,7 +172,32 @@ Page({
 
         wx.navigateTo({
             url: '../do/enroll_do?id=' + this.data.id,
-			})
+		})
+	},
+
+	/** 播放语音 */
+	bindPlayVoice: async function (e) {
+		let voice = pageHelper.dataset(e, 'voice');
+		if (!voice || !voice.tempFileURL) return;
+
+		this._innerAudioContext.stop();
+		let src = await cloudHelper.getTempFileURLOne(voice.tempFileURL);
+		this._innerAudioContext.src = src || voice.tempFileURL;
+		this._innerAudioContext.play();
+	},
+
+	/** 打开位置 */
+	bindOpenLocation: function (e) {
+		let location = pageHelper.dataset(e, 'location');
+		if (!location) return;
+
+		wx.openLocation({
+			latitude: Number(location.latitude),
+			longitude: Number(location.longitude),
+			name: location.name || '',
+			address: location.address || '',
+			scale: 18
+		});
 	},
 
 

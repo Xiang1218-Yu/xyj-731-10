@@ -3,12 +3,20 @@
 
 		<view slot="searchEnd">
 			<button bindtap="url" data-url="../add/admin_enroll_add" class="btn radius bg-admin text-white margin-right-s"><text class="icon-roundadd margin-right-xxs"></text>创建新打卡项目</button>
+			<view class="batch-toggle-btn {{isBatchMode?'active':''}}" bindtap="bindToggleBatch">
+				<text class="icon-form margin-right-xxs"></text>{{isBatchMode?'退出批量':'批量操作'}}
+			</view>
 		</view>
 		<!-- List Begin -->
 		<view class="admin-comm-list">
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录</view>
 
 			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
+				<view class="batch-item-row">
+					<view wx:if="{{isBatchMode}}" class="batch-check-wrap" catchtap="bindSelectItem" data-id="{{item._id}}">
+						<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+					</view>
+					<view class="batch-item-main">
 				<view class="no">{{index+1}}</view>
 				<view class="header">
 					<view class="left text-cut"><text wx:if="{{item.ENROLL_ORDER==0}}" class="text-black margin-right-xxs" style="font-weight:normal;font-size:24rpx">[置顶]</text><text wx:if="{{item.ENROLL_VOUCH==1}}" class="text-black margin-right-xxs" style="font-weight:normal;font-size:24rpx">[首页推荐]</text> {{item.ENROLL_TITLE}}
@@ -75,6 +83,8 @@
 
 					</view>
 				</view>
+					</view>
+				</view>
 			</view>
 
 		</view>
@@ -85,7 +95,27 @@
 		<template is="listLoadTpl" data="{{dataList,skin:'text-grey'}}" />
 		<!--load end-->
 
+		<!-- 批量模式底部占位 -->
+		<view wx:if="{{isBatchMode}}" style="height:220rpx;"></view>
+
 
 	</cmpt-comm-list>
+
+	<!-- 底部批量操作栏 -->
+	<view wx:if="{{isBatchMode}}" class="batch-bar">
+		<view class="batch-bar-info">
+			<view>已选 <text class="selected-count">{{selectedIds.length}}</text> 项</view>
+			<label class="select-all">
+				<checkbox checked="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" bindchange="bindSelectAll" color="#2499f2"></checkbox>
+				全选
+			</label>
+		</view>
+		<view class="batch-bar-actions">
+			<view class="btn bg-olive light" bindtap="bindBatchStatus" data-status="1">批量启用</view>
+			<view class="btn bg-grey light" bindtap="bindBatchStatus" data-status="0">批量停用</view>
+			<view class="btn bg-orange light" bindtap="bindBatchDel">批量删除</view>
+			<view class="btn batch-exit" bindtap="bindToggleBatch">退出批量</view>
+		</view>
+	</view>
 
 </block>

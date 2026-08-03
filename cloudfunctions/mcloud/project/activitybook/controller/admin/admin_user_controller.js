@@ -165,6 +165,151 @@ class AdminUserController extends BaseProjectAdminController {
 		let service = new AdminUserService();
 		return await service.deleteUserDataExcel();
 	}
+
+	//######################## 标签 ########################
+	/** 标签列表 */
+	async userTagList() {
+		await this.isAdmin();
+		let service = new AdminUserService();
+		return await service.getUserTagList();
+	}
+
+	/** 保存标签 */
+	async userTagSave() {
+		await this.isAdmin();
+		let rules = {
+			id: 'id',
+			title: 'must|string|min:1|max:20|name=标签名称',
+			color: 'string|name=颜色',
+			order: 'int|name=排序'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		let result = await service.saveUserTag(input);
+		this.logOther((input.id ? '编辑' : '新增') + '了用户标签《' + input.title + '》');
+		return result;
+	}
+
+	/** 删除标签 */
+	async userTagDel() {
+		await this.isAdmin();
+		let rules = { id: 'must|id' };
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		await service.delUserTag(input.id);
+		this.logOther('删除了用户标签');
+	}
+
+	//######################## 分组 ########################
+	/** 分组列表 */
+	async userGroupList() {
+		await this.isAdmin();
+		let service = new AdminUserService();
+		return await service.getUserGroupList();
+	}
+
+	/** 保存分组 */
+	async userGroupSave() {
+		await this.isAdmin();
+		let rules = {
+			id: 'id',
+			title: 'must|string|min:1|max:20|name=分组名称',
+			order: 'int|name=排序'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		let result = await service.saveUserGroup(input);
+		this.logOther((input.id ? '编辑' : '新增') + '了用户分组《' + input.title + '》');
+		return result;
+	}
+
+	/** 删除分组 */
+	async userGroupDel() {
+		await this.isAdmin();
+		let rules = { id: 'must|id' };
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		await service.delUserGroup(input.id);
+		this.logOther('删除了用户分组');
+	}
+
+	/** 设置用户标签 */
+	async userSetTags() {
+		await this.isAdmin();
+		let rules = {
+			userId: 'must|string|name=用户',
+			tags: 'must|array|name=标签'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		return await service.setUserTags(input.userId, input.tags);
+	}
+
+	/** 设置用户分组 */
+	async userSetGroup() {
+		await this.isAdmin();
+		let rules = {
+			userId: 'must|string|name=用户',
+			groupId: 'string|name=分组'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		return await service.setUserGroup(input.userId, input.groupId);
+	}
+
+	//######################## 批量操作 ########################
+	/** 批量设置标签 */
+	async userBatchSetTags() {
+		await this.isAdmin();
+		let rules = {
+			userIds: 'must|array|name=用户',
+			tags: 'must|array|name=标签',
+			mode: 'string|default=add|name=模式'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		await service.batchSetUserTags(input.userIds, input.tags, input.mode);
+		this.logOther('批量设置了用户标签（共' + input.userIds.length + '人）');
+	}
+
+	/** 批量设置分组 */
+	async userBatchSetGroup() {
+		await this.isAdmin();
+		let rules = {
+			userIds: 'must|array|name=用户',
+			groupId: 'string|name=分组'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		await service.batchSetUserGroup(input.userIds, input.groupId);
+		this.logOther('批量设置了用户分组（共' + input.userIds.length + '人）');
+	}
+
+	/** 批量修改用户状态 */
+	async userBatchStatus() {
+		await this.isAdmin();
+		let rules = {
+			userIds: 'must|array|name=用户',
+			status: 'must|int|name=状态',
+			reason: 'string|name=理由'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		await service.batchStatusUser(input.userIds, input.status, input.reason);
+		this.logOther('批量修改了用户状态（共' + input.userIds.length + '人）');
+	}
+
+	/** 批量删除用户 */
+	async userBatchDel() {
+		await this.isAdmin();
+		let rules = {
+			userIds: 'must|array|name=用户'
+		};
+		let input = this.validateData(rules);
+		let service = new AdminUserService();
+		await service.batchDelUser(input.userIds);
+		this.logOther('批量删除了用户（共' + input.userIds.length + '人）');
+	}
 }
 
 module.exports = AdminUserController;

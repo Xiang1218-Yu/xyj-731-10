@@ -43,7 +43,7 @@ Component({
 			type: Boolean,
 			value: false
 		},
-		doPoster: {  
+		doPoster: {
 			type: Boolean,
 			value: true
 		},
@@ -54,6 +54,10 @@ Component({
 		img: { //图片文件
 			type: String,
 			value: ''
+		},
+		templateIndex: { // 海报模板编号 0=简约蓝 1=活力橙 2=清新绿
+			type: Number,
+			value: 0
 		}
 	},
 
@@ -62,6 +66,36 @@ Component({
 	 */
 	data: {
 		isLoad: false,
+		// 模板配置：背景色、主文字色、次文字色、面板色
+		templateList: [
+			{
+				index: 0,
+				name: '简约蓝',
+				bg: '#345678',
+				titleColor: '#222222',
+				subColor: '#888888',
+				panelColor: '#ffffff',
+				preview: 'linear-gradient(135deg, #345678 0%, #223a52 100%)'
+			},
+			{
+				index: 1,
+				name: '活力橙',
+				bg: '#ff7a45',
+				titleColor: '#ffffff',
+				subColor: 'rgba(255,255,255,0.85)',
+				panelColor: 'rgba(255,120,80,0.18)',
+				preview: 'linear-gradient(135deg, #ff9966 0%, #ff5e62 100%)'
+			},
+			{
+				index: 2,
+				name: '清新绿',
+				bg: '#38c9a8',
+				titleColor: '#0f3d35',
+				subColor: 'rgba(15,61,53,0.7)',
+				panelColor: 'rgba(255,255,255,0.55)',
+				preview: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
+			}
+		]
 	},
 
 	lifetimes: {
@@ -113,6 +147,11 @@ Component({
 			}
 
 			let config = this.data.config;
+			if (!config) return;
+
+			// 深拷贝父页面传入的config，避免反复修改原对象
+			config = JSON.parse(JSON.stringify(config));
+
 			if (!helper.isDefined(config['width']))
 				config.width = posterConfig.width;
 
@@ -122,11 +161,30 @@ Component({
 			if (!helper.isDefined(config['pixelRatio']))
 				config.pixelRatio = posterConfig.pixelRatio;
 
-			if (!helper.isDefined(config['backgroundColor']))
-				config.backgroundColor = posterConfig.backgroundColor;
-
 			if (!helper.isDefined(config['debug']))
 				config.debug = posterConfig.debug;
+
+			// 根据模板覆盖背景色及文字颜色
+			let tplIdx = this.data.templateIndex || 0;
+			let tpl = this.data.templateList[tplIdx] || this.data.templateList[0];
+			config.backgroundColor = tpl.bg;
+
+			// 覆盖内部白色面板颜色（blocks[0]）
+			if (config.blocks && config.blocks.length) {
+				config.blocks[0].backgroundColor = tpl.panelColor;
+			}
+
+			// 覆盖文字颜色：主标题用titleColor，其余描述/提示用subColor
+			if (config.texts && config.texts.length) {
+				for (let i = 0; i < config.texts.length; i++) {
+					let t = config.texts[i];
+					if (i === 0) {
+						t.color = tpl.titleColor;
+					} else {
+						t.color = tpl.subColor;
+					}
+				}
+			}
 
 			//Object.assign(posterConfig, this.data.config); // TODO有问题
 
@@ -136,6 +194,22 @@ Component({
 				await Poster.create(true, this);
 			});
 
+		},
+
+		/**
+		 * 切换海报模板并重新生成
+		 */
+		switchTemplate: function (e) {
+			let idx = Number(e.currentTarget.dataset.idx);
+			if (idx === this.data.templateIndex) return;
+
+			this.setData({
+				templateIndex: idx,
+				isCreate: true,
+				isLoad: false
+			}, async () => {
+				await this.createPoster();
+			});
 		},
 
 		onPosterFail: function (e) {

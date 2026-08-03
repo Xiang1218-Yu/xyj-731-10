@@ -451,3 +451,54 @@
 .cmpt-biz-detail-mode-btn>view,.cmpt-biz-detail-mode-btn>button{ 
 	border: 0rpx solid #999999!important;
 }
+
+.list .right .join-voice {
+	margin-top: 18rpx;
+	width: 160rpx;
+	height: 60rpx;
+	border-radius: 30rpx;
+	background-color: #f6f7fb;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26rpx;
+}
+
+.list .right .join-voice .icon-voicefill {
+	font-size: 32rpx;
+	margin-right: 8rpx;
+}
+
+.list .right .join-location {
+	margin-top: 18rpx;
+	width: 100%;
+	display: flex;
+	align-items: flex-start;
+	background-color: #f6f7fb;
+	border-radius: 12rpx;
+	padding: 16rpx;
+	box-sizing: border-box;
+}
+
+.list .right .join-location .icon-locationfill {
+	font-size: 30rpx;
+	margin-top: 4rpx;
+}
+
+.list .right .join-location-text {
+	flex: 1;
+	padding-left: 8rpx;
+}
+
+.list .right .join-location-name {
+	font-size: 26rpx;
+	color: #333;
+	font-weight: bold;
+}
+
+.list .right .join-location-addr {
+	font-size: 24rpx;
+	color: #999;
+	margin-top: 6rpx;
+	line-height: 1.4;
+}

@@ -6,6 +6,61 @@
 		</cmpt-form-show>
 	</view>
 
+	<view class="media-box form-box shadow margin-top-xs">
+		<view class="media-title">打卡图片</view>
+		<view class="media-pics">
+			<view class="media-pic" wx:for="{{mediaPics}}" wx:key="index">
+				<image bindtap="bindPreviewPic" data-url="{{item}}" src="{{item}}" mode="aspectFill" class="loading"></image>
+				<view class="media-pic-del" catchtap="bindDelPic" data-idx="{{index}}"><text class="icon-close"></text></view>
+			</view>
+			<view wx:if="{{mediaPics.length<9}}" bindtap="bindChoosePics" class="media-pic-add">
+				<text class="icon-cameraadd"></text>
+			</view>
+		</view>
+
+		<view class="media-title">语音打卡</view>
+		<view class="voice-box">
+			<block wx:if="{{isRecording}}">
+				<view class="voice-btn recording" bindtap="bindStopVoice">
+					<text class="icon-voicefill"></text>
+					<text>松开发送</text>
+				</view>
+			</block>
+			<block wx:elif="{{!voicePath}}">
+				<view class="voice-btn" bindtouchstart="bindRecordVoice" bindtouchend="bindStopVoice">
+					<text class="icon-voice"></text>
+					<text>按住录音</text>
+				</view>
+			</block>
+			<block wx:else>
+				<view class="voice-result">
+					<view class="voice-play" bindtap="bindPlayVoice">
+						<text class="icon-playfill"></text>
+						<text>{{voiceDuration}}" </text>
+					</view>
+					<view class="voice-oprt">
+						<view bindtap="bindReRecordVoice" class="voice-op">重录</view>
+						<view bindtap="bindDelVoice" class="voice-op text-red">删除</view>
+					</view>
+				</view>
+			</block>
+		</view>
+
+		<view class="media-title">打卡位置</view>
+		<view wx:if="{{!location}}" class="location-add" bindtap="bindChooseLocation">
+			<text class="icon-location margin-right-xxs"></text>添加位置
+		</view>
+		<view wx:else class="location-card">
+			<view class="location-info">
+				<text class="icon-locationfill text-red"></text>
+				<view class="location-text">
+					<view class="location-name">{{location.name}}</view>
+					<view class="location-addr">{{location.address}}</view>
+				</view>
+			</view>
+			<view bindtap="bindDelLocation" class="location-del"><text class="icon-close"></text></view>
+		</view>
+	</view>
 
 	<button bindtap="bindFormSubmit" class="btn-base btn-project">提交</button>
 </view>

@@ -25,7 +25,11 @@ EnrollJoinModel.DB_STRUCTURE = {
 	ENROLL_JOIN_FORMS: 'array|true|default=[]|comment=表单',
 	ENROLL_JOIN_OBJ: 'object|true|default={}',
 
-	ENROLL_JOIN_STATUS: 'int|true|default=1|comment=状态 1=成功', 
+	ENROLL_JOIN_PICS: 'array|true|default=[]|comment=打卡图片',
+	ENROLL_JOIN_VOICE: 'object|false|comment=语音{tempFileURL,duration}',
+	ENROLL_JOIN_LOCATION: 'object|false|comment=位置{name,address,latitude,longitude}',
+
+	ENROLL_JOIN_STATUS: 'int|true|default=1|comment=状态 1=成功',
 
 	ENROLL_JOIN_ADD_TIME: 'int|true',
 	ENROLL_JOIN_EDIT_TIME: 'int|true',

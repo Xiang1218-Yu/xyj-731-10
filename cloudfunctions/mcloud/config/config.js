@@ -22,4 +22,7 @@ module.exports = {
 
 	// ### 服务者相关
 	WORK_LOGIN_EXPIRE: 86400, //服务者token过期时间 (秒) 
+
+	// ### 订阅消息模板
+	ACTIVITY_SUBSCRIBE_TEMPLATE_ID: '', //活动审核通知模板ID（为空则不发送）
 }

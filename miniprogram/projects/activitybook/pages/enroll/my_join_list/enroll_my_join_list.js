@@ -1,4 +1,5 @@
 const pageHelper = require('../../../../../helper/page_helper.js');
+const cloudHelper = require('../../../../../helper/cloud_helper.js');
 const ProjectBiz = require('../../../biz/project_biz.js');
 const EnrollBiz = require('../../../biz/enroll_biz.js');
 const PassportBiz = require('../../../../../comm/biz/passport_biz.js');
@@ -23,6 +24,10 @@ Page({
 			params:{enrollId:this.data.id}
 		});
 
+		this._innerAudioContext = wx.createInnerAudioContext();
+		this._innerAudioContext.onError(() => {
+			pageHelper.showNoneToast('语音播放失败');
+		});
 	},
 
 	/**
@@ -50,7 +55,10 @@ Page({
 	 * 生命周期函数--监听页面卸载
 	 */
 	onUnload: function () {
-
+		if (this._innerAudioContext) {
+			this._innerAudioContext.destroy();
+			this._innerAudioContext = null;
+		}
 	},
 
 	/**
@@ -80,6 +88,31 @@ Page({
 
 	bindCommListCmpt: function (e) {
 		pageHelper.commListListener(this, e);
+	},
+
+	/** 播放语音 */
+	bindPlayVoice: async function (e) {
+		let voice = pageHelper.dataset(e, 'voice');
+		if (!voice || !voice.tempFileURL) return;
+
+		this._innerAudioContext.stop();
+		let src = await cloudHelper.getTempFileURLOne(voice.tempFileURL);
+		this._innerAudioContext.src = src || voice.tempFileURL;
+		this._innerAudioContext.play();
+	},
+
+	/** 打开位置 */
+	bindOpenLocation: function (e) {
+		let location = pageHelper.dataset(e, 'location');
+		if (!location) return;
+
+		wx.openLocation({
+			latitude: Number(location.latitude),
+			longitude: Number(location.longitude),
+			name: location.name || '',
+			address: location.address || '',
+			scale: 18
+		});
 	},
 
 	/** 搜索菜单设置 */

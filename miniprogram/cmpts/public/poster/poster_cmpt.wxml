@@ -9,6 +9,17 @@
 
 			<view class="save-hint text-project" wx:if="{{isLoad}}">长按图片保存或者转发</view>
 
+			<!-- 模板选择条 -->
+			<view class="tpl-bar" wx:if="{{isLoad}}">
+				<view class="tpl-bar-title">选择模板</view>
+				<view class="tpl-list">
+					<view wx:for="{{templateList}}" wx:key="index" class="tpl-item {{templateIndex===item.index?'active':''}}" data-idx="{{item.index}}" bindtap="switchTemplate">
+						<view class="tpl-thumb" style="background:{{item.preview}};"></view>
+						<view class="tpl-name">{{item.name}}</view>
+					</view>
+				</view>
+			</view>
+
 		</view>
 		<view class="poster-share">
 			<button class="item item-share clearbtn" open-type="share" data-img="{{img}}">
@@ -18,7 +29,14 @@
 				<text>转发给朋友</text>
 			</button>
 
-			<view wx:if="{{doPoster}}" class="item" bindtap="bindPosterTap" style="padding-top:12rpx">
+			<view wx:if="{{isLoad}}" class="item" bindtap="bindSaveTap" style="padding-top:12rpx">
+				<view class="pic">
+					<image class='friend' src="images/friend.png" />
+				</view>
+				<text>保存到相册</text>
+			</view>
+
+			<view wx:if="{{doPoster&&!isLoad}}" class="item" bindtap="bindPosterTap" style="padding-top:12rpx">
 				<view class="pic">
 					<image class='friend' src="images/friend.png" />
 				</view>

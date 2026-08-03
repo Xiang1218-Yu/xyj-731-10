@@ -310,6 +310,61 @@ class AdminEnrollController extends BaseProjectAdminController {
 		return await service.delEnrollJoin(input.enrollJoinId);
 	}
 
+	/**批量删除打卡记录 */
+	async batchDelEnrollJoin() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			enrollJoinIds: 'must|array'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminEnrollService();
+		await service.batchDelEnrollJoin(input.enrollJoinIds);
+
+		this.logOther('批量删除了打卡记录（共' + input.enrollJoinIds.length + '条）');
+	}
+
+	/**批量删除打卡活动 */
+	async batchDelEnroll() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminEnrollService();
+		await service.batchDelEnroll(input.ids);
+
+		this.logOther('批量删除了打卡活动（共' + input.ids.length + '条）');
+	}
+
+	/**批量修改打卡活动状态 */
+	async batchStatusEnroll() {
+		await this.isAdmin();
+
+		// 数据校验
+		let rules = {
+			ids: 'must|array',
+			status: 'must|int'
+		};
+
+		// 取得数据
+		let input = this.validateData(rules);
+
+		let service = new AdminEnrollService();
+		await service.batchStatusEnroll(input.ids, input.status);
+
+		this.logOther('批量修改了打卡活动状态（共' + input.ids.length + '条）');
+	}
+
 	/**************打卡数据导出 BEGIN ********************* */
 	/** 当前是否有导出文件生成 */
 	async enrollJoinDataGet() {

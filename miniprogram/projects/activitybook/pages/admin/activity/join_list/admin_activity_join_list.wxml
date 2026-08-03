@@ -7,6 +7,9 @@
 
 		<view slot="searchEnd">
 			<!--<button bindtap="bindCancelAllTap" class="btn mid radius bg-orange margin-right-xs light">所有记录审核不通过</button>-->
+			<view class="batch-toggle-btn {{isBatchMode?'active':''}}" bindtap="bindToggleBatch">
+				<text class="icon-form margin-right-xxs"></text>{{isBatchMode?'退出批量':'批量操作'}}
+			</view>
 		</view>
 
 		<!-- List Begin -->
@@ -17,6 +20,11 @@
 			</view>
 
 			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
+				<view class="batch-item-row">
+					<view wx:if="{{isBatchMode}}" class="batch-check-wrap" catchtap="bindSelectItem" data-id="{{item._id}}">
+						<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+					</view>
+					<view class="batch-item-main">
 				<view class="header">
 					<view class="left">
 						<text class="icon-calendar margin-right-xxs"></text><text class="">{{item.ACTIVITY_JOIN_ADD_TIME}}</text>
@@ -79,6 +87,8 @@
 				</view>
 
 				<view class="no">{{index+1}}</view>
+					</view>
+				</view>
 			</view>
 		</view>
 		<!-- List END -->
@@ -87,6 +97,9 @@
 		<import src="../../../../../../tpls/public/list_load_tpl.wxml" />
 		<template is="listLoadTpl" data="{{dataList,skin:'text-grey',noHint:'暂无记录'}}" />
 		<!--load end-->
+
+		<!-- 批量模式底部占位 -->
+		<view wx:if="{{isBatchMode}}" style="height:220rpx;"></view>
 
 
 	</cmpt-comm-list>
@@ -112,5 +125,32 @@
 			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
 		</view>
 	</cmpt-modal>
+
+	<!-- 批量拒绝理由弹窗 -->
+	<cmpt-modal wx:if="{{batchRefuseModalShow}}" model:show="{{batchRefuseModalShow}}" type="dialog" title="批量审核不过" bind:click="bindBatchRefuseCmpt" class="modal-form" cancelText="返回" confirmText="确定拒绝">
+		<view class="form-group" style="padding:0 10rpx">
+			<view class="title">将对选中的 <text class="text-red">{{selectedIds.length}}</text> 条记录设置为审核不过</view>
+		</view>
+		<view class="form-group cancel-area">
+			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" value="{{batchFormReason}}" bindinput="bindBatchReasonInput" maxlength="100"></textarea>
+		</view>
+	</cmpt-modal>
+
+	<!-- 底部批量操作栏 -->
+	<view wx:if="{{isBatchMode}}" class="batch-bar">
+		<view class="batch-bar-info">
+			<view>已选 <text class="selected-count">{{selectedIds.length}}</text> 项</view>
+			<label class="select-all">
+				<checkbox checked="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" bindchange="bindSelectAll" color="#2499f2"></checkbox>
+				全选
+			</label>
+		</view>
+		<view class="batch-bar-actions">
+			<view class="btn bg-olive light" bindtap="bindBatchStatus" data-status="1">批量通过</view>
+			<view class="btn bg-grey light" bindtap="bindBatchStatus" data-status="99">批量拒绝</view>
+			<view class="btn bg-orange light" bindtap="bindBatchDel">批量删除</view>
+			<view class="btn batch-exit" bindtap="bindToggleBatch">退出批量</view>
+		</view>
+	</view>
 
 </block>

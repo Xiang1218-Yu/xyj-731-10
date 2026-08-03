@@ -7,3 +7,15 @@ page {
 .admin-comm-list .item .info .oprt { 
     padding: 0rpx 0rpx;
 }
+
+/* 用户标签展示 */
+.list-tag {
+	display: inline-block;
+	padding: 2rpx 14rpx;
+	border-radius: 16rpx;
+	color: #fff;
+	font-size: 20rpx;
+	line-height: 1.6;
+	margin-right: 8rpx;
+	margin-bottom: 4rpx;
+}

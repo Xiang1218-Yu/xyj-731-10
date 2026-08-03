@@ -365,3 +365,139 @@ page {
 .btn-bottom-admin .save {
 	background-color: var(--adminColor);
 }
+
+/* ============ 批量操作公共样式 ============ */
+
+/* 顶部批量操作按钮 */
+.batch-toggle-btn {
+	display: inline-flex;
+	align-items: center;
+	padding: 0 24rpx;
+	height: 56rpx;
+	line-height: 56rpx;
+	font-size: 26rpx;
+	border-radius: 8rpx;
+	background-color: #eee;
+	color: #333;
+	margin-left: 16rpx;
+}
+
+.batch-toggle-btn.active {
+	background-color: var(--adminColor);
+	color: #fff;
+}
+
+/* 列表项 checkbox 容器 */
+.batch-check-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 16rpx;
+	flex-shrink: 0;
+}
+
+.batch-check-wrap checkbox {
+	transform: scale(0.85);
+}
+
+/* 带 checkbox 的 item 横向布局 */
+.batch-item-row {
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	width: 100%;
+}
+
+.batch-item-row .batch-item-main {
+	flex: 1;
+	min-width: 0;
+}
+
+/* 底部浮动批量操作栏 */
+.batch-bar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 99999;
+	background-color: #fff;
+	box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.1);
+	padding: 16rpx 20rpx;
+	padding-bottom: calc(16rpx + constant(safe-area-inset-bottom));
+	padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+	display: flex;
+	flex-direction: column;
+}
+
+.batch-bar-info {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 26rpx;
+	color: #333;
+	margin-bottom: 14rpx;
+}
+
+.batch-bar-info .selected-count {
+	color: var(--adminColor);
+	font-weight: bold;
+}
+
+.batch-bar-info .select-all {
+	color: var(--adminColor);
+	display: flex;
+	align-items: center;
+}
+
+.batch-bar-info .select-all checkbox {
+	transform: scale(0.8);
+	margin-right: 6rpx;
+}
+
+.batch-bar-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12rpx;
+}
+
+.batch-bar-actions .btn {
+	flex: 1;
+	min-width: 140rpx;
+	height: 64rpx;
+	line-height: 64rpx;
+	text-align: center;
+	font-size: 26rpx;
+	border-radius: 8rpx;
+	padding: 0 10rpx;
+	margin: 0;
+}
+
+.batch-bar-actions .btn.batch-exit {
+	background-color: #f5f5f5 !important;
+	color: #666 !important;
+}
+
+/* 标签/分组选择 modal 内列表 */
+.batch-option-list {
+	max-height: 500rpx;
+	overflow-y: auto;
+}
+
+.batch-option-item {
+	display: flex;
+	align-items: center;
+	padding: 18rpx 10rpx;
+	border-bottom: 1rpx solid #f0f0f0;
+	font-size: 28rpx;
+}
+
+.batch-option-item checkbox {
+	margin-right: 16rpx;
+	transform: scale(0.85);
+}
+
+.batch-mode-hint {
+	font-size: 24rpx;
+	color: #999;
+	padding: 0 20rpx 10rpx;
+}

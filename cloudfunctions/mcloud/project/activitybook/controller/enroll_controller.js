@@ -221,13 +221,16 @@ class EnrollController extends BaseProjectController {
 		let rules = {
 			enrollId: 'must|id',
             forms: 'array|name=表单',
+            pics: 'array|name=打卡图片',
+            voice: 'object|name=语音',
+            location: 'object|name=位置',
 		};
 
 		// 取得数据
 		let input = this.validateData(rules);
 
 		let service = new EnrollService();
-		return await service.enrollJoin(this._userId, input.enrollId, input.forms);
+		return await service.enrollJoin(this._userId, input.enrollId, input.forms, input.pics, input.voice, input.location);
 	}
 
 

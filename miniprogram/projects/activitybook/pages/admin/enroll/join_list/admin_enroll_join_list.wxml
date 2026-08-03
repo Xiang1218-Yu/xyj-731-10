@@ -6,7 +6,9 @@
 	<cmpt-comm-list doDate="{{true}}" startDate="{{startDate}}" endDate="{{endDate}}" source='admin' id="cmpt-comm-list" type="admin-enroll-join-list" search="{{search||''}}" _params="{{_params}}" _menus="{{sortMenus}}" _items="{{sortItems}}" route="admin/enroll_join_list" topBottom="50" placeholder="搜索" sortMenusDefaultIndex="0" bind:list="bindCommListCmpt">
 
 		<view slot="searchEnd">
-
+			<view class="batch-toggle-btn {{isBatchMode?'active':''}}" bindtap="bindToggleBatch">
+				<text class="icon-form margin-right-xxs"></text>{{isBatchMode?'退出批量':'批量操作'}}
+			</view>
 		</view>
 
 		<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录
@@ -16,6 +18,9 @@
         		<!-- List Begin -->
 		<view class="list">
 			<view class="item" wx:for="{{dataList.list}}" wx:key="k">
+				<view wx:if="{{isBatchMode}}" class="batch-check-wrap" catchtap="bindSelectItem" data-id="{{item._id}}">
+					<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+				</view>
 				<image class="left loading" mode="aspectFill" lazy-load="{{true}}" src="{{item.user.USER_PIC}}"></image>
 				<view class="right">
 					<view class="title">
@@ -44,13 +49,30 @@
 			<template is="listLoadTpl" data="{{skin:'load-project',dataList}}" />
 		<!--load end-->
 
+		<!-- 批量模式底部占位 -->
+		<view wx:if="{{isBatchMode}}" style="height:200rpx;"></view>
+
 		</view>
 		<!-- List END -->
 
  
 
-
 	</cmpt-comm-list>
+
+	<!-- 底部批量操作栏 -->
+	<view wx:if="{{isBatchMode}}" class="batch-bar">
+		<view class="batch-bar-info">
+			<view>已选 <text class="selected-count">{{selectedIds.length}}</text> 项</view>
+			<label class="select-all">
+				<checkbox checked="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" bindchange="bindSelectAll" color="#2499f2"></checkbox>
+				全选
+			</label>
+		</view>
+		<view class="batch-bar-actions">
+			<view class="btn bg-orange light" bindtap="bindBatchDel">批量删除</view>
+			<view class="btn batch-exit" bindtap="bindToggleBatch">退出批量</view>
+		</view>
+	</view>
 
 
 </block>

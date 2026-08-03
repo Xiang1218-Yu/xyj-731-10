@@ -3,6 +3,11 @@
 
 		<view slot="searchEnd">
 			<button bindtap="url" data-url="../export/admin_user_export?condition={{dataList.condition}}" class="btn mid radius bg-admin text-white margin-right-s"><text class="icon-down margin-right-xxs"></text>导出用户资料</button>
+			<button bindtap="url" data-url="../tag_list/admin_user_tag_list" class="btn mid radius bg-admin light text-admin margin-right-s"><text class="icon-tag margin-right-xxs"></text>标签管理</button>
+			<button bindtap="url" data-url="../group_list/admin_user_group_list" class="btn mid radius bg-admin light text-admin margin-right-s"><text class="icon-group margin-right-xxs"></text>分组管理</button>
+			<view class="batch-toggle-btn {{isBatchMode?'active':''}}" bindtap="bindToggleBatch">
+				<text class="icon-form margin-right-xxs"></text>{{isBatchMode?'退出批量':'批量操作'}}
+			</view>
 		</view>
 
 		<!-- List Begin -->
@@ -10,6 +15,11 @@
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录 </view>
 
 			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
+				<view class="batch-item-row">
+					<view wx:if="{{isBatchMode}}" class="batch-check-wrap" catchtap="bindSelectItem" data-id="{{item.USER_MINI_OPENID}}">
+						<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+					</view>
+					<view class="batch-item-main">
 				<view class="no">{{index+1}}</view>
 				<view class="header">
 					<view class="left text-cut">{{item.USER_NAME}}
@@ -35,12 +45,26 @@
 					</view>
 
 					<view class="info-item">
-						<view class="title">注册</view>
-						<view class="mao">：</view>
-						<view class="content">{{item.USER_ADD_TIME}}</view>
-					</view>
+					<view class="title">注册</view>
+					<view class="mao">：</view>
+					<view class="content">{{item.USER_ADD_TIME}}</view>
+				</view>
 
-					<view class="info-item" bindtap="url" data-url="../detail/admin_user_detail?id={{item.USER_MINI_OPENID}}">
+				<view class="info-item" wx:if="{{item._tags.length>0}}">
+					<view class="title">标签</view>
+					<view class="mao">：</view>
+					<view class="content">
+						<view wx:for="{{item._tags}}" wx:key="id" wx:for-item="tag" class="list-tag" style="background-color:{{tag.color}};">{{tag.title}}</view>
+					</view>
+				</view>
+
+				<view class="info-item" wx:if="{{item._groupName}}">
+					<view class="title">分组</view>
+					<view class="mao">：</view>
+					<view class="content text-admin">{{item._groupName}}</view>
+				</view>
+
+				<view class="info-item" bindtap="url" data-url="../detail/admin_user_detail?id={{item.USER_MINI_OPENID}}">
 						<view class="title">详情</view>
 						<view class="mao">：</view>
 						<view class="content text-blue">查看更多用户资料...</view>
@@ -62,6 +86,8 @@
 
 					</view>
 				</view>
+					</view>
+				</view>
 			</view>
 		</view>
 		<!-- List END -->
@@ -70,6 +96,9 @@
 		<import src="../../../../../../tpls/public/list_load_tpl.wxml" />
 		<template is="listLoadTpl" data="{{skin:'text-grey',dataList}}" />
 		<!--load end-->
+
+		<!-- 批量模式底部占位 -->
+		<view wx:if="{{isBatchMode}}" style="height:260rpx;"></view>
 
 
 	</cmpt-comm-list>
@@ -85,5 +114,63 @@
 			<textarea placeholder-class="phc" placeholder="请输入审核不过理由 (非必填)" style="height:110rpx" model:value="{{formReason}}" maxlength="100"></textarea>
 		</view>
 	</cmpt-modal>
+
+	<!-- 批量打标签弹窗 -->
+	<cmpt-modal wx:if="{{tagModalShow}}" model:show="{{tagModalShow}}" type="dialog" title="批量设置标签" bind:click="bindBatchSetTagsCmpt" class="modal-form" cancelText="取消" confirmText="确定">
+		<view style="padding:0 10rpx;">
+			<view class="form-group" style="display:flex;align-items:center;margin-bottom:20rpx;">
+				<view class="title" style="margin-right:20rpx;">操作方式：</view>
+				<view class="btn mid radius {{tagMode=='add'?'bg-admin text-white':'bg-grey light'}}" style="margin-right:16rpx;" bindtap="bindTagModeChange" data-mode="add">追加标签</view>
+				<view class="btn mid radius {{tagMode=='remove'?'bg-admin text-white':'bg-grey light'}}" style="margin-right:16rpx;" bindtap="bindTagModeChange" data-mode="remove">移除标签</view>
+				<view class="btn mid radius {{tagMode=='set'?'bg-admin text-white':'bg-grey light'}}" bindtap="bindTagModeChange" data-mode="set">覆盖设置</view>
+			</view>
+			<view class="text-grey text-s" style="margin-bottom:16rpx;">已选 {{selectedIds.length}} 个用户</view>
+			<view class="batch-option-list" wx:if="{{tagMode!='set'}}">
+				<view wx:for="{{tagList}}" wx:key="USER_TAG_ID" class="batch-option-item" catchtap="bindTagSelect" data-id="{{item.USER_TAG_ID}}">
+					<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+					<view class="list-tag" style="background-color:{{item.USER_TAG_COLOR}};">{{item.USER_TAG_TITLE}}</view>
+				</view>
+				<view wx:if="{{tagList.length==0}}" class="text-grey" style="text-align:center;padding:40rpx 0;">暂无标签，请先在标签管理中创建</view>
+			</view>
+			<view wx:else class="text-grey" style="padding:20rpx 0;text-align:center;">覆盖模式将清空用户原有标签，点击确定即清空所有选中用户的标签</view>
+		</view>
+	</cmpt-modal>
+
+	<!-- 批量设置分组弹窗 -->
+	<cmpt-modal wx:if="{{groupModalShow}}" model:show="{{groupModalShow}}" type="dialog" title="批量设置分组" bind:click="bindBatchSetGroupCmpt" class="modal-form" cancelText="取消" confirmText="确定">
+		<view style="padding:0 10rpx;">
+			<view class="text-grey text-s" style="margin-bottom:16rpx;">已选 {{selectedIds.length}} 个用户</view>
+			<view class="batch-option-list">
+				<view class="batch-option-item" catchtap="bindClearGroupSelect">
+					<checkbox checked="{{selectedGroupId==''}}" disabled="true" color="#2499f2"></checkbox>
+					<view>不分组（清除分组）</view>
+				</view>
+				<view wx:for="{{groupList}}" wx:key="USER_GROUP_ID" class="batch-option-item" catchtap="bindGroupSelect" data-id="{{item.USER_GROUP_ID}}">
+					<checkbox checked="{{selectedGroupId==item.USER_GROUP_ID}}" disabled="true" color="#2499f2"></checkbox>
+					<view>{{item.USER_GROUP_TITLE}}</view>
+				</view>
+				<view wx:if="{{groupList.length==0}}" class="text-grey" style="text-align:center;padding:40rpx 0;">暂无分组，请先在分组管理中创建</view>
+			</view>
+		</view>
+	</cmpt-modal>
+
+	<!-- 底部批量操作栏 -->
+	<view wx:if="{{isBatchMode}}" class="batch-bar">
+		<view class="batch-bar-info">
+			<view>已选 <text class="selected-count">{{selectedIds.length}}</text> 个用户</view>
+			<label class="select-all">
+				<checkbox checked="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" bindchange="bindSelectAll" color="#2499f2"></checkbox>
+				全选
+			</label>
+		</view>
+		<view class="batch-bar-actions">
+			<view class="btn bg-blue light" bindtap="bindOpenTagModal">打标签</view>
+			<view class="btn bg-purple light" bindtap="bindOpenGroupModal">分组</view>
+			<view class="btn bg-olive light" bindtap="bindBatchStatus" data-status="1">批量启用</view>
+			<view class="btn bg-grey light" bindtap="bindBatchStatus" data-status="9">批量禁用</view>
+			<view class="btn bg-orange light" bindtap="bindBatchDel">批量删除</view>
+			<view class="btn batch-exit" bindtap="bindToggleBatch">退出批量</view>
+		</view>
+	</view>
 
 </block>
