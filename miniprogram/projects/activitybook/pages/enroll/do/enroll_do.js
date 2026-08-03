@@ -304,18 +304,36 @@ Page({
 	bindChooseLocation: function () {
 		wx.chooseLocation({
 			success: (res) => {
+				// 统一转 Number，chooseLocation 返回的经纬度在个别基础库下可能是字符串
+				let latitude = Number(res.latitude);
+				let longitude = Number(res.longitude);
+
+				// 经纬度合法性兜底（纬度 -90~90，经度 -180~180）
+				if (isNaN(latitude) || isNaN(longitude) ||
+					latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+					console.error('[chooseLocation] 经纬度非法', res);
+					return pageHelper.showModal('获取到的位置坐标异常，请重新选择');
+				}
+
 				this.setData({
 					location: {
 						name: res.name || '',
 						address: res.address || '',
-						latitude: res.latitude,
-						longitude: res.longitude
+						latitude,
+						longitude
 					}
 				});
 			},
 			fail: (err) => {
 				if (err && err.errMsg && err.errMsg.includes('cancel')) return;
-				pageHelper.showModal('获取位置失败，请检查位置权限');
+				console.log('[chooseLocation fail]', err);
+				// 区分权限拒绝与其他错误
+				let errMsg = (err && err.errMsg) || '';
+				if (errMsg.indexOf('auth') > -1 || errMsg.indexOf('permission') > -1) {
+					pageHelper.showModal('请在设置中允许微信使用位置权限');
+				} else if (errMsg.indexOf('cancel') === -1) {
+					pageHelper.showModal('获取位置失败：' + errMsg);
+				}
 			}
 		});
 	},

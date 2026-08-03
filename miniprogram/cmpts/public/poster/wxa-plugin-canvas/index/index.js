@@ -402,9 +402,10 @@ const handle = {
 const helper = {
 	/**
 	 * 下载图片并获取图片信息
+	 * 容错：单张图片下载/获取信息失败时跳过该图片，而不是 reject 整个海报生成
 	 */
 	_downloadImageAndInfo(image, index) {
-		return new Promise((resolve, reject) => {
+		return new Promise((resolve) => {
 			const {
 				x,
 				y,
@@ -412,6 +413,10 @@ const helper = {
 				zIndex
 			} = image;
 			const imageUrl = url;
+			if (!imageUrl || typeof imageUrl !== 'string') {
+				// 空地址直接跳过
+				return resolve();
+			}
 			// 下载图片
 			this._downImage(imageUrl, index)
 				// 获取图片信息
@@ -420,7 +425,6 @@ const helper = {
 					imgPath,
 					imgInfo
 				}) => {
-					console.log();
 					// 根据画布的宽高计算出图片绘制的大小，这里会保证图片绘制不变形
 					let sx;
 					let sy;
@@ -456,7 +460,11 @@ const helper = {
 					});
 					resolve();
 				})
-				.catch((err) => reject(err));
+				.catch((err) => {
+					// 单张图片失败不中断海报生成，仅打印日志并跳过
+					console.warn('[poster] 图片加载失败，已跳过该图片: ' + imageUrl, err);
+					resolve();
+				});
 		});
 	},
 	/**
@@ -465,19 +473,39 @@ const helper = {
 	 */
 	_downImage(imageUrl) {
 		return new Promise((resolve, reject) => {
-			if (imageUrl.includes('tmp') || imageUrl.includes('temp') || imageUrl.includes('wxfile')) {
-				// 支持本地地址
-				resolve(imageUrl); //2021/2/17 by cc
+			// 本地临时文件
+			if (imageUrl.includes('tmp') || imageUrl.includes('temp') || imageUrl.includes('wxfile') || imageUrl.includes('http://tmp/')) {
+				return resolve(imageUrl);
 			}
-
-			if (/^http/.test(imageUrl) && !new RegExp(wx.env.USER_DATA_PATH).test(imageUrl)) {
+			// 云存储 fileID（cloud://）：换取临时 https 链接
+			if (imageUrl.startsWith('cloud://')) {
+				wx.cloud.getTempFileURL({
+					fileList: [imageUrl],
+					success: (res) => {
+						if (res && res.fileList && res.fileList[0] && res.fileList[0].tempFileURL) {
+							// 递归下载换取后的 https 临时链接
+							this._downImage(res.fileList[0].tempFileURL).then(resolve).catch(reject);
+						} else {
+							reject(new Error('cloud fileID getTempFileURL fail'));
+						}
+					},
+					fail: reject
+				});
+				return;
+			}
+			// 本地用户数据目录
+			if (imageUrl.includes(wx.env.USER_DATA_PATH)) {
+				return resolve(imageUrl);
+			}
+			// http/https 网络图片：下载到本地临时路径
+			if (/^https?:\/\//.test(imageUrl)) {
 				wx.downloadFile({
 					url: this._mapHttpToHttps(imageUrl),
 					success: (res) => {
 						if (res.statusCode === 200) {
 							resolve(res.tempFilePath);
 						} else {
-							reject(res.errMsg);
+							reject(new Error('downloadFile statusCode=' + res.statusCode));
 						}
 					},
 					fail(err) {
@@ -485,7 +513,7 @@ const helper = {
 					},
 				});
 			} else {
-				// 支持本地地址
+				// 其他本地路径
 				resolve(imageUrl);
 			}
 		});
