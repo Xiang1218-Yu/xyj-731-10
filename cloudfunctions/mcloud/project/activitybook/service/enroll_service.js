@@ -67,7 +67,7 @@ class EnrollService extends BaseProjectService {
             'ENROLL_JOIN_ADD_TIME': 'desc'
         };
 
-        let fields = 'ENROLL_JOIN_OBJ,ENROLL_JOIN_ADD_TIME,user.USER_NAME,user.USER_PIC';
+        let fields = 'ENROLL_JOIN_OBJ,ENROLL_JOIN_PICS,ENROLL_JOIN_VOICE,ENROLL_JOIN_LOCATION,ENROLL_JOIN_ADD_TIME,user.USER_NAME,user.USER_PIC';
         return await EnrollJoinModel.getListJoin(joinParams, where, fields, orderBy, page, size, isTotal, oldTotal);
 	}
 
@@ -364,7 +364,7 @@ class EnrollService extends BaseProjectService {
 	}
 
 	// 打卡 
-	async enrollJoin(userId, enrollId, forms) {
+	async enrollJoin(userId, enrollId, forms, pics = [], voice = null, location = null) {
 
 		let user = await UserModel.getOne({ USER_MINI_OPENID: userId, USER_STATUS: UserModel.STATUS.COMM });
 		if (!user) this.AppError('用户不存在');
@@ -406,6 +406,10 @@ class EnrollService extends BaseProjectService {
 			ENROLL_JOIN_ENROLL_ID: enrollId,
 			ENROLL_JOIN_STATUS: EnrollJoinModel.STATUS.SUCC,
 			ENROLL_JOIN_DAY: day,
+
+			ENROLL_JOIN_PICS: pics,
+			ENROLL_JOIN_VOICE: voice,
+			ENROLL_JOIN_LOCATION: location,
 
             ENROLL_JOIN_OBJ: dataUtil.dbForms2Obj(forms),
             ENROLL_JOIN_FORMS: forms,

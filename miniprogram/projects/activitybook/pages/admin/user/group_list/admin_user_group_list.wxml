@@ -1,0 +1,56 @@
+<view wx:if="{{isLoad===false}}" class="margin-top load loading text-l text-grey"></view>
+
+<view wx:if="{{isLoad}}" class="main-admin">
+
+	<!-- 顶部操作栏 -->
+	<view class="admin-comm-list">
+		<view class="top-bar">
+			<button bindtap="bindNewTap" class="btn radius bg-admin text-white"><text class="icon-roundadd margin-right-xxs"></text>新建分组</button>
+		</view>
+
+		<view wx:if="{{list.length==0}}" class="load text-grey">暂无分组，点击右上角新建</view>
+
+		<!-- 分组列表 Begin -->
+		<view class="item" wx:for="{{list}}" wx:key="USER_GROUP_ID">
+			<view class="no">{{index+1}}</view>
+			<view class="header">
+				<view class="left text-cut">{{item.USER_GROUP_TITLE}}</view>
+				<view class="right">
+					<text class="text-grey">{{item.USER_GROUP_CNT||0}}人</text>
+				</view>
+			</view>
+
+			<view class="info">
+				<view class="info-item">
+					<view class="title">排序</view>
+					<view class="mao">：</view>
+					<view class="content">{{item.USER_GROUP_ORDER}}</view>
+				</view>
+
+				<view class="oprt">
+					<view bindtap="bindEditTap" data-idx="{{index}}" class="btn margin-right-s"><text class="icon-edit margin-right-xxs"></text>编辑</view>
+					<view bindtap="bindDelTap" data-idx="{{index}}" class="btn margin-right-s"><text class="icon-delete margin-right-xxs text-orange"></text>删除</view>
+				</view>
+			</view>
+		</view>
+		<!-- 分组列表 END -->
+	</view>
+</view>
+
+<!-- 编辑弹窗 Begin -->
+<cmpt-modal wx:if="{{editModalShow}}" model:show="{{editModalShow}}" type="dialog" title="{{formId?'编辑分组':'新建分组'}}" bind:click="bindSaveCmpt" class="modal-form" cancelText="取消" confirmText="保存">
+	<view class="form-group" style="padding:0 10rpx">
+		<view class="title">分组名称</view>
+	</view>
+	<view class="form-group cancel-area">
+		<input placeholder-class="phc" placeholder="请输入分组名称" model:value="{{formTitle}}" maxlength="20" class="input" />
+	</view>
+
+	<view class="form-group" style="padding:10rpx 10rpx 0">
+		<view class="title">排序号 <text class="text-grey text-mid">(越小越靠前)</text></view>
+	</view>
+	<view class="form-group cancel-area">
+		<input placeholder-class="phc" placeholder="请输入排序号（0-9999）" type="number" model:value="{{formOrder}}" maxlength="4" class="input" />
+	</view>
+</cmpt-modal>
+<!-- 编辑弹窗 END -->

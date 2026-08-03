@@ -11,6 +11,10 @@ Page({
 	 */
 	data: {
 		isLoad: false,
+
+		// 批量操作
+		isBatchMode: false,
+		selectedIds: [],
 	},
 
 	/**
@@ -57,6 +61,14 @@ Page({
 
 	bindCommListCmpt: function (e) {
 		pageHelper.commListListener(this, e);
+		// 列表刷新后同步批量选中状态
+		if (this.data.isBatchMode && this.data.selectedIds.length > 0 && this.data.dataList && this.data.dataList.list) {
+			let selectedIds = this.data.selectedIds;
+			for (let k = 0; k < this.data.dataList.list.length; k++) {
+				this.data.dataList.list[k]._checked = selectedIds.indexOf(this.data.dataList.list[k]._id) >= 0;
+			}
+			this.setData({ dataList: this.data.dataList });
+		}
 	},
 
 
@@ -301,6 +313,97 @@ Page({
 		} catch (err) {
 			console.log(err);
 		}
+	},
+
+	// ==================== 批量操作 ====================
+
+	// 切换批量模式
+	bindToggleBatch: function () {
+		let isBatchMode = !this.data.isBatchMode;
+		this._setSelectedIds([]);
+		this.setData({ isBatchMode });
+	},
+
+	// 选中/取消某条
+	bindSelectItem: function (e) {
+		let id = pageHelper.dataset(e, 'id');
+		if (!id) return;
+		let selectedIds = this.data.selectedIds.slice();
+		let idx = selectedIds.indexOf(id);
+		if (idx >= 0) selectedIds.splice(idx, 1);
+		else selectedIds.push(id);
+		this._setSelectedIds(selectedIds);
+	},
+
+	// 全选/取消全选
+	bindSelectAll: function (e) {
+		let dataList = this.data.dataList;
+		if (!dataList || !dataList.list) return;
+		let isAll = (this.data.selectedIds.length === dataList.list.length);
+		let selectedIds = isAll ? [] : dataList.list.map(item => item._id);
+		this._setSelectedIds(selectedIds);
+	},
+
+	// 更新选中并同步列表 _checked 标记
+	_setSelectedIds: function (selectedIds) {
+		let dataList = this.data.dataList;
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				dataList.list[k]._checked = selectedIds.indexOf(dataList.list[k]._id) >= 0;
+			}
+		}
+		this.setData({ selectedIds, dataList });
+	},
+
+	_checkSelected: function () {
+		if (!this.data.selectedIds || this.data.selectedIds.length === 0) {
+			pageHelper.showModal('请先选择要操作的记录');
+			return false;
+		}
+		return true;
+	},
+
+	_reloadAfterBatch: async function () {
+		try {
+			await this.selectComponent('#cmpt-comm-list').reload();
+		} catch (err) {
+			console.error(err);
+		}
+		this._setSelectedIds([]);
+	},
+
+	// 批量删除
+	bindBatchDel: function () {
+		if (!this._checkSelected()) return;
+		let ids = this.data.selectedIds;
+		let callback = async () => {
+			try {
+				await cloudHelper.callCloudSumbit('admin/enroll_batch_del', { ids }, { title: '删除中' });
+				pageHelper.showSuccToast('批量删除成功', 1000);
+				await this._reloadAfterBatch();
+			} catch (err) {
+				console.error(err);
+			}
+		};
+		pageHelper.showConfirm(`确认批量删除选中的 ${ids.length} 个打卡项目？删除后用户记录数据将一并删除且不可恢复`, callback);
+	},
+
+	// 批量状态（启用/停用）
+	bindBatchStatus: function (e) {
+		if (!this._checkSelected()) return;
+		let status = Number(pageHelper.dataset(e, 'status'));
+		let ids = this.data.selectedIds;
+		let statusDesc = status === 1 ? '启用' : '停用';
+		let callback = async () => {
+			try {
+				await cloudHelper.callCloudSumbit('admin/enroll_batch_status', { ids, status }, { title: '处理中' });
+				pageHelper.showSuccToast(`批量${statusDesc}成功`, 1000);
+				await this._reloadAfterBatch();
+			} catch (err) {
+				console.error(err);
+			}
+		};
+		pageHelper.showConfirm(`确认批量${statusDesc}选中的 ${ids.length} 个打卡项目？`, callback);
 	},
 
 	_getSearchMenu: function () {

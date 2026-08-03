@@ -147,3 +147,130 @@
 	border-bottom-left-radius: 40rpx !important;
 	border-top-right-radius: 40rpx !important;
 }
+
+/* ========== 我的数据统计卡片 ========== */
+.stat-wrap {
+	margin-top: 20rpx;
+}
+
+.stat-card {
+	background: #fff;
+	padding: 30rpx 20rpx;
+	box-sizing: border-box;
+}
+
+.stat-grid {
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 18rpx;
+}
+
+.stat-grid:last-of-type {
+	margin-bottom: 20rpx;
+}
+
+.stat-item {
+	flex: 1;
+	margin: 0 8rpx;
+	border-radius: 16rpx;
+	padding: 24rpx 10rpx;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 6rpx 14rpx rgba(0, 0, 0, 0.08);
+}
+
+.stat-item .stat-num {
+	font-size: 40rpx;
+	font-weight: bold;
+	color: #fff;
+	line-height: 1.2;
+}
+
+.stat-item .stat-label {
+	font-size: 22rpx;
+	color: rgba(255, 255, 255, 0.92);
+	margin-top: 8rpx;
+}
+
+/* 六色渐变 */
+.gradient-blue {
+	background: linear-gradient(135deg, #66a6ff 0%, #4b94e7 100%);
+}
+
+.gradient-purple {
+	background: linear-gradient(135deg, #a18cd1 0%, #764ba2 100%);
+}
+
+.gradient-cyan {
+	background: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+}
+
+.gradient-orange {
+	background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.gradient-orange .stat-num,
+.gradient-orange .stat-label {
+	color: #8a4b1e;
+}
+
+.gradient-pink {
+	background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+}
+
+.gradient-pink .stat-num,
+.gradient-pink .stat-label {
+	color: #8a3b3e;
+}
+
+.gradient-green {
+	background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+}
+
+.gradient-green .stat-num,
+.gradient-green .stat-label {
+	color: #1f5e4a;
+}
+
+/* 趋势图区域 */
+.trend-box {
+	margin-top: 10rpx;
+	padding: 20rpx 10rpx 10rpx;
+	background: #fafbfc;
+	border-radius: 16rpx;
+}
+
+.trend-title {
+	display: flex;
+	align-items: center;
+	font-size: 28rpx;
+	font-weight: bold;
+	color: #333;
+	padding: 0 10rpx 16rpx;
+}
+
+.trend-title .trend-bar {
+	display: inline-block;
+	width: 8rpx;
+	height: 28rpx;
+	background: #4b94e7;
+	border-radius: 4rpx;
+	margin-right: 14rpx;
+}
+
+.trend-canvas {
+	width: 100%;
+	display: block;
+}
+
+.trend-empty {
+	width: 100%;
+	height: 160rpx;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26rpx;
+	color: #bbb;
+}

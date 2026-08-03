@@ -85,25 +85,38 @@ class ActivityBiz extends BaseBiz {
 
 
 	static openMap(address, geo) {
-		if (geo && geo.latitude)
-			wx.openLocation({
-				latitude: geo.latitude,
-				longitude: geo.longitude,
-				address,
-				scale: 18
-			})
-		else {
-			wx.setClipboardData({
-				data: address,
-				success(res) {
-					wx.getClipboardData({
-						success(res) {
-							pageHelper.showNoneToast('已复制到剪贴板，请在地图APP里查询');
+		if (geo && geo.latitude !== undefined && geo.latitude !== null) {
+			// 经纬度统一转为 Number，微信 openLocation 要求数值类型且合法
+			let latitude = Number(geo.latitude);
+			let longitude = Number(geo.longitude);
+			if (!isNaN(latitude) && !isNaN(longitude)) {
+				wx.openLocation({
+					latitude,
+					longitude,
+					address,
+					scale: 18,
+					fail: (err) => {
+						console.log('[openMap fail]', err);
+						if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
+							pageHelper.showModal('打开地图失败：' + (err.errMsg || '未知错误'));
 						}
-					})
-				}
-			});
+					}
+				});
+				return;
+			}
 		}
+
+		// 没有坐标或坐标非法时，复制地址供用户在地图APP查询
+		wx.setClipboardData({
+			data: address,
+			success(res) {
+				wx.getClipboardData({
+					success(res) {
+						pageHelper.showNoneToast('已复制到剪贴板，请在地图APP里查询');
+					}
+				})
+			}
+		});
 	}
 }
 

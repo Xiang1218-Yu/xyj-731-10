@@ -29,7 +29,13 @@ Page({
 		cancelModalShow: false,
 		cancelAllModalShow: false,
 		formReason: '',
-		curIdx: -1
+		curIdx: -1,
+
+		// 批量操作
+		isBatchMode: false,
+		selectedIds: [],
+		batchRefuseModalShow: false,
+		batchFormReason: ''
 	},
 
 	/**
@@ -365,6 +371,10 @@ Page({
 			if (dataList) {
 				for (let k = 0; k < dataList.list.length; k++) {
 					dataList.list[k].fold = this.data.isAllFold;
+					// 同步批量选中状态
+					if (this.data.isBatchMode && this.data.selectedIds.length > 0) {
+						dataList.list[k]._checked = this.data.selectedIds.indexOf(dataList.list[k]._id) >= 0;
+					}
 				}
 			}
 
@@ -403,5 +413,161 @@ Page({
 		this.setData({
 			formReason: ''
 		})
+	},
+
+	// ==================== 批量操作 ====================
+
+	// 切换批量模式
+	bindToggleBatch: function () {
+		let isBatchMode = !this.data.isBatchMode;
+		this._setSelectedIds([]);
+		this.setData({
+			isBatchMode,
+			batchRefuseModalShow: false,
+			batchFormReason: ''
+		});
+	},
+
+	// 选中/取消某条
+	bindSelectItem: function (e) {
+		let id = pageHelper.dataset(e, 'id');
+		if (!id) return;
+		let selectedIds = this.data.selectedIds.slice();
+		let idx = selectedIds.indexOf(id);
+		if (idx >= 0) {
+			selectedIds.splice(idx, 1);
+		} else {
+			selectedIds.push(id);
+		}
+		this._setSelectedIds(selectedIds);
+	},
+
+	// 全选/取消全选当前列表
+	bindSelectAll: function (e) {
+		let dataList = this.data.dataList;
+		if (!dataList || !dataList.list) return;
+		// 当前已是全选则取消，否则全选
+		let isAll = this._isAllSelected();
+		let selectedIds = isAll ? [] : dataList.list.map(item => item._id);
+		this._setSelectedIds(selectedIds);
+	},
+
+	// 更新选中状态并同步列表项 _checked 标记
+	_setSelectedIds: function (selectedIds) {
+		let dataList = this.data.dataList;
+		if (dataList && dataList.list) {
+			for (let k = 0; k < dataList.list.length; k++) {
+				dataList.list[k]._checked = selectedIds.indexOf(dataList.list[k]._id) >= 0;
+			}
+		}
+		this.setData({
+			selectedIds,
+			dataList
+		});
+	},
+
+	// 当前列表是否全部选中
+	_isAllSelected: function () {
+		let dataList = this.data.dataList;
+		if (!dataList || !dataList.list || dataList.list.length === 0) return false;
+		return this.data.selectedIds.length === dataList.list.length;
+	},
+
+	// 判断是否已选择
+	_checkSelected: function () {
+		if (!this.data.selectedIds || this.data.selectedIds.length === 0) {
+			pageHelper.showModal('请先选择要操作的记录');
+			return false;
+		}
+		return true;
+	},
+
+	// 刷新列表并清空选中
+	_reloadAfterBatch: async function () {
+		try {
+			await this.selectComponent('#cmpt-comm-list').reload();
+		} catch (err) {
+			console.error(err);
+		}
+		this._setSelectedIds([]);
+	},
+
+	// 批量审核
+	bindBatchStatus: function (e) {
+		if (!this._checkSelected()) return;
+		let status = Number(pageHelper.dataset(e, 'status'));
+
+		// 拒绝需要弹理由输入框
+		if (status === 99) {
+			this.setData({
+				batchRefuseModalShow: true,
+				batchFormReason: ''
+			});
+			return;
+		}
+
+		// 通过直接确认
+		let activityJoinIds = this.data.selectedIds;
+		let callback = async () => {
+			try {
+				let opts = { title: '处理中' };
+				let params = { activityJoinIds, status };
+				await cloudHelper.callCloudSumbit('admin/activity_batch_status_join', params, opts);
+				pageHelper.showSuccToast('批量操作成功', 1000);
+				await this._reloadAfterBatch();
+			} catch (err) {
+				console.error(err);
+			}
+		};
+		pageHelper.showConfirm(`确认批量通过选中的 ${activityJoinIds.length} 条报名记录？`, callback);
+	},
+
+	// 批量拒绝弹窗确认
+	bindBatchRefuseCmpt: async function () {
+		if (!this._checkSelected()) return;
+		let activityJoinIds = this.data.selectedIds;
+		let reason = this.data.batchFormReason;
+		try {
+			let opts = { title: '处理中' };
+			let params = { activityJoinIds, status: 99, reason };
+			await cloudHelper.callCloudSumbit('admin/activity_batch_status_join', params, opts);
+			this.setData({ batchRefuseModalShow: false, batchFormReason: '' });
+			pageHelper.showSuccToast('批量拒绝成功', 1000);
+			await this._reloadAfterBatch();
+		} catch (err) {
+			console.error(err);
+		}
+	},
+
+	// 批量拒绝弹窗取消/清空
+	bindBatchRefuseClose: function () {
+		this.setData({
+			batchRefuseModalShow: false,
+			batchFormReason: ''
+		});
+	},
+
+	bindBatchReasonInput: function (e) {
+		this.setData({
+			batchFormReason: e.detail.value
+		});
+	},
+
+	// 批量删除
+	bindBatchDel: function () {
+		if (!this._checkSelected()) return;
+		let activityJoinIds = this.data.selectedIds;
+		let callback = async () => {
+			try {
+				let opts = { title: '删除中' };
+				let params = { activityJoinIds };
+				await cloudHelper.callCloudSumbit('admin/activity_batch_del_join', params, opts);
+				pageHelper.showSuccToast('批量删除成功', 1000);
+				await this._reloadAfterBatch();
+			} catch (err) {
+				console.error(err);
+			}
+		};
+		pageHelper.showConfirm(`确认批量删除选中的 ${activityJoinIds.length} 条报名记录？删除后不可恢复`, callback);
 	}
 })

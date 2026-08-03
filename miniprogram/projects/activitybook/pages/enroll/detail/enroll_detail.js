@@ -38,10 +38,14 @@ Page({
         });
 
         let token = PassportBiz.getToken();
-        if (token) {
-            this.setData({ user: token.name + timeHelper.time('Y-M-D') + '打卡', avatar: token.pic })
-        }
+		if (token) {
+			this.setData({ user: token.name + timeHelper.time('Y-M-D') + '打卡', avatar: token.pic })
+		}
 
+		this._innerAudioContext = wx.createInnerAudioContext();
+		this._innerAudioContext.onError(() => {
+			pageHelper.showNoneToast('语音播放失败');
+		});
 	},
 
 	_loadDetail: async function () {
@@ -139,7 +143,12 @@ Page({
 	/**
 	 * 生命周期函数--监听页面卸载
 	 */
-	onUnload: function () { },
+	onUnload: function () {
+		if (this._innerAudioContext) {
+			this._innerAudioContext.destroy();
+			this._innerAudioContext = null;
+		}
+	},
 
 	/**
 	 * 页面相关事件处理函数--监听用户下拉动作
@@ -163,7 +172,50 @@ Page({
 
         wx.navigateTo({
             url: '../do/enroll_do?id=' + this.data.id,
-			})
+		})
+	},
+
+	/** 播放语音 */
+	bindPlayVoice: async function (e) {
+		let voice = pageHelper.dataset(e, 'voice');
+		if (!voice || !voice.tempFileURL) return;
+
+		this._innerAudioContext.stop();
+		let src = await cloudHelper.getTempFileURLOne(voice.tempFileURL);
+		this._innerAudioContext.src = src || voice.tempFileURL;
+		this._innerAudioContext.play();
+	},
+
+	/** 打开位置 */
+	bindOpenLocation: function (e) {
+		let location = pageHelper.dataset(e, 'location');
+		console.log('[openLocation] dataset location =', location, typeof location);
+
+		// dataset 传对象在部分场景下可能被序列化为字符串，兜底解析
+		if (typeof location === 'string') {
+			try { location = JSON.parse(location); } catch (err) { location = null; }
+		}
+		if (!location) return;
+
+		// 直接使用经纬度，Number 转换
+		let latitude = Number(location.latitude);
+		let longitude = Number(location.longitude);
+		console.log('[openLocation] parsed lat/lng =', latitude, longitude);
+
+		wx.openLocation({
+			latitude,
+			longitude,
+			name: location.name || '',
+			address: location.address || '',
+			scale: 18,
+			fail: (err) => {
+				console.error('[openLocation fail]', err);
+				let msg = (err && err.errMsg) || '';
+				if (msg.indexOf('cancel') === -1) {
+					pageHelper.showModal('打开地图失败：' + msg);
+				}
+			}
+		});
 	},
 
 

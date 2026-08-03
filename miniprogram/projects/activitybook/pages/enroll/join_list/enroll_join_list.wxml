@@ -19,6 +19,23 @@
 						<image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_OBJ.img}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_OBJ.img}}" wx:key="key1" wx:for-item="itm" class="loading  img{{item.ENROLL_JOIN_OBJ.img.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
 					</view>
 
+					<view wx:if="{{item.ENROLL_JOIN_PICS&&item.ENROLL_JOIN_PICS.length>0}}" class="album">
+						<image bindtap="url" data-type="img" data-imgs="{{item.ENROLL_JOIN_PICS}}" data-url="{{itm}}" wx:for="{{item.ENROLL_JOIN_PICS}}" wx:key="key2" wx:for-item="itm" class="loading img{{item.ENROLL_JOIN_PICS.length}}" mode="aspectFill" lazy-load="{{true}}" src="{{itm}}"></image>
+					</view>
+
+					<view wx:if="{{item.ENROLL_JOIN_VOICE}}" bindtap="bindPlayVoice" data-voice="{{item.ENROLL_JOIN_VOICE}}" class="join-voice">
+						<text class="icon-voicefill text-project"></text>
+						<text class="join-voice-dur">{{item.ENROLL_JOIN_VOICE.duration}}" </text>
+					</view>
+
+					<view wx:if="{{item.ENROLL_JOIN_LOCATION}}" bindtap="bindOpenLocation" data-location="{{item.ENROLL_JOIN_LOCATION}}" class="join-location">
+						<text class="icon-locationfill text-red margin-right-xxs"></text>
+						<view class="join-location-text">
+							<view class="join-location-name">{{item.ENROLL_JOIN_LOCATION.name}}</view>
+							<view class="join-location-addr">{{item.ENROLL_JOIN_LOCATION.address}}</view>
+						</view>
+					</view>
+
 
 				</view>
 

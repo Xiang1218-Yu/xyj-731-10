@@ -8,6 +8,8 @@ const BaseProjectController = require('./base_project_controller.js');
 const EnrollService = require('../service/enroll_service.js');
 const timeUtil = require('../../../framework/utils/time_util.js');
 const contentCheck = require('../../../framework/validate/content_check.js');
+const cloudBase = require('../../../framework/cloud/cloud_base.js');
+const dataUtil = require('../../../framework/utils/data_util.js');
 
 class EnrollController extends BaseProjectController {
 
@@ -221,13 +223,16 @@ class EnrollController extends BaseProjectController {
 		let rules = {
 			enrollId: 'must|id',
             forms: 'array|name=表单',
+            pics: 'array|name=打卡图片',
+            voice: 'object|name=语音',
+            location: 'object|name=位置',
 		};
 
 		// 取得数据
 		let input = this.validateData(rules);
 
 		let service = new EnrollService();
-		return await service.enrollJoin(this._userId, input.enrollId, input.forms);
+		return await service.enrollJoin(this._userId, input.enrollId, input.forms, input.pics, input.voice, input.location);
 	}
 
 
@@ -249,6 +254,37 @@ class EnrollController extends BaseProjectController {
         let service = new EnrollService();
         return await service.updateJoinForms(input);
     }
+
+	/**
+	 * 上传打卡语音（通过云函数上传，绕过前端直连云存储的权限限制）
+	 * 前端将录音文件读取为 base64 传入，云函数以管理员身份写入云存储。
+	 */
+	async uploadVoice() {
+		// 数据校验：cloudPath 为云存储路径，voiceBase64 为不含 data:audio/mp3;base64, 前缀的纯 base64
+		let rules = {
+			cloudPath: 'must|string|name=存储路径',
+			voiceBase64: 'must|string|name=语音数据'
+		};
+		let input = this.validateData(rules);
+
+		// 限制 base64 大小（约 2MB，按 base64 膨胀系数 1.37 估算）
+		if (input.voiceBase64.length > 2 * 1024 * 1024 * 1.4) {
+			this.AppError('语音文件过大，请控制在 2MB 以内（约 60 秒）');
+		}
+
+		const cloud = cloudBase.getCloud();
+		// base64 转 buffer
+		let fileContent = Buffer.from(input.voiceBase64, 'base64');
+
+		let upload = await cloud.uploadFile({
+			cloudPath: input.cloudPath,
+			fileContent
+		});
+
+		return {
+			fileID: upload.fileID
+		};
+	}
 
 }
 

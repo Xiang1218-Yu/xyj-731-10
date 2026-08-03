@@ -19,8 +19,13 @@ page {
     padding: 15rpx;
     background-color: #fff;
     margin-bottom: 15rpx;
-    align-items: flex-start;
+    align-items: center;
     border-bottom: 2rpx dotted #eee;
+}
+
+.list .batch-check-wrap {
+    align-self: flex-start;
+    padding-top: 20rpx;
 }
 
 .list .left {

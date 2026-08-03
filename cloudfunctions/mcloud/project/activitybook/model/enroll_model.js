@@ -35,6 +35,8 @@ EnrollModel.DB_STRUCTURE = {
 
 	ENROLL_JOIN_FORMS: 'array|true|default=[]',
 
+	ENROLL_MEDIA_SET: 'int|true|default=1|comment=多媒体设置 位运算 1=图片,2=语音,4=位置',
+
 	ENROLL_DAYS: 'array|true|default=[]',
 
 	ENROLL_QR: 'string|false',

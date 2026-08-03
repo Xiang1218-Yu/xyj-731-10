@@ -22,6 +22,52 @@
 	</view>
 	<!--top area end-->
 
+	<!--我的数据 统计卡片 begin-->
+	<view class="stat-wrap padding-project" wx:if="{{stat}}">
+		<view class="stat-card card-project shadow-project">
+			<!-- 第一行：3个小卡片 -->
+			<view class="stat-grid">
+				<view class="stat-item gradient-blue">
+					<view class="stat-num">{{stat.activityJoinCnt||0}}</view>
+					<view class="stat-label">报名活动数</view>
+				</view>
+				<view class="stat-item gradient-purple">
+					<view class="stat-num">{{stat.activitySuccCnt||0}}</view>
+					<view class="stat-label">成功报名</view>
+				</view>
+				<view class="stat-item gradient-cyan">
+					<view class="stat-num">{{stat.checkinCnt||0}}</view>
+					<view class="stat-label">签到次数</view>
+				</view>
+			</view>
+			<!-- 第二行：3个小卡片 -->
+			<view class="stat-grid">
+				<view class="stat-item gradient-orange">
+					<view class="stat-num">{{stat.enrollJoinCnt||0}}</view>
+					<view class="stat-label">打卡次数</view>
+				</view>
+				<view class="stat-item gradient-pink">
+					<view class="stat-num">{{stat.enrollDayCnt||0}}</view>
+					<view class="stat-label">打卡天数</view>
+				</view>
+				<view class="stat-item gradient-green">
+					<view class="stat-num">{{stat.favCnt||0}}</view>
+					<view class="stat-label">收藏数</view>
+				</view>
+			</view>
+			<!-- 趋势图区域 -->
+			<view class="trend-box">
+				<view class="trend-title">
+					<text class="trend-bar"></text>
+					<text>近30天打卡趋势</text>
+				</view>
+				<canvas wx:if="{{stat.trend&&stat.trend.length>0}}" canvas-id="statCanvas" id="statCanvas" class="trend-canvas" style="width:{{chartWidth}}px;height:{{chartHeight}}px;"></canvas>
+				<view wx:else class="trend-empty">暂无打卡数据</view>
+			</view>
+		</view>
+	</view>
+	<!--我的数据 统计卡片 end-->
+
 	<view class="record padding-project">
 		<view class="inner card-project shadow-project">
 			<view class="item" bindtap="url" data-url="../../enroll/my_user_list/enroll_my_user_list">

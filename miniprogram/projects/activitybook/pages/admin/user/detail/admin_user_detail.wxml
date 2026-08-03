@@ -27,6 +27,29 @@
 					<view class="mao">：</view>
 					<view class="content">{{user.USER_ADD_TIME}} </view>
 				</view>
+
+				<!-- 用户标签 -->
+				<view class="info-item" bindtap="bindEditTagsTap">
+					<view class="title">用户标签</view>
+					<view class="mao">：</view>
+					<view class="content">
+						<block wx:if="{{userTags.length>0}}">
+							<view wx:for="{{userTags}}" wx:key="id" wx:for-item="tag" class="user-tag" style="background-color:{{tag.color}};">{{tag.title}}</view>
+						</block>
+						<text wx:else class="text-grey">未设置</text>
+						<text class="icon-edit text-grey margin-left-s"></text>
+					</view>
+				</view>
+
+				<!-- 用户分组 -->
+				<view class="info-item" bindtap="bindEditGroupTap">
+					<view class="title">用户分组</view>
+					<view class="mao">：</view>
+					<view class="content">
+						<text>{{groupName}}</text>
+						<text class="icon-edit text-grey margin-left-s"></text>
+					</view>
+				</view>
 			</view>
 		</view>
 	</view>
@@ -37,3 +60,40 @@
 
 
 </view>
+
+<!-- 标签选择弹窗 Begin -->
+<cmpt-modal wx:if="{{tagModalShow}}" model:show="{{tagModalShow}}" type="longdialog" title="设置用户标签" bind:click="bindSaveTagsCmpt" class="modal-form" cancelText="取消" confirmText="保存">
+	<view class="select-list">
+		<view wx:if="{{tagOptions.length==0}}" class="empty text-grey">暂无可选标签，请先到标签管理中创建</view>
+		<view wx:for="{{tagOptions}}" wx:key="USER_TAG_ID" class="select-item" bindtap="bindTagCheckTap" data-id="{{item.USER_TAG_ID}}">
+			<view class="select-color" style="background-color:{{item.USER_TAG_COLOR}};"></view>
+			<view class="select-title">{{item.USER_TAG_TITLE}}</view>
+			<view class="select-check">
+				<text wx:if="{{item.checked}}" class="icon-roundcheckfill text-admin text-l"></text>
+				<text wx:else class="icon-circle text-grey text-l"></text>
+			</view>
+		</view>
+	</view>
+</cmpt-modal>
+<!-- 标签选择弹窗 END -->
+
+<!-- 分组选择弹窗 Begin -->
+<cmpt-modal wx:if="{{groupModalShow}}" model:show="{{groupModalShow}}" type="longdialog" title="设置用户分组" bind:click="bindSaveGroupCmpt" class="modal-form" cancelText="取消" confirmText="保存">
+	<view class="select-list">
+		<view class="select-item" bindtap="bindGroupRadioTap" data-id="">
+			<view class="select-title">无分组</view>
+			<view class="select-check">
+				<text wx:if="{{!selectedGroup}}" class="icon-roundcheckfill text-admin text-l"></text>
+				<text wx:else class="icon-circle text-grey text-l"></text>
+			</view>
+		</view>
+		<view wx:for="{{groupList}}" wx:key="USER_GROUP_ID" class="select-item" bindtap="bindGroupRadioTap" data-id="{{item.USER_GROUP_ID}}">
+			<view class="select-title">{{item.USER_GROUP_TITLE}}</view>
+			<view class="select-check">
+				<text wx:if="{{selectedGroup===item.USER_GROUP_ID}}" class="icon-roundcheckfill text-admin text-l"></text>
+				<text wx:else class="icon-circle text-grey text-l"></text>
+			</view>
+		</view>
+	</view>
+</cmpt-modal>
+<!-- 分组选择弹窗 END -->
