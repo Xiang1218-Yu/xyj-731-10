@@ -9,10 +9,13 @@ async function safeCloudUrl(url) {
 	if (!url.startsWith('cloud')) return url;
 	try {
 		let ret = await cloudHelper.getTempFileURLOne(url);
-		return ret || url;
+		// 仍是 cloud:// 说明未解析成功, 返回空避免 canvas getImageInfo:fail file not found
+		if (!ret || ret.startsWith('cloud')) return '';
+		return ret;
 	} catch (e) {
-		console.warn('[poster] getTempFileURLOne 失败, 使用原地址', e);
-		return url;
+		// 云环境异常(如 -501000)无法解析 cloud fileID, 返回空跳过该图, 保证海报文字部分正常生成
+		console.warn('[poster] getTempFileURLOne 失败, 跳过该图', e);
+		return '';
 	}
 }
 

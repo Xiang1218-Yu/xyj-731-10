@@ -4,17 +4,21 @@
 <view class="form-group padding">
 	<view class="audio-box">
 
-		<!-- 录音中：动画指示 + 计时 + 结束按钮 -->
+		<!-- 录音中：动画指示 + 计时 + 暂停/继续 + 结束按钮 -->
 		<block wx:if="{{isRecording}}">
 			<view class="audio-recording">
-				<view class="audio-wave">
+				<view class="audio-wave {{isPaused?'audio-wave-paused':''}}">
 					<view class="audio-wave-bar"></view>
 					<view class="audio-wave-bar"></view>
 					<view class="audio-wave-bar"></view>
 					<view class="audio-wave-bar"></view>
 					<view class="audio-wave-bar"></view>
 				</view>
-				<view class="audio-timer">录音中 {{duration}}s / {{maxSecond}}s</view>
+				<view class="audio-timer">{{isPaused?'已暂停':'录音中'}} {{duration}}s / {{maxSecond}}s</view>
+			</view>
+			<view class="audio-btn bg-orange" bindtap="bindPauseTap">
+				<text wx:if="{{isPaused}}" class="icon-playfill"></text>
+				<text class="audio-btn-text">{{isPaused?'继续':'暂停'}}</text>
 			</view>
 			<view class="audio-btn bg-red" bindtap="bindRecordTap">
 				<text class="icon-stop"></text>

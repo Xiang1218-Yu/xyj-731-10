@@ -37,6 +37,7 @@ Component({
 	 */
 	data: {
 		isRecording: false, // 是否正在录音
+		isPaused: false,     // 是否已暂停录音
 		isPlaying: false,    // 是否正在播放
 		duration: 0,         // 已录制时长(秒)
 		_timer: null,        // 录音计时器
@@ -67,7 +68,19 @@ Component({
 		_initRecorder: function () {
 			recorderManager.onStart(() => {
 				// 录音真正开始，启动计时
-				this.setData({ isRecording: true, duration: 0 });
+				this.setData({ isRecording: true, isPaused: false, duration: 0 });
+				this._startTimer();
+			});
+
+			// 暂停回调：停止计时但保留时长
+			recorderManager.onPause(() => {
+				this._stopTimer();
+				this.setData({ isPaused: true });
+			});
+
+			// 继续回调：恢复计时
+			recorderManager.onResume(() => {
+				this.setData({ isPaused: false });
 				this._startTimer();
 			});
 
@@ -75,6 +88,7 @@ Component({
 				this._stopTimer();
 				this.setData({
 					isRecording: false,
+					isPaused: false,
 					audioSrc: res.tempFilePath,
 				});
 				// 抛出本地临时文件路径给父组件
@@ -83,7 +97,7 @@ Component({
 
 			recorderManager.onError(() => {
 				this._stopTimer();
-				this.setData({ isRecording: false });
+				this.setData({ isRecording: false, isPaused: false });
 				pageHelper.showNoneToast('录音失败，请检查录音权限');
 			});
 		},
@@ -110,7 +124,7 @@ Component({
 			}
 		},
 
-		// 开始/停止录音
+		// 开始/结束录音
 		bindRecordTap: function () {
 			if (this.data.isRecording) {
 				recorderManager.stop();
@@ -124,6 +138,16 @@ Component({
 				numberOfChannels: 1,
 				encodeBitRate: 48000,
 			});
+		},
+
+		// 暂停/继续录音
+		bindPauseTap: function () {
+			if (!this.data.isRecording) return;
+			if (this.data.isPaused) {
+				recorderManager.resume();
+			} else {
+				recorderManager.pause();
+			}
 		},
 
 		// 试听已录制音频
