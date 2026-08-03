@@ -70,5 +70,6 @@
 
 .audio-timer {
 	font-size: 28rpx;
-	color: #e54d42;
+	color: #333333;
+	font-weight: bold;
 }
