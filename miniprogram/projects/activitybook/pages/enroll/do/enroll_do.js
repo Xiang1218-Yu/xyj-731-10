@@ -111,19 +111,24 @@ Page({
 					cloudPath = pageHelper.getPID() + '/' + cloudPath;
 				}
 
-				let uploadRes = await wx.cloud.uploadFile({
-					cloudPath,
-					filePath: res.tempFilePath
-				});
+				// 带重试的上传，避免网络抖动导致语音文件引用丢失
+				let uploadRes = await this._uploadFileWithRetry(res.tempFilePath, cloudPath, 3);
 
 				this.setData({
 					voicePath: res.tempFilePath,
 					voiceDuration: duration,
 					voiceFileID: uploadRes.fileID
 				});
+				pageHelper.showSuccToast('语音已上传', 1000);
 			} catch (err) {
 				console.log(err);
-				pageHelper.showModal('语音上传失败，请重试');
+				// 上传最终失败：清空本地临时引用，防止提交一个无效的语音
+				this.setData({
+					voicePath: '',
+					voiceDuration: 0,
+					voiceFileID: ''
+				});
+				pageHelper.showModal('语音上传失败，请检查网络后重试录音');
 			}
 			finally {
 				wx.hideLoading();
@@ -137,6 +142,36 @@ Page({
 			console.log(err);
 			pageHelper.showModal('录音失败，请检查录音权限');
 		});
+	},
+
+	/**
+	 * 带重试的云存储上传
+	 * @param {string} filePath 本地临时文件路径
+	 * @param {string} cloudPath 云存储路径
+	 * @param {number} retries 剩余重试次数（不含首次）
+	 * @returns {Promise<WechatMiniprogram.UploadFileSuccessCallbackResult>}
+	 */
+	_uploadFileWithRetry: function (filePath, cloudPath, retries = 3) {
+		let attempt = 0;
+		let delay = 500; // 首次重试间隔 500ms，之后指数退避
+		const maxDelay = 3000;
+
+		const doUpload = () => {
+			return wx.cloud.uploadFile({ cloudPath, filePath }).catch(err => {
+				attempt++;
+				if (attempt > retries) {
+					// 重试用尽，抛出最后一次错误
+					return Promise.reject(err);
+				}
+				console.log('[voice upload] 第' + attempt + '次重试，' + delay + 'ms 后重试', err);
+				return new Promise(resolve => setTimeout(resolve, delay)).then(() => {
+					delay = Math.min(delay * 2, maxDelay); // 指数退避
+					return doUpload();
+				});
+			});
+		};
+
+		return doUpload();
 	},
 
 	/** 选择图片 */

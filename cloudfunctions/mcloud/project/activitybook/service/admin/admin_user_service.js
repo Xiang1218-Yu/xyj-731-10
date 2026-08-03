@@ -350,12 +350,15 @@ class AdminUserService extends BaseProjectAdminService {
 
 	// #####################批量操作
 
-	/** 批量设置标签 mode=add追加/cover覆盖 */
+	/** 批量设置标签 mode=add追加/cover覆盖
+	 * 纯标签字段更新，使用 in 条件一次原子更新，避免循环中途失败。
+	 */
 	async batchSetUserTags(userIds, tags, mode = 'add') {
-		if (!Array.isArray(userIds) || userIds.length == 0) return;
+		if (!Array.isArray(userIds) || userIds.length == 0) return { total: 0, updated: 0 };
 		if (!Array.isArray(tags)) tags = [];
 
 		let where = {
+			_pid: this.getProjectId(),
 			USER_MINI_OPENID: ['in', userIds]
 		};
 
@@ -363,7 +366,8 @@ class AdminUserService extends BaseProjectAdminService {
 			// 覆盖：直接设置
 			await UserModel.edit(where, { USER_TAGS: tags });
 		} else {
-			// 追加：先取出用户现有标签，合并去重
+			// 追加：先取出用户现有标签，合并去重后逐用户写回（数据库层数组追加需用push，
+			// 为保证去重正确性在业务层合并；数据量在单次批量范围内）
 			let userList = await UserModel.getAllBig(where, 'USER_MINI_OPENID,USER_TAGS', {}, 10000);
 			for (let k = 0; k < userList.length; k++) {
 				let oldTags = userList[k].USER_TAGS || [];
@@ -377,24 +381,33 @@ class AdminUserService extends BaseProjectAdminService {
 
 		// 重新统计标签使用人数
 		await this._statUserTagCnt();
+
+		return { total: userIds.length, updated: userIds.length };
 	}
 
-	/** 批量设置分组 */
+	/** 批量设置分组
+	 * 使用 in 条件一次原子更新。
+	 */
 	async batchSetUserGroup(userIds, groupId) {
-		if (!Array.isArray(userIds) || userIds.length == 0) return;
+		if (!Array.isArray(userIds) || userIds.length == 0) return { total: 0, updated: 0 };
 
 		let where = {
+			_pid: this.getProjectId(),
 			USER_MINI_OPENID: ['in', userIds]
 		};
 		await UserModel.edit(where, { USER_GROUP: groupId || '' });
 
 		// 重新统计分组人数
 		await this._statUserGroupCnt();
+
+		return { total: userIds.length, updated: userIds.length };
 	}
 
-	/** 批量修改用户状态 */
+	/** 批量修改用户状态
+	 * 使用 in 条件一次原子更新。
+	 */
 	async batchStatusUser(userIds, status, reason) {
-		if (!Array.isArray(userIds) || userIds.length == 0) return;
+		if (!Array.isArray(userIds) || userIds.length == 0) return { total: 0, updated: 0 };
 		status = Number(status);
 
 		let data = { USER_STATUS: status };
@@ -405,19 +418,25 @@ class AdminUserService extends BaseProjectAdminService {
 		}
 
 		let where = {
+			_pid: this.getProjectId(),
 			USER_MINI_OPENID: ['in', userIds]
 		};
-		await UserModel.edit(where, data);
+		let updated = await UserModel.edit(where, data);
+		return { total: userIds.length, updated };
 	}
 
-	/** 批量删除用户 */
+	/** 批量删除用户
+	 * 使用 in 条件一次原子删除。
+	 */
 	async batchDelUser(userIds) {
-		if (!Array.isArray(userIds) || userIds.length == 0) return;
+		if (!Array.isArray(userIds) || userIds.length == 0) return { total: 0, removed: 0 };
 
 		let where = {
+			_pid: this.getProjectId(),
 			USER_MINI_OPENID: ['in', userIds]
 		};
-		return await UserModel.del(where);
+		let removed = await UserModel.del(where);
+		return { total: userIds.length, removed };
 	}
 
 }

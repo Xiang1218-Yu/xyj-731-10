@@ -401,34 +401,69 @@ class AdminEnrollService extends BaseProjectAdminService {
 		await service.statEnrollJoin(enrollJoin.ENROLL_JOIN_ENROLL_ID, enrollJoin.ENROLL_JOIN_USER_ID, true);
     }
 
-	/**批量删除打卡记录 */
+	/**批量删除打卡记录
+	 * 逐条处理（需清理云存储图片、重算用户统计），收集失败并返回结果，避免中途异常造成静默部分成功。
+	 */
 	async batchDelEnrollJoin(enrollJoinIds) {
-		if (!Array.isArray(enrollJoinIds) || enrollJoinIds.length == 0) return;
+		if (!Array.isArray(enrollJoinIds) || enrollJoinIds.length == 0) {
+			return { total: 0, succ: 0, fail: 0, failIds: [] };
+		}
 
-		// 循环调用单条删除，确保图片清理和重算统计
+		let succ = 0, fail = 0;
+		let failIds = [];
+		let enrollIds = new Set();
 		for (let k = 0; k < enrollJoinIds.length; k++) {
-			await this.delEnrollJoin(enrollJoinIds[k]);
+			try {
+				// 先取出记录用于事后重算统计
+				let join = await EnrollJoinModel.getOne(enrollJoinIds[k], 'ENROLL_JOIN_ENROLL_ID');
+				await this.delEnrollJoin(enrollJoinIds[k]);
+				if (join) enrollIds.add(join.ENROLL_JOIN_ENROLL_ID);
+				succ++;
+			} catch (e) {
+				fail++;
+				failIds.push(enrollJoinIds[k]);
+				console.log('[batchDelEnrollJoin] 单条删除失败 id=' + enrollJoinIds[k], e);
+			}
 		}
+		return { total: enrollJoinIds.length, succ, fail, failIds };
 	}
 
-	/**批量删除打卡活动 */
+	/**批量删除打卡活动
+	 * 级联清理较复杂，逐条处理并收集失败。
+	 */
 	async batchDelEnroll(ids) {
-		if (!Array.isArray(ids) || ids.length == 0) return;
-
-		// 循环调用单条删除，确保级联清理正确
-		for (let k = 0; k < ids.length; k++) {
-			await this.delEnroll(ids[k]);
+		if (!Array.isArray(ids) || ids.length == 0) {
+			return { total: 0, succ: 0, fail: 0, failIds: [] };
 		}
+
+		let succ = 0, fail = 0;
+		let failIds = [];
+		for (let k = 0; k < ids.length; k++) {
+			try {
+				await this.delEnroll(ids[k]);
+				succ++;
+			} catch (e) {
+				fail++;
+				failIds.push(ids[k]);
+				console.log('[batchDelEnroll] 单条删除失败 id=' + ids[k], e);
+			}
+		}
+		return { total: ids.length, succ, fail, failIds };
 	}
 
-	/**批量修改打卡活动状态 */
+	/**批量修改打卡活动状态
+	 * 纯字段更新，使用 in 条件一次原子更新。
+	 */
 	async batchStatusEnroll(ids, status) {
-		if (!Array.isArray(ids) || ids.length == 0) return;
+		if (!Array.isArray(ids) || ids.length == 0) return { total: 0, updated: 0 };
 		status = Number(status);
 
-		for (let k = 0; k < ids.length; k++) {
-			await EnrollModel.edit(ids[k], { ENROLL_STATUS: status });
-		}
+		let where = {
+			_id: ['in', ids],
+			_pid: this.getProjectId()
+		};
+		let updated = await EnrollModel.edit(where, { ENROLL_STATUS: status });
+		return { total: ids.length, updated };
 	}
 
     // #####################导出打卡数据
@@ -490,8 +525,17 @@ class AdminEnrollService extends BaseProjectAdminService {
 			'ENROLL_JOIN_ADD_TIME': 'desc'
 		}
 
+		// 导出上限：单次最多导出 10000 条，超量需缩小日期范围，避免数据被静默截断
+		const EXPORT_MAX_CNT = 10000;
+
+		// 先统计符合条件的总数，若超出上限直接提示
+		let totalCnt = await EnrollJoinModel.count(where);
+		if (totalCnt > EXPORT_MAX_CNT) {
+			this.AppError('当前日期范围内共有 ' + totalCnt + ' 条记录，超过单次导出上限 ' + EXPORT_MAX_CNT + ' 条，请缩小日期范围后分批导出');
+		}
+
 		// 获取所有数据（不分页）
-		let result = await EnrollJoinModel.getListJoin(joinParams, where, '*', orderBy, 1, 10000, false, 0);
+		let result = await EnrollJoinModel.getListJoin(joinParams, where, '*', orderBy, 1, EXPORT_MAX_CNT, false, 0);
 		let list = result.list || [];
 
 		let data = [];

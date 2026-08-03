@@ -9,6 +9,8 @@ const util = require('../../../framework/utils/util.js');
 
 const dataUtil = require('../../../framework/utils/data_util.js');
 const timeUtil = require('../../../framework/utils/time_util.js');
+const cloudBase = require('../../../framework/cloud/cloud_base.js');
+const config = require('../../../config/config.js');
 const ActivityModel = require('../model/activity_model.js');
 const UserModel = require('../model/user_model.js');
 const ActivityJoinModel = require('../model/activity_join_model.js');
@@ -258,73 +260,103 @@ class ActivityService extends BaseProjectService {
 	}
 
 	//################## 报名 
-	// 报名 
+	// 报名（使用事务，防止并发超卖与重复报名）
 	async activityJoin(userId, activityId, forms) {
 
-		// 报名是否结束
-		let whereActivity = {
-			_id: activityId,
-			ACTIVITY_STATUS: ActivityModel.STATUS.COMM
-		}
-		let activity = await ActivityModel.getOne(whereActivity);
-		if (!activity)
-			this.AppError('该活动不存在或者已经停止');
+		// 集合名（事务内直接操作 collection）
+		const ACTIVITY_CL = config.COLLECTION_PRFIX + 'activity';
+		const ACTIVITY_JOIN_CL = config.COLLECTION_PRFIX + 'activity_join';
+		const projectId = this.getProjectId();
+		const timestamp = this._timestamp;
 
-		// 是否活动结束
-		if (activity.ACTIVITY_END < this._timestamp)
-			this.AppError('该活动已经结束，请选择其他活动');
+		// 整个"查活动→校验名额/重复报名→插入报名"放进一个事务，保证原子性
+		const result = await cloudBase.runTransaction(async transaction => {
+			const actCol = transaction.collection(ACTIVITY_CL);
+			const joinCol = transaction.collection(ACTIVITY_JOIN_CL);
+			const _ = transaction.database.command; // 事务内的数据库操作符
 
-		// 是否过了报名截止期
-		if (activity.ACTIVITY_STOP < this._timestamp)
-			this.AppError('该活动报名已经截止，请选择其他活动');
-
-
-		// 人数是否满
-		if (activity.ACTIVITY_MAX_CNT > 0) {
-			let whereCnt = {
-				ACTIVITY_JOIN_ACTIVITY_ID: activityId,
-				ACTIVITY_JOIN_STATUS: ['in', [ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.SUCC]]
+			// 1. 事务内读取活动（自带行级快照）
+			let actRes = await actCol.doc(activityId).get();
+			let activity = actRes.data;
+			if (!activity || activity.ACTIVITY_STATUS != ActivityModel.STATUS.COMM) {
+				await transaction.rollback('该活动不存在或者已经停止');
 			}
-			let cntJoin = await ActivityJoinModel.count(whereCnt);
-			if (cntJoin >= activity.ACTIVITY_MAX_CNT)
-				this.AppError('该活动报名已满，请选择其他活动');
+
+			// 是否活动结束
+			if (activity.ACTIVITY_END < timestamp) {
+				await transaction.rollback('该活动已经结束，请选择其他活动');
+			}
+
+			// 是否过了报名截止期
+			if (activity.ACTIVITY_STOP < timestamp) {
+				await transaction.rollback('该活动报名已经截止，请选择其他活动');
+			}
+
+			// 2. 自己是否已经有报名（事务内查询，防止同一用户并发提交）
+			let myRes = await joinCol.where({
+				_pid: projectId,
+				ACTIVITY_JOIN_USER_ID: userId,
+				ACTIVITY_JOIN_ACTIVITY_ID: activityId,
+				ACTIVITY_JOIN_STATUS: _.in([ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.SUCC])
+			}).get();
+
+			if (myRes.data && myRes.data.length > 0) {
+				let my = myRes.data[0];
+				if (my.ACTIVITY_JOIN_STATUS == ActivityJoinModel.STATUS.WAIT)
+					await transaction.rollback('您已经报名，正在等待审核，无须重复报名');
+				else
+					await transaction.rollback('您已经报名成功，无须重复报名');
+			}
+
+			// 3. 名额校验（事务内 count，确保与插入在同一事务中）
+			if (activity.ACTIVITY_MAX_CNT > 0) {
+				let cntRes = await joinCol.where({
+					_pid: projectId,
+					ACTIVITY_JOIN_ACTIVITY_ID: activityId,
+					ACTIVITY_JOIN_STATUS: _.in([ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.SUCC])
+				}).count();
+				let cntJoin = cntRes.total;
+				if (cntJoin >= activity.ACTIVITY_MAX_CNT) {
+					await transaction.rollback('该活动报名已满，请选择其他活动');
+				}
+			}
+
+			// 4. 插入报名记录
+			let data = {
+				_pid: projectId,
+				ACTIVITY_JOIN_USER_ID: userId,
+				ACTIVITY_JOIN_ACTIVITY_ID: activityId,
+				ACTIVITY_JOIN_STATUS: (activity.ACTIVITY_CHECK_SET == 0) ? ActivityJoinModel.STATUS.SUCC : ActivityJoinModel.STATUS.WAIT,
+				ACTIVITY_JOIN_FORMS: forms,
+				ACTIVITY_JOIN_OBJ: dataUtil.dbForms2Obj(forms),
+				ACTIVITY_JOIN_CODE: dataUtil.genRandomIntString(15),
+				ACTIVITY_JOIN_IS_ADMIN: 0,
+				ACTIVITY_JOIN_IS_CHECKIN: 0,
+				ACTIVITY_JOIN_CHECKIN_TIME: 0,
+				ACTIVITY_JOIN_ADD_TIME: timestamp,
+				ACTIVITY_JOIN_EDIT_TIME: timestamp,
+			};
+
+			let addRes = await joinCol.add({ data });
+
+			return {
+				activityJoinId: addRes._id,
+				check: activity.ACTIVITY_CHECK_SET
+			};
+		}).catch(err => {
+			// 事务回滚抛出的信息统一转成业务错误
+			let msg = (err && err.message) ? err.message : '报名失败，请稍后重试';
+			this.AppError(msg);
+		});
+
+		// 事务提交成功后，异步刷新统计数量（非核心，失败不影响报名结果）
+		try {
+			await this.statActivityJoin(activityId);
+		} catch (e) {
+			console.log('[activityJoin] statActivityJoin error:', e);
 		}
 
-		// 自己是否已经有报名
-		let whereMy = {
-			ACTIVITY_JOIN_USER_ID: userId,
-			ACTIVITY_JOIN_ACTIVITY_ID: activityId,
-			ACTIVITY_JOIN_STATUS: ['in', [ActivityJoinModel.STATUS.WAIT, ActivityJoinModel.STATUS.SUCC]]
-		}
-		let my = await ActivityJoinModel.getOne(whereMy);
-		if (my) {
-			if (my.ACTIVITY_JOIN_STATUS == ActivityJoinModel.STATUS.WAIT)
-				this.AppError('您已经报名，正在等待审核，无须重复报名');
-			else
-				this.AppError('您已经报名成功，无须重复报名');
-		}
-
-
-		// 入库
-		let data = {
-			ACTIVITY_JOIN_USER_ID: userId,
-			ACTIVITY_JOIN_ACTIVITY_ID: activityId,
-			ACTIVITY_JOIN_STATUS: (activity.ACTIVITY_CHECK_SET == 0) ? ActivityJoinModel.STATUS.SUCC : ActivityJoinModel.STATUS.WAIT,
-			ACTIVITY_JOIN_FORMS: forms,
-			ACTIVITY_JOIN_OBJ: dataUtil.dbForms2Obj(forms),
-			ACTIVITY_JOIN_CODE: dataUtil.genRandomIntString(15),
-
-		}
-
-		let activityJoinId = await ActivityJoinModel.insert(data); 
-
-		// 统计数量
-		await this.statActivityJoin(activityId);
-
-		let check = activity.ACTIVITY_CHECK_SET;
-
-		return { activityJoinId, check }
-
+		return { activityJoinId: result.activityJoinId, check: result.check };
 	} 
  
 

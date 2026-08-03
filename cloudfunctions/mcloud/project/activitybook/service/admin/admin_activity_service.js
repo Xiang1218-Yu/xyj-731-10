@@ -440,44 +440,105 @@ class AdminActivityService extends BaseProjectAdminService {
 		);
 	}
 
-	/**批量审核报名 */
+	/**批量审核报名
+	 * 注意：审核涉及逐条发送订阅消息通知，无法整体放入单个数据库事务。
+	 * 这里采用"逐条处理 + 失败收集"策略：任一单条失败不会中断整体，
+	 * 最终返回成功/失败数量，由上层给操作者明确提示，避免"静默部分成功"。
+	 */
 	async batchStatusActivityJoin(activityJoinIds, status, reason = '') {
-		if (!Array.isArray(activityJoinIds) || activityJoinIds.length == 0) return;
-
-		// 循环调用单条审核逻辑，确保通知和统计正确
-		for (let k = 0; k < activityJoinIds.length; k++) {
-			await this.statusActivityJoin(activityJoinIds[k], status, reason);
+		if (!Array.isArray(activityJoinIds) || activityJoinIds.length == 0) {
+			return { total: 0, succ: 0, fail: 0, failIds: [] };
 		}
+
+		let succ = 0, fail = 0;
+		let failIds = [];
+		for (let k = 0; k < activityJoinIds.length; k++) {
+			try {
+				await this.statusActivityJoin(activityJoinIds[k], status, reason);
+				succ++;
+			} catch (e) {
+				fail++;
+				failIds.push(activityJoinIds[k]);
+				console.log('[batchStatusActivityJoin] 单条审核失败 id=' + activityJoinIds[k], e);
+			}
+		}
+		return { total: activityJoinIds.length, succ, fail, failIds };
 	}
 
-	/**批量删除报名 */
+	/**批量删除报名
+	 * 删除涉及级联清理云存储图片，逐条处理并收集失败，最后统一重算涉及活动的统计。
+	 */
 	async batchDelActivityJoin(activityJoinIds) {
-		if (!Array.isArray(activityJoinIds) || activityJoinIds.length == 0) return;
+		if (!Array.isArray(activityJoinIds) || activityJoinIds.length == 0) {
+			return { total: 0, succ: 0, fail: 0, failIds: [] };
+		}
 
-		// 循环调用单条删除，确保级联清理和重算统计
+		let succ = 0, fail = 0;
+		let failIds = [];
+		let activityIds = new Set();
 		for (let k = 0; k < activityJoinIds.length; k++) {
-			await this.delActivityJoin(activityJoinIds[k]);
+			try {
+				// 先取出记录用于事后重算统计
+				let join = await ActivityJoinModel.getOne(activityJoinIds[k], 'ACTIVITY_JOIN_ACTIVITY_ID');
+				await this.delActivityJoin(activityJoinIds[k]);
+				if (join) activityIds.add(join.ACTIVITY_JOIN_ACTIVITY_ID);
+				succ++;
+			} catch (e) {
+				fail++;
+				failIds.push(activityJoinIds[k]);
+				console.log('[batchDelActivityJoin] 单条删除失败 id=' + activityJoinIds[k], e);
+			}
 		}
+
+		// 统一重算涉及活动的报名统计，保证统计数据最终一致
+		for (let aid of activityIds) {
+			try {
+				let activityService = new ActivityService();
+				await activityService.statActivityJoin(aid);
+			} catch (e) {
+				console.log('[batchDelActivityJoin] 重算统计失败 activityId=' + aid, e);
+			}
+		}
+
+		return { total: activityJoinIds.length, succ, fail, failIds };
 	}
 
-	/**批量删除活动 */
+	/**批量删除活动
+	 * 活动删除涉及大量级联清理（表单图片、二维码、报名记录），逐条处理并收集失败。
+	 */
 	async batchDelActivity(ids) {
-		if (!Array.isArray(ids) || ids.length == 0) return;
-
-		// 循环调用单条删除，确保级联清理正确
-		for (let k = 0; k < ids.length; k++) {
-			await this.delActivity(ids[k]);
+		if (!Array.isArray(ids) || ids.length == 0) {
+			return { total: 0, succ: 0, fail: 0, failIds: [] };
 		}
+
+		let succ = 0, fail = 0;
+		let failIds = [];
+		for (let k = 0; k < ids.length; k++) {
+			try {
+				await this.delActivity(ids[k]);
+				succ++;
+			} catch (e) {
+				fail++;
+				failIds.push(ids[k]);
+				console.log('[batchDelActivity] 单条删除失败 id=' + ids[k], e);
+			}
+		}
+		return { total: ids.length, succ, fail, failIds };
 	}
 
-	/**批量修改活动状态 */
+	/**批量修改活动状态
+	 * 纯字段更新，使用 in 条件一次原子更新，避免循环单条更新中途失败。
+	 */
 	async batchStatusActivity(ids, status) {
-		if (!Array.isArray(ids) || ids.length == 0) return;
+		if (!Array.isArray(ids) || ids.length == 0) return { total: 0, updated: 0 };
 		status = Number(status);
 
-		for (let k = 0; k < ids.length; k++) {
-			await ActivityModel.edit(ids[k], { ACTIVITY_STATUS: status });
-		}
+		let where = {
+			_id: ['in', ids],
+			_pid: this.getProjectId()
+		};
+		let updated = await ActivityModel.edit(where, { ACTIVITY_STATUS: status });
+		return { total: ids.length, updated };
 	}
 
 
@@ -665,8 +726,17 @@ class AdminActivityService extends BaseProjectAdminService {
 			'ACTIVITY_JOIN_ADD_TIME': 'desc'
 		};
 
+		// 导出上限：单次最多导出 10000 条，超量需缩小筛选范围，避免数据被静默截断
+		const EXPORT_MAX_CNT = 10000;
+
+		// 先统计符合条件的总数，若超出上限直接提示，不做静默截断
+		let totalCnt = await ActivityJoinModel.count(where);
+		if (totalCnt > EXPORT_MAX_CNT) {
+			this.AppError('当前筛选条件下共有 ' + totalCnt + ' 条记录，超过单次导出上限 ' + EXPORT_MAX_CNT + ' 条，请按状态或时间缩小范围后分批导出');
+		}
+
 		// 一次性取出全部报名数据
-		let result = await ActivityJoinModel.getListJoin(joinParams, where, '*', orderBy, 1, 10000, false, 0);
+		let result = await ActivityJoinModel.getListJoin(joinParams, where, '*', orderBy, 1, EXPORT_MAX_CNT, false, 0);
 		let list = result.list || [];
 
 		let data = [];
