@@ -15,6 +15,7 @@ Page({
 		// 批量操作
 		batchMode: false,
 		selectedIds: [],
+		selectedMap: {}, // 选中ID映射 {id:true}, 供wxml判断选中态
 	},
 
 	/**
@@ -66,7 +67,7 @@ Page({
 	//############### 批量操作 ###############
 
 	bindToggleBatchTap: function () {
-		this.setData({ batchMode: !this.data.batchMode, selectedIds: [] });
+		this.setData({ batchMode: !this.data.batchMode, selectedIds: [], selectedMap: {} });
 	},
 
 	bindSelectTap: function (e) {
@@ -75,7 +76,7 @@ Page({
 		let idx = selectedIds.indexOf(id);
 		if (idx >= 0) selectedIds.splice(idx, 1);
 		else selectedIds.push(id);
-		this.setData({ selectedIds });
+		this.setData({ selectedIds, selectedMap: this._buildSelectedMap(selectedIds) });
 	},
 
 	bindSelectAllTap: function () {
@@ -83,7 +84,14 @@ Page({
 		let selectedIds = this.data.selectedIds;
 		if (selectedIds.length == list.length && list.length > 0) selectedIds = [];
 		else selectedIds = list.map(item => item._id);
-		this.setData({ selectedIds });
+		this.setData({ selectedIds, selectedMap: this._buildSelectedMap(selectedIds) });
+	},
+
+	// 由选中ID数组构建 {id:true} 映射 (wxml不支持indexOf)
+	_buildSelectedMap: function (selectedIds) {
+		let map = {};
+		for (let k = 0; k < selectedIds.length; k++) map[selectedIds[k]] = true;
+		return map;
 	},
 
 	bindBatchDelTap: function () {
@@ -116,7 +124,7 @@ Page({
 	},
 
 	_afterBatch: function (msg) {
-		this.setData({ batchMode: false, selectedIds: [] });
+		this.setData({ batchMode: false, selectedIds: [], selectedMap: {} });
 		pageHelper.showSuccToast(msg, 1500, () => {
 			let cmpt = this.selectComponent('#cmpt-comm-list');
 			if (cmpt) cmpt.reload();

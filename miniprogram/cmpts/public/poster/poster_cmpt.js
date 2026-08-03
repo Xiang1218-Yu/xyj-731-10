@@ -96,12 +96,7 @@ Component({
 	observers: {
 		'show': function (show) {
 			if (show && this.data.showTemplate && this.data.posterData && !this.data.isCreate) {
-				this.setData({
-					isCreate: true,
-					isLoad: false,
-				}, async () => {
-					await this.createPoster();
-				});
+				this._genByTemplate(this.data.curTemplate);
 			}
 		}
 	},
@@ -127,12 +122,19 @@ Component({
 		bindSelectTemplateTap: async function (e) {
 			let template = Number(pageHelper.dataset(e, 'template'));
 			if (template == this.data.curTemplate && this.data.isCreate) return;
+			await this._genByTemplate(template);
+		},
 
-			// 根据模板编号与原始数据重建config
+		// 根据模板编号 + posterData 生成海报config并渲染 (兼容父组件未传config的情况)
+		_genByTemplate: async function (template) {
 			let posterData = this.data.posterData;
-			if (!posterData) return;
+			let config = this.data.config;
 
-			let config = await posterCmptHelper.configByTemplate(template, posterData);
+			// 有原始数据则按模板重建；否则回退到父组件传入的config
+			if (posterData) {
+				config = await posterCmptHelper.configByTemplate(template, posterData);
+			}
+			if (!config) return; // 既无posterData也无config, 无法生成
 
 			this.setData({
 				curTemplate: template,

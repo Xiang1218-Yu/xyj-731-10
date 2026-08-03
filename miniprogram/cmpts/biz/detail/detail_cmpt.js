@@ -147,11 +147,17 @@ Component({
 					avatar: this.data.avatar
 				};
 
-				let posterConfig = await posterCmptHelper.config1(posterData)
-				this.setData({
-					posterConfig,
-					posterData
-				});
+				try {
+					let posterConfig = await posterCmptHelper.config1(posterData)
+					this.setData({
+						posterConfig,
+						posterData
+					});
+				} catch (e) {
+					// 海报预生成失败(如云环境异常)不影响分享入口显示
+					console.warn('[detail] 海报预生成失败', e);
+					this.setData({ posterData });
+				}
 
 			}
 		},

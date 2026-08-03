@@ -1,5 +1,21 @@
 const cloudHelper = require('../../../helper/cloud_helper.js');
 
+/**
+ * 安全解析云文件临时地址：
+ * 云环境异常(如 -501000 Environment not found)时不抛错，返回原值，保证分享/海报流程不中断
+ */
+async function safeCloudUrl(url) {
+	if (!url || typeof url !== 'string') return url || '';
+	if (!url.startsWith('cloud')) return url;
+	try {
+		let ret = await cloudHelper.getTempFileURLOne(url);
+		return ret || url;
+	} catch (e) {
+		console.warn('[poster] getTempFileURLOne 失败, 使用原地址', e);
+		return url;
+	}
+}
+
 async function config1({
 	cover,
 	title,
@@ -9,14 +25,9 @@ async function config1({
     user = '',
     avatar = '' //头像
 }) {
-	if (cover.startsWith('cloud'))
-		cover = await cloudHelper.getTempFileURLOne(cover);
-
-	if (qr.startsWith('cloud'))
-		qr = await cloudHelper.getTempFileURLOne(qr);
-
-    if (avatar.startsWith('cloud'))
-        avatar = await cloudHelper.getTempFileURLOne(avatar);
+	cover = await safeCloudUrl(cover);
+	qr = await safeCloudUrl(qr);
+	avatar = await safeCloudUrl(avatar);
 
 	let posterConfig = {
 		width: 480, // rpx
@@ -128,12 +139,9 @@ async function config2({
 	user = '',
 	avatar = ''
 }) {
-	if (cover.startsWith('cloud'))
-		cover = await cloudHelper.getTempFileURLOne(cover);
-	if (qr.startsWith('cloud'))
-		qr = await cloudHelper.getTempFileURLOne(qr);
-	if (avatar.startsWith('cloud'))
-		avatar = await cloudHelper.getTempFileURLOne(avatar);
+	cover = await safeCloudUrl(cover);
+	qr = await safeCloudUrl(qr);
+	avatar = await safeCloudUrl(avatar);
 
 	let posterConfig = {
 		width: 480,
@@ -210,12 +218,9 @@ async function config3({
 	user = '',
 	avatar = ''
 }) {
-	if (cover.startsWith('cloud'))
-		cover = await cloudHelper.getTempFileURLOne(cover);
-	if (qr.startsWith('cloud'))
-		qr = await cloudHelper.getTempFileURLOne(qr);
-	if (avatar.startsWith('cloud'))
-		avatar = await cloudHelper.getTempFileURLOne(avatar);
+	cover = await safeCloudUrl(cover);
+	qr = await safeCloudUrl(qr);
+	avatar = await safeCloudUrl(avatar);
 
 	let posterConfig = {
 		width: 480,

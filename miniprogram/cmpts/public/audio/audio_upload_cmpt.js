@@ -39,6 +39,7 @@ Component({
 		isRecording: false, // 是否正在录音
 		isPlaying: false,    // 是否正在播放
 		duration: 0,         // 已录制时长(秒)
+		_timer: null,        // 录音计时器
 	},
 
 	/**
@@ -49,7 +50,8 @@ Component({
 			this._initRecorder();
 		},
 		detached: function () {
-			// 释放音频资源
+			// 释放音频资源与计时器
+			if (this.data._timer) clearInterval(this.data._timer);
 			if (innerAudioContext) {
 				innerAudioContext.destroy();
 				innerAudioContext = null;
@@ -63,7 +65,14 @@ Component({
 	methods: {
 		// 初始化录音管理器回调
 		_initRecorder: function () {
+			recorderManager.onStart(() => {
+				// 录音真正开始，启动计时
+				this.setData({ isRecording: true, duration: 0 });
+				this._startTimer();
+			});
+
 			recorderManager.onStop((res) => {
+				this._stopTimer();
 				this.setData({
 					isRecording: false,
 					audioSrc: res.tempFilePath,
@@ -73,9 +82,32 @@ Component({
 			});
 
 			recorderManager.onError(() => {
+				this._stopTimer();
 				this.setData({ isRecording: false });
 				pageHelper.showNoneToast('录音失败，请检查录音权限');
 			});
+		},
+
+		// 启动录音计时器
+		_startTimer: function () {
+			if (this.data._timer) clearInterval(this.data._timer);
+			let timer = setInterval(() => {
+				let duration = this.data.duration + 1;
+				this.setData({ duration });
+				// 到达最长时长自动停止
+				if (duration >= this.data.maxSecond) {
+					recorderManager.stop();
+				}
+			}, 1000);
+			this.data._timer = timer;
+		},
+
+		// 停止录音计时器
+		_stopTimer: function () {
+			if (this.data._timer) {
+				clearInterval(this.data._timer);
+				this.data._timer = null;
+			}
 		},
 
 		// 开始/停止录音
@@ -91,11 +123,6 @@ Component({
 				sampleRate: 16000,
 				numberOfChannels: 1,
 				encodeBitRate: 48000,
-			});
-			this.setData({
-				isRecording: true,
-				audioSrc: '',
-				duration: 0,
 			});
 		},
 

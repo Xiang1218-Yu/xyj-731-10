@@ -23,9 +23,9 @@
 		<view class="admin-comm-list">
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录</view>
 
-			<view class="item {{batchMode&&selectedIds.indexOf(item._id)>=0?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
+			<view class="item {{batchMode&&selectedMap[item._id]?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
 				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectTap" data-id="{{item._id}}">
-					<text class="{{selectedIds.indexOf(item._id)>=0?'icon-squarecheckfill text-green':'icon-squarecheck text-grey'}}"></text>
+					<text class="{{selectedMap[item._id]?'icon-squarecheckfill text-green':'icon-squarecheck text-grey'}}"></text>
 				</view>
 				<view class="no">{{index+1}}</view>
 				<view class="header">

@@ -24,10 +24,10 @@
 		<view class="admin-comm-list">
 			<view wx:if="{{dataList && dataList.total }}" class="load text-grey">共有{{dataList.total}}条符合条件记录 </view>
 
-			<view class="item {{batchMode&&selectedIds.indexOf(item.USER_MINI_OPENID)>=0?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
+			<view class="item {{batchMode&&selectedMap[item.USER_MINI_OPENID]?'item-selected':''}}" wx:for="{{dataList.list}}" wx:key="key">
 				<!-- 批量选择勾选框 -->
 				<view wx:if="{{batchMode}}" class="batch-check" catchtap="bindSelectTap" data-id="{{item.USER_MINI_OPENID}}">
-					<text class="{{selectedIds.indexOf(item.USER_MINI_OPENID)>=0?'icon-squarecheckfill text-green':'icon-squarecheck text-grey'}}"></text>
+					<text class="{{selectedMap[item.USER_MINI_OPENID]?'icon-squarecheckfill text-green':'icon-squarecheck text-grey'}}"></text>
 				</view>
 				<view class="no">{{index+1}}</view>
 				<view class="header">

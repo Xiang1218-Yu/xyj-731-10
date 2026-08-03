@@ -21,6 +21,7 @@ Page({
 		// 批量操作
 		batchMode: false,   // 是否进入批量选择模式
 		selectedIds: [],    // 已选中的用户openid数组
+		selectedMap: {},    // 选中ID映射 {id:true}, 供wxml判断选中态
 		tagModalShow: false, // 批量打标签弹窗
 		formTag: '',        // 待添加的标签
 	},
@@ -189,7 +190,8 @@ Page({
 	bindToggleBatchTap: function () {
 		this.setData({
 			batchMode: !this.data.batchMode,
-			selectedIds: []
+			selectedIds: [],
+			selectedMap: {}
 		});
 	},
 
@@ -202,7 +204,7 @@ Page({
 			selectedIds.splice(idx, 1);
 		else
 			selectedIds.push(id);
-		this.setData({ selectedIds });
+		this.setData({ selectedIds, selectedMap: this._buildSelectedMap(selectedIds) });
 	},
 
 	// 全选/取消全选(当前页)
@@ -214,7 +216,14 @@ Page({
 		} else {
 			selectedIds = list.map(item => item.USER_MINI_OPENID);
 		}
-		this.setData({ selectedIds });
+		this.setData({ selectedIds, selectedMap: this._buildSelectedMap(selectedIds) });
+	},
+
+	// 由选中ID数组构建 {id:true} 映射, 供wxml通过 selectedMap[id] 判断选中态 (wxml不支持indexOf)
+	_buildSelectedMap: function (selectedIds) {
+		let map = {};
+		for (let k = 0; k < selectedIds.length; k++) map[selectedIds[k]] = true;
+		return map;
 	},
 
 	// 批量删除
@@ -283,7 +292,8 @@ Page({
 	_afterBatch: function (msg) {
 		this.setData({
 			batchMode: false,
-			selectedIds: []
+			selectedIds: [],
+			selectedMap: {}
 		});
 		pageHelper.showSuccToast(msg, 1500, () => {
 			let cmpt = this.selectComponent('#cmpt-comm-list');

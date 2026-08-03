@@ -1,24 +1,51 @@
 <view class="form-group">
-	<view class="title"><text wx:if="{{must}}" class="text-red">*</text>{{title}} <text class="text-gray text-normal">(最长{{maxSecond}}秒)</text></view>
+	<view class="title"><text wx:if="{{must}}" class="text-red">*</text>{{title}} <text class="text-grey text-normal">(最长{{maxSecond}}秒)</text></view>
 </view>
 <view class="form-group padding">
 	<view class="audio-box">
-		<!-- 录音按钮 -->
-		<view class="audio-btn {{isRecording?'bg-red':'bg-olive'}}" bindtap="bindRecordTap">
-			<text class="{{isRecording?'icon-stop':'icon-voice'}}"></text>
-			<text class="audio-btn-text">{{isRecording?'点击停止':'点击录音'}}</text>
-		</view>
 
-		<!-- 试听与删除 -->
-		<block wx:if="{{audioSrc}}">
-			<view class="audio-btn bg-blue" bindtap="bindPlayTap">
-				<text class="{{isPlaying?'icon-stop':'icon-playfill'}}"></text>
-				<text class="audio-btn-text">{{isPlaying?'停止':'试听'}}</text>
+		<!-- 录音中：动画指示 + 计时 + 结束按钮 -->
+		<block wx:if="{{isRecording}}">
+			<view class="audio-recording">
+				<view class="audio-wave">
+					<view class="audio-wave-bar"></view>
+					<view class="audio-wave-bar"></view>
+					<view class="audio-wave-bar"></view>
+					<view class="audio-wave-bar"></view>
+					<view class="audio-wave-bar"></view>
+				</view>
+				<view class="audio-timer">录音中 {{duration}}s / {{maxSecond}}s</view>
 			</view>
-			<view class="audio-btn bg-grey" bindtap="bindDelTap">
-				<text class="icon-close"></text>
-				<text class="audio-btn-text">删除</text>
+			<view class="audio-btn bg-red" bindtap="bindRecordTap">
+				<text class="icon-stop"></text>
+				<text class="audio-btn-text">结束录音</text>
 			</view>
 		</block>
+
+		<!-- 未录音：开始录音 或 已录制后的操作 -->
+		<block wx:else>
+			<!-- 尚未录制：开始录音 -->
+			<view wx:if="{{!audioSrc}}" class="audio-btn bg-olive" bindtap="bindRecordTap">
+				<text class="icon-voice"></text>
+				<text class="audio-btn-text">开始录音</text>
+			</view>
+
+			<!-- 已录制：试听 / 重录 / 删除 -->
+			<block wx:else>
+				<view class="audio-btn bg-blue" bindtap="bindPlayTap">
+					<text class="{{isPlaying?'icon-stop':'icon-playfill'}}"></text>
+					<text class="audio-btn-text">{{isPlaying?'停止':'试听'}}</text>
+				</view>
+				<view class="audio-btn bg-olive" bindtap="bindRecordTap">
+					<text class="icon-voice"></text>
+					<text class="audio-btn-text">重录</text>
+				</view>
+				<view class="audio-btn bg-grey" bindtap="bindDelTap">
+					<text class="icon-close"></text>
+					<text class="audio-btn-text">删除</text>
+				</view>
+			</block>
+		</block>
+
 	</view>
 </view>
