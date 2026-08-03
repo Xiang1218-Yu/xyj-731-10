@@ -90,6 +90,13 @@ function dateTimePicker(startYear, endYear, date, minuStep = 1) {
 	let start = startYear || 1978;
 	let end = endYear || 2100;
 
+	// 确保 start <= end
+	if (start > end) {
+		let temp = start;
+		start = end;
+		end = temp;
+	}
+
 	if (date && date.length == 4) date += '-01-01 00:00:00';
 	if (date && date.length == 7) date += '-01 00:00:00';
 	if (date && date.length == 10) date += ' 00:00:00';

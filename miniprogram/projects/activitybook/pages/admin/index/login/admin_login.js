@@ -15,7 +15,22 @@ Page({
 	 * 生命周期函数--监听页面加载
 	 */
 	onLoad: function (options) {
-		AdminBiz.clearAdminToken();
+		const setting = require('../../../../../../setting/setting.js');
+		if (setting.ADMIN_NO_LOGIN) {
+			// 免登录模式：直接写入管理员token并跳转，不清除
+			let admin = AdminBiz.getAdminToken();
+			if (!admin) {
+				admin = { name: 'admin', type: 1, token: 'admin-no-login-token' };
+				const cacheHelper = require('../../../../../../helper/cache_helper.js');
+				const constants = require('../../../../../../comm/constants.js');
+				cacheHelper.set(constants.CACHE_ADMIN, admin, constants.ADMIN_TOKEN_EXPIRE);
+			}
+			wx.redirectTo({
+				url: pageHelper.fmtURLByPID('/pages/admin/index/home/admin_home'),
+			});
+		} else {
+			AdminBiz.clearAdminToken();
+		}
 	},
 
 	/**
