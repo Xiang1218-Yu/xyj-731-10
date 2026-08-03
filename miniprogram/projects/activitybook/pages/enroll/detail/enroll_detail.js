@@ -189,22 +189,18 @@ Page({
 	/** 打开位置 */
 	bindOpenLocation: function (e) {
 		let location = pageHelper.dataset(e, 'location');
+		console.log('[openLocation] dataset location =', location, typeof location);
 
-		// dataset 传对象在部分场景下可能被序列化为字符串，做兜底解析
+		// dataset 传对象在部分场景下可能被序列化为字符串，兜底解析
 		if (typeof location === 'string') {
 			try { location = JSON.parse(location); } catch (err) { location = null; }
 		}
-		if (!location || typeof location !== 'object') return;
+		if (!location) return;
 
-		// 经纬度统一转为 Number，微信 openLocation 要求合法数值
+		// 直接使用经纬度，Number 转换
 		let latitude = Number(location.latitude);
 		let longitude = Number(location.longitude);
-
-		// 经纬度为 NaN 时不调用，避免微信内部报错
-		if (isNaN(latitude) || isNaN(longitude)) {
-			console.error('[openLocation] 经纬度非法', location);
-			return;
-		}
+		console.log('[openLocation] parsed lat/lng =', latitude, longitude);
 
 		wx.openLocation({
 			latitude,
@@ -213,10 +209,10 @@ Page({
 			address: location.address || '',
 			scale: 18,
 			fail: (err) => {
-				console.log('[openLocation fail]', err);
-				// 仅在真正失败时提示，避免对合法坐标误报
-				if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
-					pageHelper.showModal('打开地图失败：' + (err.errMsg || '未知错误'));
+				console.error('[openLocation fail]', err);
+				let msg = (err && err.errMsg) || '';
+				if (msg.indexOf('cancel') === -1) {
+					pageHelper.showModal('打开地图失败：' + msg);
 				}
 			}
 		});

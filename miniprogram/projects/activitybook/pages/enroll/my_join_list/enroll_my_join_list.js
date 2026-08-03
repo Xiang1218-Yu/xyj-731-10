@@ -107,25 +107,19 @@ Page({
 		if (typeof location === 'string') {
 			try { location = JSON.parse(location); } catch (err) { location = null; }
 		}
-		if (!location || typeof location !== 'object') return;
-
-		let latitude = Number(location.latitude);
-		let longitude = Number(location.longitude);
-		if (isNaN(latitude) || isNaN(longitude)) {
-			console.error('[openLocation] 经纬度非法', location);
-			return;
-		}
+		if (!location) return;
 
 		wx.openLocation({
-			latitude,
-			longitude,
+			latitude: Number(location.latitude),
+			longitude: Number(location.longitude),
 			name: location.name || '',
 			address: location.address || '',
 			scale: 18,
 			fail: (err) => {
-				console.log('[openLocation fail]', err);
-				if (err && err.errMsg && err.errMsg.indexOf('cancel') === -1) {
-					pageHelper.showModal('打开地图失败：' + (err.errMsg || '未知错误'));
+				console.error('[openLocation fail]', err);
+				let msg = (err && err.errMsg) || '';
+				if (msg.indexOf('cancel') === -1) {
+					pageHelper.showModal('打开地图失败：' + msg);
 				}
 			}
 		});

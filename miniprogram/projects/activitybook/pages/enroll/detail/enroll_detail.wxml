@@ -143,7 +143,7 @@
 
                                 <view wx:if="{{item.ENROLL_JOIN_VOICE}}" bindtap="bindPlayVoice" data-voice="{{item.ENROLL_JOIN_VOICE}}" class="join-voice">
                                     <text class="icon-voicefill text-project"></text>
-                                    <text class="join-voice-dur">{{item.ENROLL_JOIN_VOICE.duration}}" </text>
+                                    <text class="join-voice-dur">{{item.ENROLL_JOIN_VOICE.duration}}″</text>
                                 </view>
 
                                 <view wx:if="{{item.ENROLL_JOIN_LOCATION}}" bindtap="bindOpenLocation" data-location="{{item.ENROLL_JOIN_LOCATION}}" class="join-location">

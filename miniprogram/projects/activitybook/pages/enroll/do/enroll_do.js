@@ -304,35 +304,27 @@ Page({
 	bindChooseLocation: function () {
 		wx.chooseLocation({
 			success: (res) => {
-				// 统一转 Number，chooseLocation 返回的经纬度在个别基础库下可能是字符串
-				let latitude = Number(res.latitude);
-				let longitude = Number(res.longitude);
-
-				// 经纬度合法性兜底（纬度 -90~90，经度 -180~180）
-				if (isNaN(latitude) || isNaN(longitude) ||
-					latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-					console.error('[chooseLocation] 经纬度非法', res);
-					return pageHelper.showModal('获取到的位置坐标异常，请重新选择');
-				}
-
+				console.log('[chooseLocation success]', res);
+				// 直接使用微信返回的经纬度（Number 类型），不做额外范围校验，避免误判
 				this.setData({
 					location: {
 						name: res.name || '',
 						address: res.address || '',
-						latitude,
-						longitude
+						latitude: res.latitude,
+						longitude: res.longitude
 					}
 				});
 			},
 			fail: (err) => {
-				if (err && err.errMsg && err.errMsg.includes('cancel')) return;
-				console.log('[chooseLocation fail]', err);
-				// 区分权限拒绝与其他错误
+				console.error('[chooseLocation fail]', err);
 				let errMsg = (err && err.errMsg) || '';
-				if (errMsg.indexOf('auth') > -1 || errMsg.indexOf('permission') > -1) {
-					pageHelper.showModal('请在设置中允许微信使用位置权限');
-				} else if (errMsg.indexOf('cancel') === -1) {
-					pageHelper.showModal('获取位置失败：' + errMsg);
+				// 用户主动取消不提示
+				if (errMsg.indexOf('cancel') > -1) return;
+				// 开发者工具未配置地图Key/无法定位时给出明确提示
+				if (errMsg.indexOf('key') > -1 || errMsg.indexOf('config') > -1) {
+					pageHelper.showModal('地图定位服务未配置，请在微信开发者工具中确认地图Key设置，或在真机上使用');
+				} else {
+					pageHelper.showModal('选择位置失败：' + errMsg);
 				}
 			}
 		});
