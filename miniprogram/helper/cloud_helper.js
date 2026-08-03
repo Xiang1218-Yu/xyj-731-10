@@ -289,13 +289,20 @@ async function dataList(that, listName, route, params, options, isReverse = fals
 }
 
 async function getTempFileURLOne(fileID) {
-	if (!fileID) return '';
+	if (!fileID || typeof fileID !== 'string') return '';
+	// 仅对 cloud:// 协议的 fileID 换取临时链接，
+	// 避免把普通 URL/空值/对象传给云 API 引发 Environment not found 等错误
+	if (!fileID.startsWith('cloud://')) return fileID;
 
-	let result = await wx.cloud.getTempFileURL({
-		fileList: [fileID],
-	})
-	if (result && result.fileList && result.fileList[0] && result.fileList[0].tempFileURL)
-		return result.fileList[0].tempFileURL;
+	try {
+		let result = await wx.cloud.getTempFileURL({
+			fileList: [fileID],
+		});
+		if (result && result.fileList && result.fileList[0] && result.fileList[0].tempFileURL)
+			return result.fileList[0].tempFileURL;
+	} catch (e) {
+		console.error('[getTempFileURLOne] error:', e);
+	}
 	return '';
 }
 

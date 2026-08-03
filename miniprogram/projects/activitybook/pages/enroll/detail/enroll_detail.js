@@ -189,14 +189,33 @@ Page({
 	/** 打开位置 */
 	bindOpenLocation: function (e) {
 		let location = pageHelper.dataset(e, 'location');
+
+		// dataset 传对象在部分场景下可能被序列化为字符串，做兜底解析
+		if (typeof location === 'string') {
+			try { location = JSON.parse(location); } catch (err) { location = null; }
+		}
 		if (!location) return;
 
+		// 经纬度必须为合法数字，且在微信 openLocation 要求的范围内
+		let latitude = Number(location.latitude);
+		let longitude = Number(location.longitude);
+		if (isNaN(latitude) || isNaN(longitude)) {
+			return pageHelper.showModal('位置坐标数据异常');
+		}
+		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+			return pageHelper.showModal('位置坐标超出合法范围（纬度-90~90，经度-180~180），当前值：' + latitude + ',' + longitude);
+		}
+
 		wx.openLocation({
-			latitude: Number(location.latitude),
-			longitude: Number(location.longitude),
+			latitude,
+			longitude,
 			name: location.name || '',
 			address: location.address || '',
-			scale: 18
+			scale: 18,
+			fail: (err) => {
+				console.log('[openLocation fail]', err);
+				pageHelper.showModal('打开地图失败，请检查位置权限');
+			}
 		});
 	},
 

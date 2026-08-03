@@ -9,14 +9,22 @@ async function config1({
     user = '',
     avatar = '' //头像
 }) {
-	if (cover.startsWith('cloud'))
+	// 安全处理：cover/qr/avatar 可能为 undefined、空字符串或非 cloud:// 链接，
+	// 直接 startsWith 会抛异常，进而导致页面 onLoad 失败、云环境报错。
+	if (cover && typeof cover === 'string' && cover.startsWith('cloud'))
 		cover = await cloudHelper.getTempFileURLOne(cover);
+	else
+		cover = cover || '';
 
-	if (qr.startsWith('cloud'))
+	if (qr && typeof qr === 'string' && qr.startsWith('cloud'))
 		qr = await cloudHelper.getTempFileURLOne(qr);
+	else
+		qr = qr || '';
 
-    if (avatar.startsWith('cloud'))
+    if (avatar && typeof avatar === 'string' && avatar.startsWith('cloud'))
         avatar = await cloudHelper.getTempFileURLOne(avatar);
+	else
+		avatar = avatar || '';
 
 	let posterConfig = {
 		width: 480, // rpx

@@ -19,7 +19,9 @@
 		<view class="list">
 			<view class="item" wx:for="{{dataList.list}}" wx:key="k">
 				<view wx:if="{{isBatchMode}}" class="batch-check-wrap" catchtap="bindSelectItem" data-id="{{item._id}}">
-					<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+					<view class="batch-check-icon {{item._checked?'checked':''}}">
+						<text wx:if="{{item._checked}}" class="icon-check"></text>
+					</view>
 				</view>
 				<image class="left loading" mode="aspectFill" lazy-load="{{true}}" src="{{item.user.USER_PIC}}"></image>
 				<view class="right">
@@ -63,10 +65,12 @@
 	<view wx:if="{{isBatchMode}}" class="batch-bar">
 		<view class="batch-bar-info">
 			<view>已选 <text class="selected-count">{{selectedIds.length}}</text> 项</view>
-			<label class="select-all">
-				<checkbox checked="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" bindchange="bindSelectAll" color="#2499f2"></checkbox>
+			<view class="select-all" catchtap="bindSelectAll">
+				<view class="batch-check-icon sm {{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length?'checked':''}}">
+					<text wx:if="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" class="icon-check"></text>
+				</view>
 				全选
-			</label>
+			</view>
 		</view>
 		<view class="batch-bar-actions">
 			<view class="btn bg-orange light" bindtap="bindBatchDel">批量删除</view>

@@ -215,10 +215,11 @@ Page({
 
 	// 全选/取消全选
 	bindSelectAll: function (e) {
-		let checked = (e.detail && e.detail.value && e.detail.value.length > 0);
 		let dataList = this.data.dataList;
 		if (!dataList || !dataList.list) return;
-		this._setSelectedIds(checked ? dataList.list.map(item => item._id) : []);
+		let isAll = (this.data.selectedIds.length === dataList.list.length);
+		let selectedIds = isAll ? [] : dataList.list.map(item => item._id);
+		this._setSelectedIds(selectedIds);
 	},
 
 	// 更新选中并同步列表 _checked 标记

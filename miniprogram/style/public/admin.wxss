@@ -400,6 +400,36 @@ page {
 	transform: scale(0.85);
 }
 
+/* 自定义勾选圆圈（替代 disabled 的 checkbox，避免事件被拦截导致点选无反应） */
+.batch-check-icon {
+	width: 40rpx;
+	height: 40rpx;
+	border-radius: 50%;
+	border: 2rpx solid #c4c4c4;
+	background: #fff;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	transition: all .15s ease;
+}
+.batch-check-icon.sm {
+	width: 34rpx;
+	height: 34rpx;
+}
+.batch-check-icon.checked {
+	background: #2499f2;
+	border-color: #2499f2;
+}
+.batch-check-icon .icon-check {
+	color: #fff;
+	font-size: 26rpx;
+	line-height: 1;
+}
+.batch-check-icon.sm .icon-check {
+	font-size: 22rpx;
+}
+
 /* 带 checkbox 的 item 横向布局 */
 .batch-item-row {
 	display: flex;

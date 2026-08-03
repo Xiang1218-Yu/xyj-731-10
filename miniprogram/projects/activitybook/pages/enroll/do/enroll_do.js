@@ -106,7 +106,9 @@ Page({
 
 			try {
 				let rd = dataHelper.genRandomNum(1000000, 9999999);
-				let cloudPath = 'enroll/voice/' + this.data.id + '/' + rd + '.mp3';
+				// 语音文件与打卡图片放在同一业务目录 enroll/join 下，
+				// 避免云存储安全规则仅放行特定目录导致 -503002 storage permission denied
+				let cloudPath = 'enroll/join/' + this.data.id + '/voice_' + rd + '.mp3';
 				if (pageHelper.getPID()) {
 					cloudPath = pageHelper.getPID() + '/' + cloudPath;
 				}
@@ -128,7 +130,13 @@ Page({
 					voiceDuration: 0,
 					voiceFileID: ''
 				});
-				pageHelper.showModal('语音上传失败，请检查网络后重试录音');
+				// 区分存储权限错误与网络错误，给出更有针对性的提示
+				let errMsg = (err && err.errMsg) ? err.errMsg : '';
+				if (errMsg.indexOf('-503002') > -1 || errMsg.indexOf('permission') > -1) {
+					pageHelper.showModal('语音上传被云存储拒绝，请检查云开发存储安全规则是否允许上传到 enroll/join 目录');
+				} else {
+					pageHelper.showModal('语音上传失败，请检查网络后重试录音');
+				}
 			}
 			finally {
 				wx.hideLoading();

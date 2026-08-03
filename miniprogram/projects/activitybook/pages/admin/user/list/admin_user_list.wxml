@@ -17,7 +17,9 @@
 			<view class="item" wx:for="{{dataList.list}}" wx:key="key">
 				<view class="batch-item-row">
 					<view wx:if="{{isBatchMode}}" class="batch-check-wrap" catchtap="bindSelectItem" data-id="{{item.USER_MINI_OPENID}}">
-						<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+						<view class="batch-check-icon {{item._checked?'checked':''}}">
+							<text wx:if="{{item._checked}}" class="icon-check"></text>
+						</view>
 					</view>
 					<view class="batch-item-main">
 				<view class="no">{{index+1}}</view>
@@ -127,7 +129,9 @@
 			<view class="text-grey text-s" style="margin-bottom:16rpx;">已选 {{selectedIds.length}} 个用户</view>
 			<view class="batch-option-list" wx:if="{{tagMode!='set'}}">
 				<view wx:for="{{tagList}}" wx:key="USER_TAG_ID" class="batch-option-item" catchtap="bindTagSelect" data-id="{{item.USER_TAG_ID}}">
-					<checkbox checked="{{item._checked}}" disabled="true" color="#2499f2"></checkbox>
+					<view class="batch-check-icon sm {{item._checked?'checked':''}}">
+						<text wx:if="{{item._checked}}" class="icon-check"></text>
+					</view>
 					<view class="list-tag" style="background-color:{{item.USER_TAG_COLOR}};">{{item.USER_TAG_TITLE}}</view>
 				</view>
 				<view wx:if="{{tagList.length==0}}" class="text-grey" style="text-align:center;padding:40rpx 0;">暂无标签，请先在标签管理中创建</view>
@@ -142,11 +146,15 @@
 			<view class="text-grey text-s" style="margin-bottom:16rpx;">已选 {{selectedIds.length}} 个用户</view>
 			<view class="batch-option-list">
 				<view class="batch-option-item" catchtap="bindClearGroupSelect">
-					<checkbox checked="{{selectedGroupId==''}}" disabled="true" color="#2499f2"></checkbox>
+					<view class="batch-check-icon sm {{selectedGroupId==''?'checked':''}}">
+						<text wx:if="{{selectedGroupId==''}}" class="icon-check"></text>
+					</view>
 					<view>不分组（清除分组）</view>
 				</view>
 				<view wx:for="{{groupList}}" wx:key="USER_GROUP_ID" class="batch-option-item" catchtap="bindGroupSelect" data-id="{{item.USER_GROUP_ID}}">
-					<checkbox checked="{{selectedGroupId==item.USER_GROUP_ID}}" disabled="true" color="#2499f2"></checkbox>
+					<view class="batch-check-icon sm {{selectedGroupId==item.USER_GROUP_ID?'checked':''}}">
+						<text wx:if="{{selectedGroupId==item.USER_GROUP_ID}}" class="icon-check"></text>
+					</view>
 					<view>{{item.USER_GROUP_TITLE}}</view>
 				</view>
 				<view wx:if="{{groupList.length==0}}" class="text-grey" style="text-align:center;padding:40rpx 0;">暂无分组，请先在分组管理中创建</view>
@@ -158,10 +166,12 @@
 	<view wx:if="{{isBatchMode}}" class="batch-bar">
 		<view class="batch-bar-info">
 			<view>已选 <text class="selected-count">{{selectedIds.length}}</text> 个用户</view>
-			<label class="select-all">
-				<checkbox checked="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" bindchange="bindSelectAll" color="#2499f2"></checkbox>
+			<view class="select-all" catchtap="bindSelectAll">
+				<view class="batch-check-icon sm {{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length?'checked':''}}">
+					<text wx:if="{{selectedIds.length>0 && dataList && dataList.list && selectedIds.length==dataList.list.length}}" class="icon-check"></text>
+				</view>
 				全选
-			</label>
+			</view>
 		</view>
 		<view class="batch-bar-actions">
 			<view class="btn bg-blue light" bindtap="bindOpenTagModal">打标签</view>

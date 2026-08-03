@@ -444,10 +444,11 @@ Page({
 
 	// 全选/取消全选当前列表
 	bindSelectAll: function (e) {
-		let checked = (e.detail && e.detail.value && e.detail.value.length > 0);
 		let dataList = this.data.dataList;
 		if (!dataList || !dataList.list) return;
-		let selectedIds = checked ? dataList.list.map(item => item._id) : [];
+		// 当前已是全选则取消，否则全选
+		let isAll = this._isAllSelected();
+		let selectedIds = isAll ? [] : dataList.list.map(item => item._id);
 		this._setSelectedIds(selectedIds);
 	},
 

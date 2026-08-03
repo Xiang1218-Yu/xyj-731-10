@@ -104,14 +104,30 @@ Page({
 	/** 打开位置 */
 	bindOpenLocation: function (e) {
 		let location = pageHelper.dataset(e, 'location');
+		if (typeof location === 'string') {
+			try { location = JSON.parse(location); } catch (err) { location = null; }
+		}
 		if (!location) return;
 
+		let latitude = Number(location.latitude);
+		let longitude = Number(location.longitude);
+		if (isNaN(latitude) || isNaN(longitude)) {
+			return pageHelper.showModal('位置坐标数据异常');
+		}
+		if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+			return pageHelper.showModal('位置坐标超出合法范围，当前值：' + latitude + ',' + longitude);
+		}
+
 		wx.openLocation({
-			latitude: Number(location.latitude),
-			longitude: Number(location.longitude),
+			latitude,
+			longitude,
 			name: location.name || '',
 			address: location.address || '',
-			scale: 18
+			scale: 18,
+			fail: (err) => {
+				console.log('[openLocation fail]', err);
+				pageHelper.showModal('打开地图失败，请检查位置权限');
+			}
 		});
 	},
 
